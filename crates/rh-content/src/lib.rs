@@ -20,3 +20,17 @@ pub use schema::*;
 pub fn load_embedded() -> Result<Catalogue, ContentError> {
     Catalogue::from_sources(embedded::SOURCES)
 }
+
+/// A fingerprint of the embedded content bytes. Share codes carry it so a
+/// replay recorded against different authored numbers fails loudly instead
+/// of silently diverging.
+pub fn content_fingerprint() -> u16 {
+    let mut hash: u64 = 0xcbf29ce484222325;
+    for (name, source) in embedded::SOURCES {
+        for byte in name.bytes().chain(source.bytes()) {
+            hash ^= u64::from(byte);
+            hash = hash.wrapping_mul(0x100000001b3);
+        }
+    }
+    (hash ^ (hash >> 16) ^ (hash >> 32) ^ (hash >> 48)) as u16
+}

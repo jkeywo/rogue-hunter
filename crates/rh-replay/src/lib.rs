@@ -27,14 +27,18 @@ pub enum ReplayError {
     Malformed(String),
     #[error("share code version {found} is not supported (expected {expected})")]
     VersionMismatch { found: u8, expected: u8 },
+    #[error("share code was recorded against different game content")]
+    ContentMismatch,
     #[error("replayed command {index} was rejected: {rejection}")]
     RejectedCommand { index: usize, rejection: Rejection },
 }
 
-/// The serialized form of a run: seed plus semantic command log.
+/// The serialized form of a run: seed plus semantic command log, stamped
+/// with the content fingerprint the run was recorded against.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ReplayRecord {
     pub version: u8,
+    pub content: u16,
     pub seed: u64,
     pub commands: Vec<Command>,
 }
@@ -72,6 +76,7 @@ impl RunSession {
     pub fn share_code(&self) -> String {
         codec::encode(&ReplayRecord {
             version: REPLAY_VERSION,
+            content: rh_content::content_fingerprint(),
             seed: self.seed,
             commands: self.commands.clone(),
         })
@@ -90,6 +95,9 @@ impl RunSession {
                 found: record.version,
                 expected: REPLAY_VERSION,
             });
+        }
+        if record.content != rh_content::content_fingerprint() {
+            return Err(ReplayError::ContentMismatch);
         }
         let mut session = Self::new(record.seed, catalogue)?;
         for (index, command) in record.commands.into_iter().enumerate() {
