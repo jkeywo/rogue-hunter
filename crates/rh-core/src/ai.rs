@@ -154,11 +154,10 @@ fn enemy_act(sim: &mut Sim, id: ActorId, enemy: &str) {
                     && has_line_of_sight(&sim.state, &sim.world, map, pos, hunter);
                 if distance <= 2 {
                     // Too close: back off if possible, else fight with steel.
-                    if !step_away(sim, id, hunter) {
-                        if pos.is_adjacent(hunter) {
+                    if !step_away(sim, id, hunter)
+                        && pos.is_adjacent(hunter) {
                             attack_hunter(sim, id, 0);
                         }
-                    }
                 } else if in_range {
                     ranged_attack_hunter(sim, id, ranged.damage, ranged.hit_percent);
                 } else {
@@ -382,15 +381,14 @@ fn revenant_act(
             return;
         }
     }
-    if dash_ready && distance > 3 {
-        if dash_move(sim, id, hunter, cadence.dash_tiles, true) {
+    if dash_ready && distance > 3
+        && dash_move(sim, id, hunter, cadence.dash_tiles, true) {
             if let Some(actor) = sim.state.actor_mut(id) {
                 actor.dash_cooldown = dash_cooldown_max;
             }
             sim.log(EventKind::Telegraph, cadence.dash_telegraph.clone());
             return;
         }
-    }
     chase_or_attack(
         sim,
         id,

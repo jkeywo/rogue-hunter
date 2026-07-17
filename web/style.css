@@ -1,0 +1,122 @@
+/* Rogue Hunter — browser client. Early-modern lamplight over terminal bones. */
+
+:root {
+  --bg: #0a0a08;
+  --panel: #14120e;
+  --border: #3a352a;
+  --text: #cfc9b8;
+  --dim: #6e6858;
+  --accent: #ffd75f;
+  --danger: #ff5f5f;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Courier New", monospace;
+  font-size: 15px;
+  display: flex;
+  justify-content: center;
+}
+
+#app { max-width: 1000px; width: 100%; padding: 12px; position: relative; }
+
+.hidden { display: none !important; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+}
+
+#main { display: flex; gap: 10px; }
+
+#map {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  outline: none;
+  flex-shrink: 0;
+}
+
+#side { flex: 1; min-width: 260px; overflow-y: auto; max-height: 484px; }
+#side h2 { margin: 0 0 4px; font-size: 16px; color: var(--accent); }
+#side h3 { margin: 10px 0 2px; font-size: 14px; border-bottom: 1px solid var(--border); }
+#side ul { margin: 4px 0; padding-left: 16px; }
+#side .clock { color: var(--accent); font-weight: bold; }
+#side .leads li { color: #87ff87; }
+
+#log { margin-top: 10px; min-height: 150px; }
+.events div { margin: 1px 0; }
+.ev-combat { color: #ff5f5f; }
+.ev-telegraph { color: #ff87ff; }
+.ev-clue { color: #87ff87; }
+.ev-clock { color: #ffd75f; }
+.ev-social { color: #5fd7d7; }
+.ev-item { color: #87afff; }
+.ev-travel { color: #efefe0; }
+.ev-system { color: #9e9e8e; }
+.inspect { color: #ffffff; font-style: italic; }
+.status { color: var(--accent); font-weight: bold; }
+.hints { color: var(--dim); margin-top: 6px; }
+.dim { color: var(--dim); }
+
+#overlay {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 320px;
+  max-width: 560px;
+  box-shadow: 0 0 24px #000;
+}
+
+#fullscreen { min-height: 90vh; }
+#fullscreen h1 {
+  color: var(--danger);
+  text-align: center;
+  letter-spacing: 0.4em;
+  margin: 24px 0;
+}
+#fullscreen .intro { max-width: 640px; margin: 10px auto; text-align: center; }
+.bindings { margin: 16px auto; border-spacing: 12px 2px; }
+.bindings .keys { color: #5fffff; text-align: right; }
+
+ul.menu { list-style: none; padding: 0; max-width: 640px; margin: 16px auto; }
+ul.menu .item { padding: 4px 10px; cursor: pointer; }
+ul.menu .item.selected { background: var(--accent); color: #14120e; font-weight: bold; }
+ul.menu .item.blocked { color: var(--dim); }
+ul.menu.big { text-align: center; font-size: 18px; }
+
+.split { display: flex; gap: 16px; }
+.split ul.menu { flex: 0 0 300px; margin: 0; }
+.split .detail { flex: 1; border-left: 1px solid var(--border); padding-left: 16px; }
+
+.entry { font-size: 18px; color: var(--accent); word-break: break-all; }
+.caret { animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.error { color: var(--danger); }
+
+.outcome { font-size: 18px; color: var(--accent); font-weight: bold; }
+.villain { color: var(--danger); }
+.dimlist { color: var(--dim); }
+pre.route { color: #87ff87; white-space: pre-wrap; }
+pre.code {
+  color: #5fffff;
+  white-space: pre-wrap;
+  word-break: break-all;
+  border: 1px dashed var(--border);
+  padding: 8px;
+  user-select: all;
+}
+button {
+  background: var(--panel);
+  color: var(--accent);
+  border: 1px solid var(--border);
+  font-family: inherit;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+button:hover { background: var(--border); }

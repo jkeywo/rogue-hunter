@@ -862,7 +862,7 @@ fn candidate_actions(ctx: &Ctx, cfg: &PlannerConfig, state: &PState) -> Vec<Acti
             .map(|def| def.affected_by_consecration)
             .unwrap_or(false);
         if !state.consecrated
-            && state.turn + 1 <= cfg.deadline
+            && state.turn < cfg.deadline
             && ctx.villain_map == SETTLEMENT
             && rite_matters
         {
@@ -871,8 +871,8 @@ fn candidate_actions(ctx: &Ctx, cfg: &PlannerConfig, state: &PState) -> Vec<Acti
     }
 
     // Travel to the other maps.
-    if state.turn + 1 <= cfg.deadline
-        && state.legs + 1 <= generator.route_travel_budget
+    if state.turn < cfg.deadline
+        && state.legs < generator.route_travel_budget
         && state.effort + 2 <= generator.route_effort_budget
     {
         for destination in 0..3u8 {

@@ -155,38 +155,6 @@ fn build_candidate(
     materialise::build_world(seed, catalogue, combo, &cast, ambush_percent, rng)
 }
 
-#[cfg(test)]
-mod debug_tests {
-    use super::*;
-
-    #[test]
-    #[ignore = "diagnostic dump for generator tuning; run with --ignored"]
-    fn dump_seed() {
-        let seed: u64 = std::env::var("RH_DEBUG_SEED")
-            .ok()
-            .and_then(|value| value.parse().ok())
-            .unwrap_or(42);
-        let catalogue = rh_content::load_embedded().expect("content");
-        let mut rng = SimRng::new(seed);
-        let combo = cast::pick_combo(&mut rng, &catalogue);
-        let generator = &catalogue.balance.generator;
-        let ambush = rng.in_range(
-            u32::from(generator.ambush_percent_min),
-            u32::from(generator.ambush_percent_max),
-        ) as u8;
-        for attempt in 0..2 {
-            let candidate = build_candidate(seed, &catalogue, &combo, ambush, &mut rng);
-            match candidate {
-                Ok(world) => {
-                    println!("--- attempt {attempt} ---");
-                    println!("{}", planner::debug_certify(&catalogue, &world));
-                }
-                Err(reason) => println!("--- attempt {attempt}: candidate failed: {reason}"),
-            }
-        }
-    }
-}
-
 /// Final validation over the assembled world before it is returned.
 fn final_validation(catalogue: &Catalogue, world: &World) -> Result<(), String> {
     // The travel triangle must be intact with paired exits.
@@ -239,4 +207,36 @@ fn final_validation(catalogue: &Catalogue, world: &World) -> Result<(), String> 
         return Err("certified routes were not recorded".to_owned());
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod debug_tests {
+    use super::*;
+
+    #[test]
+    #[ignore = "diagnostic dump for generator tuning; run with --ignored"]
+    fn dump_seed() {
+        let seed: u64 = std::env::var("RH_DEBUG_SEED")
+            .ok()
+            .and_then(|value| value.parse().ok())
+            .unwrap_or(42);
+        let catalogue = rh_content::load_embedded().expect("content");
+        let mut rng = SimRng::new(seed);
+        let combo = cast::pick_combo(&mut rng, &catalogue);
+        let generator = &catalogue.balance.generator;
+        let ambush = rng.in_range(
+            u32::from(generator.ambush_percent_min),
+            u32::from(generator.ambush_percent_max),
+        ) as u8;
+        for attempt in 0..2 {
+            let candidate = build_candidate(seed, &catalogue, &combo, ambush, &mut rng);
+            match candidate {
+                Ok(world) => {
+                    println!("--- attempt {attempt} ---");
+                    println!("{}", planner::debug_certify(&catalogue, &world));
+                }
+                Err(reason) => println!("--- attempt {attempt}: candidate failed: {reason}"),
+            }
+        }
+    }
 }

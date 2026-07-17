@@ -164,7 +164,7 @@ pub fn hunt_viability(
     let effective_hp = u32::from(loadout.hunter_hp + draught_heal * loadout.draughts) * 1000;
     let mut survive = (effective_hp / incoming) as i32;
     survive += i32::from(loadout.physical.min(2)) * 3; // snare denial
-    survive -= i32::from(loadout.draughts) as i32; // drinking costs actions
+    survive -= i32::from(loadout.draughts); // drinking costs actions
     if loadout.on_consecrated_ground {
         survive += 1; // the ward burns the revenant even as it approaches
     }

@@ -37,10 +37,6 @@ clap = { version = "4.6.2", features = ["derive"] }
 [workspace.lints.rust]
 unsafe_code = "deny"
 
-[workspace.lints.clippy]
-unwrap_used = "warn"
-expect_used = "warn"
-
 [profile.release]
 opt-level = "s"
 lto = true

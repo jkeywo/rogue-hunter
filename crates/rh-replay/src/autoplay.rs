@@ -92,21 +92,19 @@ const STEP_BUDGET: u32 = 150;
 impl Bot {
     fn act(&mut self, session: &mut RunSession) {
         // Free knowledge action first: name the villain once proven.
-        if session.sim.state.identity_clues.len() >= 2 && !session.sim.state.villain_uncovered {
-            if session.apply(Command::UncoverVillain).is_ok() {
+        if session.sim.state.identity_clues.len() >= 2 && !session.sim.state.villain_uncovered
+            && session.apply(Command::UncoverVillain).is_ok() {
                 return;
             }
-        }
 
         // Emergency healing beats everything else; with draughts to spare,
         // top up after incidental scrapes too.
         let hunter_hp = session.sim.state.hunter.hp;
         let draughts = session.sim.state.hunter.item_count("wound-draught");
-        if (hunter_hp <= 5 && draughts > 0) || (hunter_hp <= 8 && draughts >= 2) {
-            if session.apply(Command::UseDraught).is_ok() {
+        if ((hunter_hp <= 5 && draughts > 0) || (hunter_hp <= 8 && draughts >= 2))
+            && session.apply(Command::UseDraught).is_ok() {
                 return;
             }
-        }
 
         // A live villain on our map is the fight we came for.
         if let Some(actor_id) = session.sim.state.villain.actor {
@@ -278,11 +276,10 @@ impl Bot {
         }
         // Walk into the hunt healthy: drink first if a draught is spare.
         let hunter = &session.sim.state.hunter;
-        if hunter.hp + 4 <= hunter.max_hp && hunter.item_count("wound-draught") > 0 {
-            if session.apply(Command::UseDraught).is_ok() {
+        if hunter.hp + 4 <= hunter.max_hp && hunter.item_count("wound-draught") > 0
+            && session.apply(Command::UseDraught).is_ok() {
                 return;
             }
-        }
         let villain_active = session.sim.state.villain.active;
         if villain_active {
             // Villain is somewhere else; head to its map.
@@ -317,14 +314,13 @@ impl Bot {
             let has_silver = session.sim.state.hunter.item_count("silver-bullet") > 0;
             // Open from range: back off before the aimed silver shot rather
             // than starting the fight inside the beast's reach.
-            if has_silver && distance < 2 {
-                if self.step_away(session, pos) {
+            if has_silver && distance < 2
+                && self.step_away(session, pos) {
                     return;
                 }
-            }
-            if has_silver && distance >= 2 && distance <= 6 {
-                if !session.sim.state.hunter.sure_shot && session.sim.state.hunter.stamina >= 2 {
-                    if session
+            if has_silver && (2..=6).contains(&distance) {
+                if !session.sim.state.hunter.sure_shot && session.sim.state.hunter.stamina >= 2
+                    && session
                         .apply(Command::Manoeuvre {
                             id: "aim".to_owned(),
                             steps: Vec::new(),
@@ -333,7 +329,6 @@ impl Bot {
                     {
                         return;
                     }
-                }
                 if session
                     .apply(Command::Ranged {
                         target: Target::Npc(host),
@@ -402,8 +397,8 @@ impl Bot {
 
         // Silver first against a regenerating villain: aim, then the sure shot.
         if has_silver && def.regeneration.is_some() && !regen_stopped {
-            if !sure_shot && stamina >= 2 {
-                if session
+            if !sure_shot && stamina >= 2
+                && session
                     .apply(Command::Manoeuvre {
                         id: "aim".to_owned(),
                         steps: Vec::new(),
@@ -412,7 +407,6 @@ impl Bot {
                 {
                     return;
                 }
-            }
             if session
                 .apply(Command::Ranged {
                     target: Target::Actor(actor_id),
@@ -425,8 +419,8 @@ impl Bot {
         }
 
         // Bind a shrouded revenant the moment we stand beside it.
-        if adjacent && has_charm && def.cadence.is_some() && !vulnerable && !bound && !dormant {
-            if session
+        if adjacent && has_charm && def.cadence.is_some() && !vulnerable && !bound && !dormant
+            && session
                 .apply(Command::UseBindingCharm {
                     target: Target::Actor(actor_id),
                 })
@@ -434,7 +428,6 @@ impl Bot {
             {
                 return;
             }
-        }
 
         // Against a shrouded revenant with the church warded and no charm,
         // the winning ground is the ward: retreat there and let it follow.
@@ -489,8 +482,7 @@ impl Bot {
             && (def.cadence.is_none() || vulnerable)
             && session.sim.state.hunter.item_count("flintlock-shot") > 0
             && hunter.distance(villain_pos) <= 6
-        {
-            if session
+            && session
                 .apply(Command::Ranged {
                     target: Target::Actor(actor_id),
                     silver: false,
@@ -499,18 +491,15 @@ impl Bot {
             {
                 return;
             }
-        }
 
         // A snared villain cannot follow: back off and use the flintlock.
         if trapped_now
             && adjacent
             && (def.cadence.is_none() || vulnerable)
             && session.sim.state.hunter.item_count("flintlock-shot") > 0
-        {
-            if self.step_away(session, villain_pos) {
+            && self.step_away(session, villain_pos) {
                 return;
             }
-        }
 
         if adjacent {
             // Only strike when the blow can land (cadence villains).
@@ -523,8 +512,8 @@ impl Bot {
             }
             // Priming Power Attack costs an action, which only pays against
             // a sleeping target: the coup opener. In a live fight, swing.
-            if dormant && !power_primed && stamina >= 2 {
-                if session
+            if dormant && !power_primed && stamina >= 2
+                && session
                     .apply(Command::Manoeuvre {
                         id: "power-attack".to_owned(),
                         steps: Vec::new(),
@@ -533,7 +522,6 @@ impl Bot {
                 {
                     return;
                 }
-            }
             let wounded = session
                 .sim
                 .state
@@ -557,8 +545,8 @@ impl Bot {
                 .actor(actor_id)
                 .map(|actor| actor.trapped > 0)
                 .unwrap_or(false);
-            if physical >= 1 && (dormant || trapped || wounded) {
-                if session
+            if physical >= 1 && (dormant || trapped || wounded)
+                && session
                     .apply(Command::Signature {
                         id: "killing-blow".to_owned(),
                         dir: None,
@@ -568,7 +556,6 @@ impl Bot {
                 {
                     return;
                 }
-            }
             let _ = session.apply(Command::Melee(Target::Actor(actor_id)));
             return;
         }
@@ -583,8 +570,8 @@ impl Bot {
                     .snares
                     .iter()
                     .any(|snare| snare.map == session.sim.state.current_map);
-                if !already && snare_at != villain_pos {
-                    if session
+                if !already && snare_at != villain_pos
+                    && session
                         .apply(Command::Signature {
                             id: "set-snare".to_owned(),
                             dir: Some(dir),
@@ -594,7 +581,6 @@ impl Bot {
                     {
                         return;
                     }
-                }
             }
         }
         self.walk_toward(session, villain_pos, true);

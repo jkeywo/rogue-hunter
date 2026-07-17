@@ -1,5 +1,235 @@
-//! Native terminal ASCII client (Bevy + Ratatui).
+//! Native terminal ASCII client: Bevy + Ratatui over the shared client core.
+//!
+//! A thin renderer: raw crossterm input becomes `Intent`s, the shared
+//! `ClientSession` owns all behaviour, and each frame draws the viewmodel.
+//! Active runs persist as share-code save files.
+
+mod render;
+
+use std::path::PathBuf;
+use std::time::Duration;
+
+use bevy::app::{App, AppExit, ScheduleRunnerPlugin};
+use bevy::prelude::*;
+use bevy_ratatui::event::{KeyMessage, MouseMessage, PasteMessage};
+use bevy_ratatui::{RatatuiContext, RatatuiPlugins};
+use ratatui::crossterm::event::{
+    KeyCode, KeyEventKind, KeyModifiers, MouseButton, MouseEventKind,
+};
+use ratatui::layout::Rect;
+use rh_client_core::{ClientSession, Intent, Screen};
+use rh_core::geometry::{Direction, Point};
+
+#[derive(Resource)]
+pub struct Client {
+    pub session: ClientSession,
+    pub save_path: PathBuf,
+    /// Interior of the map widget from the last frame, for mouse hit-testing.
+    pub map_area: Rect,
+}
 
 fn main() {
-    println!("rogue-hunter terminal client placeholder");
+    let catalogue = match rh_content::load_embedded() {
+        Ok(catalogue) => catalogue,
+        Err(error) => {
+            eprintln!("content failed to validate: {error}");
+            std::process::exit(1);
+        }
+    };
+    let nonce = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|elapsed| elapsed.as_millis() as u64)
+        .unwrap_or(1);
+    let mut session = ClientSession::new(catalogue, nonce);
+
+    let save_path = save_path();
+    if let Ok(code) = std::fs::read_to_string(&save_path) {
+        session.restore(code.trim());
+    }
+
+    App::new()
+        .add_plugins(
+            MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(Duration::from_millis(16))),
+        )
+        .add_plugins(RatatuiPlugins {
+            enable_mouse_capture: true,
+            ..Default::default()
+        })
+        .insert_resource(Client {
+            session,
+            save_path,
+            map_area: Rect::new(0, 0, 0, 0),
+        })
+        .add_systems(Update, (input_system, draw_system).chain())
+        .run();
+}
+
+fn save_path() -> PathBuf {
+    let mut base = dirs::data_dir().unwrap_or_else(|| PathBuf::from("."));
+    base.push("rogue-hunter");
+    let _ = std::fs::create_dir_all(&base);
+    base.push("active-run.rh1");
+    base
+}
+
+/// Persist or clear the active-run save after every state change.
+fn persist(client: &Client) {
+    match (&client.session.screen, client.session.share_code()) {
+        (Screen::Run, Some(code))
+        | (Screen::Grimoire { .. }, Some(code))
+        | (Screen::Relationships, Some(code))
+        | (Screen::RegionMap, Some(code))
+        | (Screen::EventLog { .. }, Some(code)) => {
+            let _ = std::fs::write(&client.save_path, code);
+        }
+        (Screen::CaseReport, _) | (Screen::Splash { .. }, _) => {
+            let _ = std::fs::remove_file(&client.save_path);
+        }
+        _ => {}
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn input_system(
+    mut client: ResMut<Client>,
+    mut keys: MessageReader<KeyMessage>,
+    mut mice: MessageReader<MouseMessage>,
+    mut pastes: MessageReader<PasteMessage>,
+    mut exit: MessageWriter<AppExit>,
+) {
+    let mut changed = false;
+    for key in keys.read() {
+        if !matches!(key.kind, KeyEventKind::Press | KeyEventKind::Repeat) {
+            continue;
+        }
+        // Quit from the splash screen; Ctrl+Q anywhere.
+        let on_splash = matches!(client.session.screen, Screen::Splash { .. });
+        if (key.code == KeyCode::Esc && on_splash && client.session.modal.is_none())
+            || (key.code == KeyCode::Char('q')
+                && key.modifiers.contains(KeyModifiers::CONTROL))
+        {
+            exit.write_default();
+            return;
+        }
+        if let Some(intent) = translate_key(&client.session, key.code) {
+            client.session.handle(intent);
+            changed = true;
+        }
+    }
+    for paste in pastes.read() {
+        client.session.handle(Intent::Paste(paste.0.clone()));
+        changed = true;
+    }
+    for mouse in mice.read() {
+        let area = client.map_area;
+        let to_map = |column: u16, row: u16| -> Option<Point> {
+            if column >= area.x
+                && column < area.x + area.width
+                && row >= area.y
+                && row < area.y + area.height
+            {
+                Some(Point::new(
+                    (column - area.x) as i16,
+                    (row - area.y) as i16,
+                ))
+            } else {
+                None
+            }
+        };
+        match mouse.kind {
+            MouseEventKind::Moved => {
+                let intent = match to_map(mouse.column, mouse.row) {
+                    Some(point) => Intent::Hover(point),
+                    None => Intent::HoverClear,
+                };
+                client.session.handle(intent);
+            }
+            MouseEventKind::Down(MouseButton::Left) => {
+                if let Some(point) = to_map(mouse.column, mouse.row) {
+                    client.session.handle(Intent::Click(point));
+                    changed = true;
+                }
+            }
+            _ => {}
+        }
+    }
+    if changed {
+        persist(&client);
+    }
+}
+
+/// Map a key press to an intent, respecting text-entry screens.
+fn translate_key(session: &ClientSession, code: KeyCode) -> Option<Intent> {
+    let text_entry = matches!(
+        session.screen,
+        Screen::SeedEntry { .. } | Screen::CodeEntry { .. }
+    );
+    if text_entry {
+        return match code {
+            KeyCode::Char(c) => Some(Intent::Char(c)),
+            KeyCode::Backspace => Some(Intent::Backspace),
+            KeyCode::Enter => Some(Intent::Confirm),
+            KeyCode::Esc => Some(Intent::Cancel),
+            _ => None,
+        };
+    }
+    // Menu-style screens want list navigation on arrows.
+    let in_menu = session.modal.is_some()
+        || !matches!(session.screen, Screen::Run);
+    match code {
+        KeyCode::Esc => Some(Intent::Cancel),
+        KeyCode::Enter => Some(Intent::Confirm),
+        KeyCode::Up if in_menu => Some(Intent::Up),
+        KeyCode::Down if in_menu => Some(Intent::Down),
+        KeyCode::Up => Some(Intent::Move(Direction::North)),
+        KeyCode::Down => Some(Intent::Move(Direction::South)),
+        KeyCode::Left => Some(Intent::Move(Direction::West)),
+        KeyCode::Right => Some(Intent::Move(Direction::East)),
+        KeyCode::Char(c) => translate_char(session, c, in_menu),
+        _ => None,
+    }
+}
+
+fn translate_char(_session: &ClientSession, c: char, in_menu: bool) -> Option<Intent> {
+    match c {
+        'h' => Some(Intent::Move(Direction::West)),
+        'j' if !in_menu => Some(Intent::Move(Direction::South)),
+        'k' if !in_menu => Some(Intent::Move(Direction::North)),
+        'j' => Some(Intent::Down),
+        'k' => Some(Intent::Up),
+        'l' => Some(Intent::Move(Direction::East)),
+        'y' => Some(Intent::Move(Direction::NorthWest)),
+        'u' => Some(Intent::Move(Direction::NorthEast)),
+        'b' => Some(Intent::Move(Direction::SouthWest)),
+        'n' => Some(Intent::Move(Direction::SouthEast)),
+        '.' | ' ' => Some(Intent::Wait),
+        'e' => Some(Intent::Interact),
+        'f' => Some(Intent::Fire),
+        'F' => Some(Intent::FireSilver),
+        'a' => Some(Intent::Aim),
+        'p' => Some(Intent::PowerAttack),
+        's' => Some(Intent::Sprint),
+        'x' => Some(Intent::SetSnare),
+        'K' => Some(Intent::KillingBlow),
+        'q' => Some(Intent::Draught),
+        'c' => Some(Intent::Charm),
+        'g' => Some(Intent::Grimoire),
+        'r' => Some(Intent::Relationships),
+        'v' => Some(Intent::RegionMap),
+        'L' => Some(Intent::EventLog),
+        _ => None,
+    }
+}
+
+fn draw_system(mut context: ResMut<RatatuiContext>, mut client: ResMut<Client>) {
+    let view = client.session.view();
+    let mut map_area = client.map_area;
+    let result = context.draw(|frame| {
+        map_area = render::draw(frame, &view);
+    });
+    if result.is_err() {
+        // Terminal trouble: nothing sensible to do but keep running.
+        return;
+    }
+    client.map_area = map_area;
 }

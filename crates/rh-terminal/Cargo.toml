@@ -12,6 +12,14 @@ path = "src/main.rs"
 
 [dependencies]
 rh-client-core = { workspace = true }
+rh-content = { workspace = true }
+rh-core = { workspace = true }
+# Pinned to the bevy line bevy_ratatui 0.11 is built against.
+bevy = { version = "0.18", default-features = false }
+bevy_ratatui = "0.11"
+ratatui = "0.30"
+crossterm = "0.29"
+dirs = "6"
 
 [lints]
 workspace = true

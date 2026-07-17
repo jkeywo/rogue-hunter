@@ -11,6 +11,24 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 rh-client-core = { workspace = true }
+rh-content = { workspace = true }
+rh-core = { workspace = true }
+wasm-bindgen = "0.2.106"
+js-sys = "0.3.83"
+
+[dependencies.web-sys]
+version = "0.3.83"
+features = [
+  "Window",
+  "Document",
+  "Element",
+  "HtmlElement",
+  "HtmlCanvasElement",
+  "CanvasRenderingContext2d",
+  "Storage",
+  "DomTokenList",
+  "console",
+]
 
 [lints]
 workspace = true

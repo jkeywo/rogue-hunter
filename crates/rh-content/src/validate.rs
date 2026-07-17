@@ -327,8 +327,8 @@ fn check_clues(cat: &Catalogue, issues: &mut Vec<String>) {
     }
     // Every villain x origin combination needs enough raw material: at least
     // four identity clues (early route pair + fallback pair) and one location clue.
-    for (villain_id, _) in &cat.villains {
-        for (origin_id, _) in &cat.origins {
+    for villain_id in cat.villains.keys() {
+        for origin_id in cat.origins.keys() {
             let fits = |clue: &ClueTemplate| {
                 (clue.archetype == "any" || clue.archetype == *villain_id)
                     && (clue.origins.is_empty() || clue.origins.iter().any(|o| o == origin_id))
