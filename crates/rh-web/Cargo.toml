@@ -1,0 +1,16 @@
+[package]
+name = "rh-web"
+description = "Browser WebAssembly ASCII client rendering to Canvas/HTML."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+rh-client-core = { workspace = true }
+
+[lints]
+workspace = true

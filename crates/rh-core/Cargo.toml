@@ -1,0 +1,15 @@
+[package]
+name = "rh-core"
+description = "Authoritative deterministic headless simulation: state, semantic commands, rules, and events."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+rh-content = { workspace = true }
+serde = { workspace = true }
+postcard = { workspace = true }
+
+[lints]
+workspace = true

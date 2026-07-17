@@ -1,0 +1,16 @@
+[package]
+name = "rh-client-core"
+description = "Shared UI-agnostic client layer: session state machine, viewmodel, and input intents."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+rh-content = { workspace = true }
+rh-core = { workspace = true }
+rh-gen = { workspace = true }
+rh-replay = { workspace = true }
+
+[lints]
+workspace = true

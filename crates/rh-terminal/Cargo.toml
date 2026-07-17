@@ -1,0 +1,17 @@
+[package]
+name = "rh-terminal"
+description = "Native terminal ASCII client built on Bevy and Ratatui."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "rogue-hunter"
+path = "src/main.rs"
+
+[dependencies]
+rh-client-core = { workspace = true }
+
+[lints]
+workspace = true

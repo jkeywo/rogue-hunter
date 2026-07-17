@@ -1,0 +1,47 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/rh-content",
+  "crates/rh-core",
+  "crates/rh-gen",
+  "crates/rh-replay",
+  "crates/rh-client-core",
+  "crates/rh-cli",
+  "crates/rh-terminal",
+  "crates/rh-web",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/jkeywo/rogue-hunter"
+
+[workspace.dependencies]
+# Internal crates
+rh-content = { path = "crates/rh-content" }
+rh-core = { path = "crates/rh-core" }
+rh-gen = { path = "crates/rh-gen" }
+rh-replay = { path = "crates/rh-replay" }
+rh-client-core = { path = "crates/rh-client-core" }
+
+# External crates
+serde = { version = "1.0.228", features = ["derive"] }
+toml = "1.1.3"
+postcard = { version = "1.1.3", features = ["alloc"] }
+base64 = "0.22.1"
+anyhow = "1.0.103"
+thiserror = "2.0.18"
+clap = { version = "4.6.2", features = ["derive"] }
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1

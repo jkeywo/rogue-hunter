@@ -13,6 +13,14 @@ target
 # Contains mutation testing data
 **/mutants.out*/
 
+# Python tooling
+__pycache__/
+*.egg-info/
+.venv/
+
+# WASM build output (built by wasm-pack in CI and locally)
+/web/pkg/
+
 # RustRover
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
