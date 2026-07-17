@@ -8,7 +8,7 @@ lore_cap = 2
 social_cap = 2
 mystic_cap = 0
 physical_cap = 2
-stamina_cap = 4
+stamina_cap = 6
 starting_items = ["hunting-blade", "flintlock", "flintlock-shot", "flintlock-shot", "flintlock-shot"]
 
 # Generic stamina manoeuvres, shared by all future hunters.
@@ -16,23 +16,23 @@ starting_items = ["hunting-blade", "flintlock", "flintlock-shot", "flintlock-sho
 [[manoeuvres]]
 id = "aim"
 name = "Aim"
-stamina_cost = 2
+stamina_cost = 3
 effect = { kind = "sure-ranged-shot" }
 description = "Steady the flintlock. Your next ranged shot this encounter cannot miss."
 
 [[manoeuvres]]
 id = "power-attack"
 name = "Power Attack"
-stamina_cost = 2
+stamina_cost = 3
 effect = { kind = "melee-damage-multiplier", numerator = 3 }
 description = "Put your weight behind the next blow. Your next melee strike deals half again its damage."
 
 [[manoeuvres]]
 id = "sprint"
 name = "Sprint"
-stamina_cost = 1
+stamina_cost = 2
 effect = { kind = "dash", tiles = 2 }
-description = "Move two tiles in a single action."
+description = "Move two tiles in a single direction, in one action."
 
 # Hunter-specific Physical-point signatures expressing the Huntress's identity.
 

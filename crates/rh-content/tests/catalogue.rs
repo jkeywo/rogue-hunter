@@ -13,7 +13,7 @@ fn embedded_catalogue_loads_and_validates() {
     assert_eq!(catalogue.hunter.social_cap, 2);
     assert_eq!(catalogue.hunter.mystic_cap, 0);
     assert_eq!(catalogue.hunter.physical_cap, 2);
-    assert_eq!(catalogue.hunter.stamina_cap, 4);
+    assert_eq!(catalogue.hunter.stamina_cap, 6);
 
     // Both villain archetypes with their concealment styles.
     assert_eq!(

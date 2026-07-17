@@ -324,7 +324,7 @@ impl Bot {
             }
             if has_silver && (2..=6).contains(&distance) {
                 if !session.sim.state.hunter.sure_shot
-                    && session.sim.state.hunter.stamina >= 2
+                    && session.sim.state.hunter.stamina >= manoeuvre_cost(session, "aim")
                     && session
                         .apply(Command::Manoeuvre {
                             id: "aim".to_owned(),
@@ -403,7 +403,7 @@ impl Bot {
         // Silver first against a regenerating villain: aim, then the sure shot.
         if has_silver && def.regeneration.is_some() && !regen_stopped {
             if !sure_shot
-                && stamina >= 2
+                && stamina >= manoeuvre_cost(session, "aim")
                 && session
                     .apply(Command::Manoeuvre {
                         id: "aim".to_owned(),
@@ -526,7 +526,7 @@ impl Bot {
             // a sleeping target: the coup opener. In a live fight, swing.
             if dormant
                 && !power_primed
-                && stamina >= 2
+                && stamina >= manoeuvre_cost(session, "power-attack")
                 && session
                     .apply(Command::Manoeuvre {
                         id: "power-attack".to_owned(),
@@ -759,6 +759,20 @@ fn next_step(session: &RunSession, target: Point, adjacent_ok: bool) -> Option<D
         current = parent;
     }
     first_dir
+}
+
+/// Stamina cost of a manoeuvre by id, from authored content (so the bot
+/// tracks tuning changes instead of hardcoding costs).
+fn manoeuvre_cost(session: &RunSession, id: &str) -> u8 {
+    session
+        .sim
+        .catalogue
+        .hunter
+        .manoeuvres
+        .iter()
+        .find(|m| m.id == id)
+        .map(|m| m.stamina_cost)
+        .unwrap_or(u8::MAX)
 }
 
 trait RegenLookup {

@@ -186,38 +186,28 @@ pub fn build(session: &ClientSession) -> ViewModel {
                 .collect(),
             selected: Some(*selected),
         },
-        Screen::Relationships => ScreenView::List {
-            title: "Faces and Entanglements".to_owned(),
-            entries: relationship_entries(session),
-            selected: None,
-        },
-        Screen::RegionMap => ScreenView::List {
-            title: "The Valley".to_owned(),
-            entries: region_entries(session),
-            selected: None,
-        },
-        Screen::EventLog { scroll } => {
-            let entries: Vec<(String, String)> = session
-                .run
-                .as_ref()
-                .map(|run| {
-                    run.sim
-                        .state
-                        .log
-                        .iter()
-                        .map(|event| (format!("day {}", event.global_turn), event.text.clone()))
-                        .collect()
-                })
-                .unwrap_or_default();
-            let selected = if *scroll == usize::MAX {
-                entries.len().saturating_sub(1)
-            } else {
-                (*scroll).min(entries.len().saturating_sub(1))
-            };
+        Screen::Relationships { selected } => {
+            let entries = relationship_entries(session);
+            ScreenView::List {
+                title: "Faces and Entanglements".to_owned(),
+                selected: Some((*selected).min(entries.len().saturating_sub(1))),
+                entries,
+            }
+        }
+        Screen::RegionMap { selected } => {
+            let entries = region_entries(session);
+            ScreenView::List {
+                title: "The Valley".to_owned(),
+                selected: Some((*selected).min(entries.len().saturating_sub(1))),
+                entries,
+            }
+        }
+        Screen::EventLog { selected } => {
+            let entries = record_entries(session);
             ScreenView::List {
                 title: "The Record".to_owned(),
+                selected: Some((*selected).min(entries.len().saturating_sub(1))),
                 entries,
-                selected: Some(selected),
             }
         }
         Screen::CaseReport => ScreenView::CaseReport(build_case_report(session)),
@@ -274,18 +264,24 @@ fn build_run_view(session: &ClientSession) -> RunView {
                 };
             }
             if let Some(feature) = world_map.feature_at(point) {
+                // An opened grave shows an emptied pit ('u') rather than a mound.
+                let opened_grave =
+                    matches!(feature.kind, rh_core::world::FeatureKind::Grave { .. })
+                        && state.opened_graves.contains(&feature.id);
                 let glyph = match feature.kind {
                     rh_core::world::FeatureKind::Altar => 'A',
                     rh_core::world::FeatureKind::Workstation => 'W',
+                    rh_core::world::FeatureKind::Grave { .. } if opened_grave => 'u',
                     rh_core::world::FeatureKind::Grave { .. } => 'n',
                     rh_core::world::FeatureKind::Landmark => cell.glyph,
                 };
                 cell = Cell {
                     glyph,
-                    color: if visible {
-                        CellColor::Feature
-                    } else {
+                    // Opened graves read as spent: dimmed like unseen ground.
+                    color: if !visible || opened_grave {
                         CellColor::TerrainDim
+                    } else {
+                        CellColor::Feature
                     },
                 };
             }
@@ -434,13 +430,8 @@ fn build_run_view(session: &ClientSession) -> RunView {
                 selected: *selected,
             }
         }
-        Modal::SprintFirst => OverlayView {
-            title: "Sprint: first direction?".to_owned(),
-            items: Vec::new(),
-            selected: 0,
-        },
-        Modal::SprintSecond(_) => OverlayView {
-            title: "Sprint: second direction?".to_owned(),
+        Modal::SprintDirection => OverlayView {
+            title: "Sprint: which direction?".to_owned(),
             items: Vec::new(),
             selected: 0,
         },
@@ -529,7 +520,32 @@ fn empty_run_view() -> RunView {
     }
 }
 
-fn relationship_entries(session: &ClientSession) -> Vec<(String, String)> {
+/// The record grouped as one entry per day, each with its events as lines.
+pub(crate) fn record_entries(session: &ClientSession) -> Vec<(String, String)> {
+    let Some(run) = session.run.as_ref() else {
+        return Vec::new();
+    };
+    let travel_turns = run.sim.catalogue.balance.clock.travel_turns;
+    let mut entries: Vec<(String, String)> = Vec::new();
+    for event in &run.sim.state.log {
+        let day = event.global_turn;
+        let heading = if day >= travel_turns {
+            "The final night".to_owned()
+        } else {
+            format!("Day {} of {}", day, travel_turns)
+        };
+        match entries.last_mut() {
+            Some((last_heading, body)) if *last_heading == heading => {
+                body.push('\n');
+                body.push_str(&event.text);
+            }
+            _ => entries.push((heading, event.text.clone())),
+        }
+    }
+    entries
+}
+
+pub(crate) fn relationship_entries(session: &ClientSession) -> Vec<(String, String)> {
     let Some(run) = session.run.as_ref() else {
         return Vec::new();
     };
@@ -580,7 +596,7 @@ fn relationship_entries(session: &ClientSession) -> Vec<(String, String)> {
     entries
 }
 
-fn region_entries(session: &ClientSession) -> Vec<(String, String)> {
+pub(crate) fn region_entries(session: &ClientSession) -> Vec<(String, String)> {
     let Some(run) = session.run.as_ref() else {
         return Vec::new();
     };

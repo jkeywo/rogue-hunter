@@ -36,10 +36,14 @@ pub enum Screen {
     Grimoire {
         selected: usize,
     },
-    Relationships,
-    RegionMap,
+    Relationships {
+        selected: usize,
+    },
+    RegionMap {
+        selected: usize,
+    },
     EventLog {
-        scroll: usize,
+        selected: usize,
     },
     CaseReport,
 }
@@ -48,13 +52,9 @@ pub enum Screen {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Modal {
     /// Choosing a ranged target among visible hostiles.
-    FireTarget {
-        silver: bool,
-        selected: usize,
-    },
-    /// Sprint: waiting for the first or second direction.
-    SprintFirst,
-    SprintSecond(Direction),
+    FireTarget { silver: bool, selected: usize },
+    /// Sprint: waiting for a single direction (moves several tiles that way).
+    SprintDirection,
     /// Snare: waiting for a direction.
     SnareDirection,
     /// A context menu of actions built by the Interact intent.
@@ -152,9 +152,10 @@ impl ClientSession {
             Screen::SeedEntry { .. } => self.handle_seed_entry(intent),
             Screen::CodeEntry { .. } => self.handle_code_entry(intent),
             Screen::Run => self.handle_run(intent),
-            Screen::Grimoire { .. } => self.handle_grimoire(intent),
-            Screen::Relationships | Screen::RegionMap => self.handle_overlay(intent),
-            Screen::EventLog { .. } => self.handle_event_log(intent),
+            Screen::Grimoire { .. } => self.handle_list_screen(intent),
+            Screen::Relationships { .. } => self.handle_list_screen(intent),
+            Screen::RegionMap { .. } => self.handle_list_screen(intent),
+            Screen::EventLog { .. } => self.handle_list_screen(intent),
             Screen::CaseReport => self.handle_case_report(intent),
         }
     }
@@ -240,42 +241,48 @@ impl ClientSession {
         }
     }
 
-    fn handle_grimoire(&mut self, intent: Intent) {
-        let Screen::Grimoire { selected } = &mut self.screen else {
-            return;
+    /// Shared arrow-navigable list screens: grimoire, faces, the valley, and
+    /// the record. Up/Down move the highlighted entry; the screen's own key,
+    /// Esc, or Enter close it.
+    fn handle_list_screen(&mut self, intent: Intent) {
+        let count = self.list_len();
+        let toggle = match self.screen {
+            Screen::Grimoire { .. } => Some(Intent::Grimoire),
+            Screen::Relationships { .. } => Some(Intent::Relationships),
+            Screen::RegionMap { .. } => Some(Intent::RegionMap),
+            Screen::EventLog { .. } => Some(Intent::EventLog),
+            _ => None,
         };
-        let count = self.catalogue.grimoire.len();
-        match intent {
-            Intent::Up => *selected = selected.saturating_sub(1),
-            Intent::Down => *selected = (*selected + 1).min(count.saturating_sub(1)),
-            Intent::Cancel | Intent::Grimoire | Intent::Confirm => self.back_to_run(),
-            _ => {}
+        match &mut self.screen {
+            Screen::Grimoire { selected }
+            | Screen::Relationships { selected }
+            | Screen::RegionMap { selected }
+            | Screen::EventLog { selected } => match &intent {
+                Intent::Up => {
+                    *selected = selected.saturating_sub(1);
+                    return;
+                }
+                Intent::Down => {
+                    *selected = (*selected + 1).min(count.saturating_sub(1));
+                    return;
+                }
+                _ => {}
+            },
+            _ => return,
+        }
+        if matches!(intent, Intent::Cancel | Intent::Confirm) || Some(&intent) == toggle.as_ref() {
+            self.back_to_run();
         }
     }
 
-    fn handle_overlay(&mut self, intent: Intent) {
-        match intent {
-            Intent::Cancel | Intent::Confirm | Intent::Relationships | Intent::RegionMap => {
-                self.back_to_run()
-            }
-            _ => {}
-        }
-    }
-
-    fn handle_event_log(&mut self, intent: Intent) {
-        let log_len = self
-            .run
-            .as_ref()
-            .map(|run| run.sim.state.log.len())
-            .unwrap_or(0);
-        let Screen::EventLog { scroll } = &mut self.screen else {
-            return;
-        };
-        match intent {
-            Intent::Up => *scroll = scroll.saturating_sub(1),
-            Intent::Down => *scroll = (*scroll + 1).min(log_len.saturating_sub(1)),
-            Intent::Cancel | Intent::EventLog | Intent::Confirm => self.back_to_run(),
-            _ => {}
+    /// Number of entries in the current list screen, for clamping selection.
+    fn list_len(&self) -> usize {
+        match self.screen {
+            Screen::Grimoire { .. } => self.catalogue.grimoire.len(),
+            Screen::Relationships { .. } => view::relationship_entries(self).len(),
+            Screen::RegionMap { .. } => view::region_entries(self).len(),
+            Screen::EventLog { .. } => view::record_entries(self).len(),
+            _ => 0,
         }
     }
 
@@ -375,7 +382,7 @@ impl ClientSession {
                 id: "power-attack".into(),
                 steps: vec![],
             }),
-            Intent::Sprint => self.modal = Some(Modal::SprintFirst),
+            Intent::Sprint => self.modal = Some(Modal::SprintDirection),
             Intent::SetSnare => self.modal = Some(Modal::SnareDirection),
             Intent::KillingBlow => match self.adjacent_hostile() {
                 Some(target) => self.apply(Command::Signature {
@@ -394,9 +401,13 @@ impl ClientSession {
             Intent::FireSilver => self.open_fire_menu(true),
             Intent::Interact => self.open_interact_menu(),
             Intent::Grimoire => self.screen = Screen::Grimoire { selected: 0 },
-            Intent::Relationships => self.screen = Screen::Relationships,
-            Intent::RegionMap => self.screen = Screen::RegionMap,
-            Intent::EventLog => self.screen = Screen::EventLog { scroll: usize::MAX },
+            Intent::Relationships => self.screen = Screen::Relationships { selected: 0 },
+            Intent::RegionMap => self.screen = Screen::RegionMap { selected: 0 },
+            Intent::EventLog => {
+                // Open the record at the most recent day.
+                let last = view::record_entries(self).len().saturating_sub(1);
+                self.screen = Screen::EventLog { selected: last };
+            }
             Intent::Hover(point) => self.hover = Some(point),
             Intent::HoverClear => self.hover = None,
             Intent::Click(point) => self.handle_click(point),
@@ -419,14 +430,13 @@ impl ClientSession {
             return;
         };
         match (modal, intent) {
-            (Modal::SprintFirst, Intent::Move(dir)) => {
-                self.modal = Some(Modal::SprintSecond(dir));
-            }
-            (Modal::SprintSecond(first), Intent::Move(second)) => {
+            (Modal::SprintDirection, Intent::Move(dir)) => {
                 self.modal = None;
+                // Sprint moves several tiles, all in the one chosen direction.
+                let tiles = self.sprint_tiles();
                 self.apply(Command::Manoeuvre {
                     id: "sprint".into(),
-                    steps: vec![first, second],
+                    steps: vec![dir; usize::from(tiles)],
                 });
             }
             (Modal::SnareDirection, Intent::Move(dir)) => {
@@ -530,6 +540,31 @@ impl ClientSession {
         }
     }
 
+    /// Stamina cost of a manoeuvre by id, from the authored hunter profile.
+    fn manoeuvre_cost(&self, id: &str) -> u8 {
+        self.catalogue
+            .hunter
+            .manoeuvres
+            .iter()
+            .find(|m| m.id == id)
+            .map(|m| m.stamina_cost)
+            .unwrap_or(0)
+    }
+
+    /// Tiles the Sprint manoeuvre moves, from the authored hunter profile.
+    fn sprint_tiles(&self) -> u8 {
+        self.catalogue
+            .hunter
+            .manoeuvres
+            .iter()
+            .find(|m| m.id == "sprint")
+            .and_then(|m| match m.effect {
+                rh_content::ManoeuvreEffect::Dash { tiles } => Some(tiles),
+                _ => None,
+            })
+            .unwrap_or(2)
+    }
+
     // -- Look mode -------------------------------------------------------------
 
     fn enter_look_mode(&mut self) {
@@ -614,25 +649,28 @@ impl ClientSession {
         }
 
         let stamina = hunter.stamina;
+        let aim_cost = self.manoeuvre_cost("aim");
         push(
             "a",
             "Aim (sure next shot)",
-            stamina >= 2,
-            (stamina < 2).then(|| "2 stamina".into()),
+            stamina >= aim_cost,
+            (stamina < aim_cost).then(|| format!("{aim_cost} stamina")),
             Intent::Aim,
         );
+        let power_cost = self.manoeuvre_cost("power-attack");
         push(
             "p",
             "Power Attack",
-            stamina >= 2,
-            (stamina < 2).then(|| "2 stamina".into()),
+            stamina >= power_cost,
+            (stamina < power_cost).then(|| format!("{power_cost} stamina")),
             Intent::PowerAttack,
         );
+        let sprint_cost = self.manoeuvre_cost("sprint");
         push(
             "s",
-            "Sprint (move 2)",
-            stamina >= 1,
-            (stamina < 1).then(|| "1 stamina".into()),
+            &format!("Sprint (move {})", self.sprint_tiles()),
+            stamina >= sprint_cost,
+            (stamina < sprint_cost).then(|| format!("{sprint_cost} stamina")),
             Intent::Sprint,
         );
 
@@ -1097,7 +1135,13 @@ impl ClientSession {
             }
         }
         if let Some(feature) = sim.world.map(map).feature_at(point) {
-            parts.push(feature.name.clone());
+            let opened = matches!(feature.kind, FeatureKind::Grave { .. })
+                && state.opened_graves.contains(&feature.id);
+            if opened {
+                parts.push(format!("{} (opened)", feature.name));
+            } else {
+                parts.push(feature.name.clone());
+            }
         }
         for opp in &sim.world.opportunities {
             if opp.map == map

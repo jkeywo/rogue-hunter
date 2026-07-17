@@ -9,8 +9,8 @@ splash_intro = [
 ]
 
 [[key_bindings]]
-keys = "Arrows / hjkl+yubn"
-action = "Move / melee an adjacent enemy"
+keys = "Arrows / numpad / hjkl+yubn"
+action = "Move (8 directions) / melee an adjacent enemy"
 
 [[key_bindings]]
 keys = "e / Enter"

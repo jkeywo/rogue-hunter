@@ -72,8 +72,8 @@ fn persist(client: &Client) {
     match (&client.session.screen, client.session.share_code()) {
         (Screen::Run, Some(code))
         | (Screen::Grimoire { .. }, Some(code))
-        | (Screen::Relationships, Some(code))
-        | (Screen::RegionMap, Some(code))
+        | (Screen::Relationships { .. }, Some(code))
+        | (Screen::RegionMap { .. }, Some(code))
         | (Screen::EventLog { .. }, Some(code)) => {
             let _ = std::fs::write(&client.save_path, code);
         }
@@ -191,12 +191,23 @@ fn translate_key(session: &ClientSession, code: KeyCode) -> Option<Intent> {
         KeyCode::Down => Some(Intent::Move(Direction::South)),
         KeyCode::Left => Some(Intent::Move(Direction::West)),
         KeyCode::Right => Some(Intent::Move(Direction::East)),
+        // Numpad diagonals (NumLock off sends these navigation codes).
+        KeyCode::Home if !in_menu => Some(Intent::Move(Direction::NorthWest)),
+        KeyCode::PageUp if !in_menu => Some(Intent::Move(Direction::NorthEast)),
+        KeyCode::End if !in_menu => Some(Intent::Move(Direction::SouthWest)),
+        KeyCode::PageDown if !in_menu => Some(Intent::Move(Direction::SouthEast)),
         KeyCode::Char(c) => translate_char(session, c, in_menu),
         _ => None,
     }
 }
 
 fn translate_char(_session: &ClientSession, c: char, in_menu: bool) -> Option<Intent> {
+    // Numpad digits (NumLock on) are roguelike movement in the run screen.
+    if !in_menu {
+        if let Some(intent) = numpad_move(c) {
+            return Some(intent);
+        }
+    }
     match c {
         'h' => Some(Intent::Move(Direction::West)),
         'j' if !in_menu => Some(Intent::Move(Direction::South)),
@@ -226,6 +237,22 @@ fn translate_char(_session: &ClientSession, c: char, in_menu: bool) -> Option<In
         ';' => Some(Intent::ToggleLook),
         _ => None,
     }
+}
+
+/// Roguelike numpad movement: 1-9 laid out like the keypad, 5 waits.
+fn numpad_move(c: char) -> Option<Intent> {
+    Some(match c {
+        '1' => Intent::Move(Direction::SouthWest),
+        '2' => Intent::Move(Direction::South),
+        '3' => Intent::Move(Direction::SouthEast),
+        '4' => Intent::Move(Direction::West),
+        '5' => Intent::Wait,
+        '6' => Intent::Move(Direction::East),
+        '7' => Intent::Move(Direction::NorthWest),
+        '8' => Intent::Move(Direction::North),
+        '9' => Intent::Move(Direction::NorthEast),
+        _ => return None,
+    })
 }
 
 fn draw_system(mut context: ResMut<RatatuiContext>, mut client: ResMut<Client>) {

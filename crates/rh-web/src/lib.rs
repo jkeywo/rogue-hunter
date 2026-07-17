@@ -201,6 +201,21 @@ impl WebClient {
             "v" => Some(Intent::RegionMap),
             "L" => Some(Intent::EventLog),
             ";" => Some(Intent::ToggleLook),
+            // Numpad movement (NumLock on gives digits; off gives nav keys).
+            "1" if !in_menu => Some(Intent::Move(Direction::SouthWest)),
+            "2" if !in_menu => Some(Intent::Move(Direction::South)),
+            "3" if !in_menu => Some(Intent::Move(Direction::SouthEast)),
+            "4" if !in_menu => Some(Intent::Move(Direction::West)),
+            "5" if !in_menu => Some(Intent::Wait),
+            "6" if !in_menu => Some(Intent::Move(Direction::East)),
+            "7" if !in_menu => Some(Intent::Move(Direction::NorthWest)),
+            "8" if !in_menu => Some(Intent::Move(Direction::North)),
+            "9" if !in_menu => Some(Intent::Move(Direction::NorthEast)),
+            "Home" if !in_menu => Some(Intent::Move(Direction::NorthWest)),
+            "PageUp" if !in_menu => Some(Intent::Move(Direction::NorthEast)),
+            "End" if !in_menu => Some(Intent::Move(Direction::SouthWest)),
+            "PageDown" if !in_menu => Some(Intent::Move(Direction::SouthEast)),
+            "Clear" if !in_menu => Some(Intent::Wait),
             _ => None,
         }
     }

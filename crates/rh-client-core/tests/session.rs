@@ -59,10 +59,14 @@ fn movement_and_menus_flow() {
     client.handle(Intent::Cancel);
     assert!(matches!(client.screen, Screen::Run));
     client.handle(Intent::RegionMap);
-    assert!(matches!(client.screen, Screen::RegionMap));
+    assert!(matches!(client.screen, Screen::RegionMap { .. }));
+    // Arrow keys navigate the list; Down moves the selection.
+    client.handle(Intent::Down);
+    assert!(matches!(client.screen, Screen::RegionMap { selected } if selected == 1));
     client.handle(Intent::Cancel);
+    assert!(matches!(client.screen, Screen::Run));
 
-    // Sprint is modal: two directions.
+    // Sprint is modal: one direction, then it fires.
     client.handle(Intent::Sprint);
     assert!(client.modal.is_some());
     client.handle(Intent::Cancel);
@@ -133,6 +137,50 @@ fn action_panel_lists_keyed_actions_and_dispatches_clicks() {
     // Clicking the look row (by index) toggles look mode.
     client.handle(Intent::DoAction(look));
     assert!(client.is_looking());
+}
+
+#[test]
+fn record_groups_events_into_one_multiline_entry_per_day() {
+    let mut client = session();
+    client.handle(Intent::Down);
+    client.handle(Intent::Confirm);
+    for digit in "11".chars() {
+        client.handle(Intent::Char(digit));
+    }
+    client.handle(Intent::Confirm);
+
+    // Open The Record. It should list days, not individual events, and open
+    // on the newest day.
+    client.handle(Intent::EventLog);
+    let view = client.view();
+    match view.screen {
+        rh_client_core::view::ScreenView::List {
+            title,
+            entries,
+            selected,
+        } => {
+            assert_eq!(title, "The Record");
+            assert!(!entries.is_empty());
+            // Every heading names a day (or the final night); the body holds
+            // that day's events, one per line.
+            for (heading, body) in &entries {
+                assert!(
+                    heading.starts_with("Day ") || heading == "The final night",
+                    "unexpected record heading: {heading}"
+                );
+                assert!(!body.is_empty());
+            }
+            // The first day already has several events on one entry.
+            assert!(entries[0].1.contains('\n'), "day 0 should have many lines");
+            assert_eq!(selected, Some(entries.len() - 1), "opens on the newest day");
+        }
+        other => panic!("expected record list, got {other:?}"),
+    }
+
+    // Arrow keys navigate without panicking; selection clamps in the view.
+    client.handle(Intent::Up);
+    client.handle(Intent::Down);
+    assert!(matches!(client.screen, Screen::EventLog { .. }));
 }
 
 #[test]

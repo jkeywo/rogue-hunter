@@ -102,7 +102,7 @@ fn draw_run(frame: &mut Frame, run: &RunView, status: &str) -> RunAreas {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(MAP_HEIGHT as u16 + 2),
-            Constraint::Min(6),
+            Constraint::Min(10),
         ])
         .split(frame.area());
     let top = Layout::default()
@@ -221,7 +221,8 @@ fn draw_run(frame: &mut Frame, run: &RunView, status: &str) -> RunAreas {
         top[2],
     );
 
-    // The lower band: event log and status.
+    // The lower band: event log and status. Keep the newest lines that fit,
+    // so the bottom of the log is never clipped off-screen.
     let mut log_lines: Vec<Line> = run
         .log_tail
         .iter()
@@ -235,9 +236,14 @@ fn draw_run(frame: &mut Frame, run: &RunView, status: &str) -> RunAreas {
                 .add_modifier(Modifier::BOLD),
         ));
     }
+    let inner_height = vertical[1].height.saturating_sub(2) as usize;
+    if log_lines.len() > inner_height {
+        log_lines.drain(0..log_lines.len() - inner_height);
+    }
+    // No wrapping here: one event per row, so the row budget is exact and the
+    // newest lines always land inside the panel.
     frame.render_widget(
         Paragraph::new(Text::from(log_lines))
-            .wrap(Wrap { trim: false })
             .block(Block::default().borders(Borders::ALL).title("The Record")),
         vertical[1],
     );
