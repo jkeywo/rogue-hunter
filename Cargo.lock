@@ -302,6 +302,7 @@ dependencies = [
  "rh-content",
  "rh-core",
  "serde",
+ "thiserror",
 ]
 
 [[package]]

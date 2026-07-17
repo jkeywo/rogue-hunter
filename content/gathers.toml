@@ -1,0 +1,82 @@
+# Gathering and looting opportunities anchored to map slots. Lore/Mystic
+# gathering supplies crafting ingredients; free finds supply coin and shot.
+
+[gather-herbs-north]
+name = "Gather herbs in the clearing"
+map = "wilderness"
+slot = "herb-clearing-north"
+pool = "lore"
+cost = 1
+items = ["moon-herb", "bitter-root"]
+discovery = { kind = "sight-or-clue", clue = "herbwifes-tip" }
+prompt = "Moon-herb and bitter-root grow thick where the light gets in — for eyes that know them."
+reveal = "You cut moon-herb and dig bitter-root, wrapping them against the damp."
+
+[gather-herbs-south]
+name = "Gather herbs off the trail"
+map = "wilderness"
+slot = "herb-clearing-south"
+pool = "lore"
+cost = 1
+items = ["moon-herb", "bitter-root"]
+discovery = { kind = "sight-or-clue", clue = "herbwifes-tip" }
+prompt = "A second clearing, rich with the same silver-leafed growth."
+reveal = "More moon-herb, more bitter-root. The wood provides for those who ask properly."
+
+[scavenge-candlesticks]
+name = "Scavenge the silver candlesticks"
+map = "settlement"
+slot = "church-candles"
+items = ["silver"]
+discovery = { kind = "revealed-by-clue", clue = "silver-candlesticks" }
+prompt = "The candlesticks are true silver, and the church owes the valley a defence."
+reveal = "Forgive me. You wrap the cold silver in cloth; the altar keeps its dignity, barely."
+
+[mine-silver]
+name = "Chip silver from the lode"
+map = "wilderness"
+slot = "mine"
+items = ["silver"]
+discovery = { kind = "sight-or-clue", clue = "mine-lode" }
+prompt = "Past the fallen rubble, a thread of pale metal glints in the rockface."
+reveal = "Your knife and patience win a fist of true silver from the lode."
+
+[search-study]
+name = "Search the manor study"
+map = "outlying"
+slot = "manor-study"
+items = ["coin", "coin"]
+discovery = { kind = "sight" }
+prompt = "The study was abandoned in haste. Drawers hang open; not all were emptied."
+reveal = "Under a false drawer-bottom: a purse the fleeing family never came back for."
+
+[search-campsite]
+name = "Pick over the campsite"
+map = "outlying"
+slot = "campsite"
+items = ["flintlock-shot", "coin"]
+discovery = { kind = "sight" }
+prompt = "Someone camped in the manor grounds recently, and left in a hurry."
+reveal = "A spilled powder horn, a cast ball, a dropped penny. Their hurry is your gain."
+
+[sweep-the-crypt]
+name = "Gather dust from the old niches"
+map = "outlying"
+slot = "crypt-8"
+pool = "lore"
+cost = 1
+items = ["grave-dust"]
+discovery = { kind = "sight" }
+prompt = "The oldest niches hold dead long past all grudges. Taken with the proper words, their dust is freely given."
+reveal = "You speak the old courtesies and take a handful of consecrated dust. The crypt stays quiet. It approves."
+
+[draw-the-well]
+name = "Sound the old well"
+map = "outlying"
+slot = "well"
+pool = "lore"
+cost = 1
+items = ["bitter-root"]
+discovery = { kind = "sight" }
+prompt = "Things get thrown down wells. Some of them keep."
+reveal = "The bucket comes up with sweet water and a knot of bitter-root, still good."

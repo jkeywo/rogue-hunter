@@ -67,6 +67,11 @@ id = "ambush-site"
 kind = "wilds"
 at = [17, 13]
 
+[[initial_enemies]]
+enemy = "wolf"
+near_slot = "wolf-den"
+count = 2
+
 [[exits]]
 to = "settlement"
 at = [31, 10]

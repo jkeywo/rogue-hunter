@@ -222,6 +222,11 @@ pub struct OpportunitySpec {
     pub obscurity: u8,
     pub discovery: DiscoveryRule,
     pub grants: OpportunityGrant,
+    /// Physical-access prerequisite the planner must schedule first
+    /// (e.g. forcing the crypt door). The sim enforces this spatially.
+    pub requires: Option<OpportunityId>,
+    /// Resolving this clears the anchored tile's terrain (forced door/rubble).
+    pub clears_terrain: bool,
     pub prompt: String,
     pub reveal: String,
 }

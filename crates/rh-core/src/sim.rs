@@ -79,8 +79,35 @@ impl Sim {
             Command::Craft { recipe } => self.cmd_craft(recipe),
             Command::Consecrate => self.cmd_consecrate(),
             Command::OpenGrave(feature) => self.cmd_open_grave(*feature),
+            Command::Force(dir) => self.cmd_force(*dir),
             Command::UncoverVillain => self.cmd_uncover(),
         }
+    }
+
+    /// Force adjacent barred terrain with muscle: 1 Physical point.
+    fn cmd_force(&mut self, dir: Direction) -> Result<(), Rejection> {
+        let at = self.state.hunter.pos.step(dir);
+        let map = self.state.current_map;
+        let terrain = self.state.terrain(&self.world, map, at);
+        let (cleared, text) = match terrain {
+            Terrain::BarredDoor => (Terrain::Door, "The bar splinters and the door swings free."),
+            Terrain::Rubble => (
+                Terrain::Floor,
+                "Stone by stone, you heave the rubble aside until there is a way through.",
+            ),
+            _ => return Err(Rejection::NothingToForce),
+        };
+        if self.state.hunter.physical < 1 {
+            return Err(Rejection::PoolEmpty {
+                pool: PoolKind::Physical,
+                needed: 1,
+            });
+        }
+        self.state.hunter.physical -= 1;
+        self.state.terrain_overrides.insert((map, at), cleared);
+        self.log(EventKind::Clue, text.to_owned());
+        self.end_action();
+        Ok(())
     }
 
     // -- Logging -------------------------------------------------------------
@@ -513,6 +540,19 @@ impl Sim {
         }
         self.state.resolved.insert(id);
         self.log(EventKind::Clue, spec.reveal.clone());
+        if spec.clears_terrain {
+            if let OpportunityAnchor::Tile(at) = spec.anchor {
+                let terrain = self.state.terrain(&self.world, spec.map, at);
+                let cleared = match terrain {
+                    Terrain::BarredDoor => Some(Terrain::Door),
+                    Terrain::Rubble => Some(Terrain::Floor),
+                    _ => None,
+                };
+                if let Some(cleared) = cleared {
+                    self.state.terrain_overrides.insert((spec.map, at), cleared);
+                }
+            }
+        }
         self.apply_grant(&spec);
         self.cascade_discovery(id);
         self.end_action();

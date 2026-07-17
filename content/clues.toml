@@ -282,6 +282,7 @@ action = "commune"
 pool = "mystic"
 site = "grave"
 obscurity = 2
+grants_items = ["grave-dust"]
 prompt = "Consecrated earth remembers what it holds."
 reveal = "The oldest grave gives up its handful of dust freely, as if glad to be of use against the thing that mocks all graves."
 
@@ -293,5 +294,6 @@ action = "persuade"
 pool = "social"
 site = "npc"
 obscurity = 1
+grants_items = ["grave-dust"]
 prompt = "Grave-dust for a binding charm must be freely given, not stolen."
 reveal = "The gravedigger fills a pouch from the old consecrated rows and presses it on you. 'Sew it tight. Use it close.'"

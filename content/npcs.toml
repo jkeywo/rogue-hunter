@@ -2,6 +2,18 @@
 # three NPCs: the mystical archetype plus two others, wired into a triangle
 # of relationship links. False secrets must be optional and falsifiable.
 
+# Names for the settled dead: grave markers and revenant identities.
+deceased_name_pool = [
+  "Aldous Crane",
+  "Goody Marsh",
+  "Nathaniel Pryor",
+  "Tamsin Vale",
+  "Ezekiel Thorn",
+  "Rosamund Leigh",
+  "Old Corwin",
+  "Prudence Ashby",
+]
+
 [archetypes.priest]
 name = "Priest"
 glyph = "P"

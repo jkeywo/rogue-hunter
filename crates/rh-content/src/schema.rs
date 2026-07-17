@@ -395,6 +395,10 @@ pub struct ClueTemplate {
     pub site: SiteKind,
     /// 0 = obvious .. 3 = niche. Fallback routes prefer low totals.
     pub obscurity: u8,
+    /// Items granted directly on resolution (weakness clues that hand over
+    /// ingredients, like freely-given grave-dust). Usually empty.
+    #[serde(default)]
+    pub grants_items: Vec<String>,
     /// Opportunity text shown before the clue is taken.
     pub prompt: String,
     /// Event-log / journal text once revealed.
@@ -461,6 +465,8 @@ pub struct NpcCatalogue {
     pub secrets: BTreeMap<String, SecretTemplate>,
     /// Relationship kinds the generator may draw for NPC links.
     pub relationship_kinds: Vec<RelationshipKind>,
+    /// Names for the settled dead: grave markers and revenant identities.
+    pub deceased_name_pool: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -520,7 +526,20 @@ pub struct MapTemplate {
     pub exits: Vec<ExitDef>,
     /// Reserved cover pockets (validated against the viability contract).
     pub cover_pockets: Vec<CoverPocket>,
+    /// Baseline enemies present from the start of a run.
+    #[serde(default)]
+    pub initial_enemies: Vec<InitialEnemy>,
     pub description: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct InitialEnemy {
+    /// Enemy id in enemies.toml.
+    pub enemy: String,
+    /// Slot id the spawn clusters around.
+    pub near_slot: String,
+    pub count: u8,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
@@ -571,6 +590,41 @@ pub struct ExitDef {
 pub struct CoverPocket {
     /// Tiles forming this pocket; must be opaque terrain in `rows`.
     pub tiles: Vec<Coord>,
+}
+
+// ---------------------------------------------------------------------------
+// gathers.toml
+// ---------------------------------------------------------------------------
+
+/// A placeable gathering/looting opportunity anchored to a map slot.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct GatherDef {
+    pub name: String,
+    /// Map template id the anchor slot belongs to.
+    pub map: String,
+    /// Slot id the opportunity sits on.
+    pub slot: String,
+    /// Pool the action draws from; omit for a free interaction.
+    pub pool: Option<PoolKind>,
+    #[serde(default)]
+    pub cost: u8,
+    /// Item ids granted (duplicates encode quantity).
+    pub items: Vec<String>,
+    pub discovery: GatherDiscovery,
+    pub prompt: String,
+    pub reveal: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
+pub enum GatherDiscovery {
+    /// Discovered when the anchor tile is first seen.
+    Sight,
+    /// Only revealed by resolving the named clue template.
+    RevealedByClue { clue: String },
+    /// Discovered by sight, or revealed early by the named clue template.
+    SightOrClue { clue: String },
 }
 
 // ---------------------------------------------------------------------------

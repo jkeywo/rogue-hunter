@@ -58,6 +58,8 @@ pub enum Command {
     Consecrate,
     /// Force open a grave (1 Physical): the informed play or the gamble.
     OpenGrave(FeatureId),
+    /// Force adjacent barred terrain (1 Physical): doors and rubble.
+    Force(Direction),
     /// Combine two corroborating identity clues. Free action.
     UncoverVillain,
 }
@@ -96,6 +98,7 @@ pub enum Rejection {
     AlreadyConsecrated,
     NotAtGrave,
     GraveAlreadyOpened,
+    NothingToForce,
     NeedMoreIdentityClues { have: u8, need: u8 },
     AlreadyUncovered,
     UnknownAbility { id: String },
@@ -135,6 +138,9 @@ impl std::fmt::Display for Rejection {
             Rejection::NotAtAltar => write!(f, "The rite must be performed at the altar."),
             Rejection::AlreadyConsecrated => write!(f, "This ground is already warded."),
             Rejection::NotAtGrave => write!(f, "Stand at a grave to open it."),
+            Rejection::NothingToForce => {
+                write!(f, "There is nothing there that force will move.")
+            }
             Rejection::GraveAlreadyOpened => write!(f, "This grave already lies open."),
             Rejection::NeedMoreIdentityClues { have, need } => {
                 write!(

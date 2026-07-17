@@ -21,6 +21,7 @@ pub struct Catalogue {
     pub clues: BTreeMap<String, ClueTemplate>,
     pub npcs: NpcCatalogue,
     pub maps: BTreeMap<String, MapTemplate>,
+    pub gathers: BTreeMap<String, GatherDef>,
     pub grimoire: Vec<GrimoireEntry>,
     pub ui: UiText,
 }
@@ -77,6 +78,7 @@ impl Catalogue {
             clues: parse("clues.toml", text("clues.toml")?)?,
             npcs: parse("npcs.toml", text("npcs.toml")?)?,
             maps,
+            gathers: parse("gathers.toml", text("gathers.toml")?)?,
             grimoire: grimoire_file.entries,
             ui: parse("ui.toml", text("ui.toml")?)?,
         };

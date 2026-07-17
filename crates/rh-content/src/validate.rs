@@ -21,9 +21,61 @@ pub fn validate(cat: &Catalogue) -> Vec<String> {
     check_clues(cat, &mut issues);
     check_npcs(cat, &mut issues);
     check_maps(cat, &mut issues);
+    check_gathers(cat, &mut issues);
     check_grimoire(cat, &mut issues);
     check_ui(cat, &mut issues);
     issues
+}
+
+fn check_gathers(cat: &Catalogue, issues: &mut Vec<String>) {
+    for (id, gather) in &cat.gathers {
+        let Some(map) = cat.maps.get(&gather.map) else {
+            issues.push(format!(
+                "gathers: '{id}' references unknown map '{}'",
+                gather.map
+            ));
+            continue;
+        };
+        if !map.slots.iter().any(|slot| slot.id == gather.slot) {
+            issues.push(format!(
+                "gathers: '{id}' references unknown slot '{}' on map '{}'",
+                gather.slot, gather.map
+            ));
+        }
+        for item in &gather.items {
+            if !cat.items.contains_key(item) {
+                issues.push(format!("gathers: '{id}' grants unknown item '{item}'"));
+            }
+        }
+        if gather.items.is_empty() {
+            issues.push(format!("gathers: '{id}' grants nothing"));
+        }
+        if gather.pool.is_some() && gather.cost == 0 {
+            issues.push(format!("gathers: '{id}' names a pool but costs 0"));
+        }
+        match &gather.discovery {
+            GatherDiscovery::RevealedByClue { clue } | GatherDiscovery::SightOrClue { clue } => {
+                if !cat.clues.contains_key(clue) {
+                    issues.push(format!("gathers: '{id}' revealed by unknown clue '{clue}'"));
+                }
+            }
+            GatherDiscovery::Sight => {}
+        }
+    }
+    // Enough raw ingredient supply must exist for every recipe path the
+    // planner relies on: two draughts, one charm, and silver by two routes.
+    for required in ["moon-herb", "silver"] {
+        let sources = cat
+            .gathers
+            .values()
+            .filter(|gather| gather.items.iter().any(|item| item == required))
+            .count();
+        if sources < 2 {
+            issues.push(format!(
+                "gathers: ingredient '{required}' needs at least two gather sources, found {sources}"
+            ));
+        }
+    }
 }
 
 fn check_balance(cat: &Catalogue, issues: &mut Vec<String>) {
@@ -428,6 +480,20 @@ fn check_maps(cat: &Catalogue, issues: &mut Vec<String>) {
                         ));
                     }
                 }
+            }
+        }
+        for spawn in &map.initial_enemies {
+            if !cat.enemies.contains_key(&spawn.enemy) {
+                issues.push(format!(
+                    "maps: '{id}' spawns unknown enemy '{}'",
+                    spawn.enemy
+                ));
+            }
+            if !map.slots.iter().any(|slot| slot.id == spawn.near_slot) {
+                issues.push(format!(
+                    "maps: '{id}' spawns near unknown slot '{}'",
+                    spawn.near_slot
+                ));
             }
         }
         for exit in &map.exits {

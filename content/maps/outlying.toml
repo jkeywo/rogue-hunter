@@ -104,6 +104,16 @@ id = "crypt-8"
 kind = "grave"
 at = [27, 17]
 
+[[initial_enemies]]
+enemy = "restless-dead"
+near_slot = "crypt-1"
+count = 2
+
+[[initial_enemies]]
+enemy = "bandit"
+near_slot = "campsite"
+count = 1
+
 [[exits]]
 to = "wilderness"
 at = [16, 0]
