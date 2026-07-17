@@ -1,0 +1,1620 @@
+//! The authoritative simulation: semantic command boundary and rules.
+//!
+//! [`Sim::apply`] is the only way state changes. Every input path (keyboard,
+//! mouse, replay, browser) funnels through it, and every rejection carries a
+//! player-readable reason so blocked actions are explained, never hidden.
+
+use rh_content::{Catalogue, ItemKind, ManoeuvreEffect, PoolKind, SignatureEffect, Terrain};
+
+use crate::command::{Command, Rejection, Target};
+use crate::events::{EventKind, LogEvent};
+use crate::fov::{self, has_line_of_sight, is_walkable};
+use crate::geometry::{Direction, Point};
+use crate::rng::SimRng;
+use crate::state::{Actor, ActorId, ActorKind, Outcome, RunState, Snare};
+use crate::world::{
+    DiscoveryRule, FeatureId, FeatureKind, GraveContents, MapId, NpcId, OpportunityAnchor,
+    OpportunityGrant, OpportunityId, OpportunitySpec, World,
+};
+
+/// Why the global clock advanced; controls which pools refresh.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ClockReason {
+    Travel,
+    Death,
+    CostlyAction,
+}
+
+pub struct Sim {
+    pub catalogue: Catalogue,
+    pub world: World,
+    pub state: RunState,
+}
+
+impl Sim {
+    /// Start a run over a generated world. The RNG continues from where
+    /// generation left off: one deterministic stream drives everything.
+    pub fn new(catalogue: Catalogue, world: World, rng: SimRng) -> Self {
+        let state = RunState::new(&world, &catalogue, rng);
+        let mut sim = Self {
+            catalogue,
+            world,
+            state,
+        };
+        sim.log(
+            EventKind::System,
+            format!(
+                "{} arrives in {}.",
+                sim.catalogue.hunter.name,
+                sim.world.map(sim.state.current_map).name
+            ),
+        );
+        sim.refresh_senses();
+        sim
+    }
+
+    /// Apply one semantic command. On success the event log grew by whatever
+    /// happened; on rejection nothing changed at all.
+    pub fn apply(&mut self, command: &Command) -> Result<(), Rejection> {
+        if self.state.outcome.is_some() {
+            return Err(Rejection::RunOver);
+        }
+        match command {
+            Command::Move(dir) => self.cmd_move(*dir),
+            Command::Wait => {
+                self.log(EventKind::System, "You wait, watching.".to_owned());
+                self.end_action();
+                Ok(())
+            }
+            Command::Melee(target) => self.cmd_melee(*target),
+            Command::Ranged { target, silver } => self.cmd_ranged(*target, *silver),
+            Command::Manoeuvre { id, steps } => self.cmd_manoeuvre(id, steps),
+            Command::Signature { id, dir, target } => self.cmd_signature(id, *dir, *target),
+            Command::UseDraught => self.cmd_use_draught(),
+            Command::UseBindingCharm { target } => self.cmd_use_charm(*target),
+            Command::Interact(id) => self.cmd_interact(*id),
+            Command::Talk(npc) => self.cmd_talk(*npc),
+            Command::BuyShot(npc) => self.cmd_buy_shot(*npc),
+            Command::Travel => self.cmd_travel(),
+            Command::Craft { recipe } => self.cmd_craft(recipe),
+            Command::Consecrate => self.cmd_consecrate(),
+            Command::OpenGrave(feature) => self.cmd_open_grave(*feature),
+            Command::UncoverVillain => self.cmd_uncover(),
+        }
+    }
+
+    // -- Logging -------------------------------------------------------------
+
+    pub(crate) fn log(&mut self, kind: EventKind, text: String) {
+        self.state.log.push(LogEvent {
+            global_turn: self.state.clock,
+            local_turn: self.state.local_turn,
+            kind,
+            text,
+        });
+    }
+
+    // -- Movement and combat ---------------------------------------------------
+
+    fn cmd_move(&mut self, dir: Direction) -> Result<(), Rejection> {
+        let dest = self.state.hunter.pos.step(dir);
+        if !dest.in_bounds() {
+            return Err(Rejection::Blocked {
+                what: "the map's edge".to_owned(),
+            });
+        }
+        // Bump attack: moving into a hostile actor melees it.
+        if let Some(actor) = self.state.actor_at(self.state.current_map, dest) {
+            let id = actor.id;
+            return self.cmd_melee(Target::Actor(id));
+        }
+        if self
+            .state
+            .npc_at(&self.world, self.state.current_map, dest)
+            .is_some()
+        {
+            return Err(Rejection::Blocked {
+                what: "someone standing there".to_owned(),
+            });
+        }
+        let terrain = self
+            .state
+            .terrain(&self.world, self.state.current_map, dest);
+        if !is_walkable(terrain) {
+            let what = match terrain {
+                Terrain::BarredDoor => "a barred door (a Physical point could force it)",
+                Terrain::Rubble => "fallen rubble (a Physical point could shift it)",
+                Terrain::Wall => "a wall",
+                Terrain::Tree => "dense growth",
+                Terrain::Water => "deep water",
+                Terrain::Altar => "the altar",
+                Terrain::Workstation => "the workbench",
+                _ => "the terrain",
+            };
+            return Err(Rejection::Blocked {
+                what: what.to_owned(),
+            });
+        }
+        self.state.hunter.pos = dest;
+        if self.exit_at(dest).is_some() {
+            self.log(
+                EventKind::Travel,
+                "A route out. Travelling will spend a day.".to_owned(),
+            );
+        }
+        self.end_action();
+        Ok(())
+    }
+
+    fn cmd_melee(&mut self, target: Target) -> Result<(), Rejection> {
+        let weapon_damage = self.melee_damage();
+        match target {
+            Target::Actor(id) => {
+                let (pos, dormant) = {
+                    let actor = self.live_actor(id)?;
+                    (actor.pos, actor.dormant > 0)
+                };
+                if !self.state.hunter.pos.is_adjacent(pos) {
+                    return Err(Rejection::NotAdjacent);
+                }
+                let multiplier = self.take_melee_multiplier();
+                let damage = weapon_damage * u16::from(multiplier) / 2;
+                self.hunter_strike(id, damage, dormant, false);
+                self.end_action();
+                Ok(())
+            }
+            Target::Npc(npc) => {
+                self.require_npc_adjacent(npc)?;
+                self.attack_npc(npc, weapon_damage, false)?;
+                self.end_action();
+                Ok(())
+            }
+        }
+    }
+
+    fn cmd_ranged(&mut self, target: Target, silver: bool) -> Result<(), Rejection> {
+        let Some((range, base_damage)) = self.ranged_weapon() else {
+            return Err(Rejection::NoAmmo {
+                item: "firearm".to_owned(),
+            });
+        };
+        let (ammo_item, damage) = if silver {
+            let Some(def) = self.catalogue.items.get("silver-bullet") else {
+                return Err(Rejection::NoAmmo {
+                    item: "silver bullet".to_owned(),
+                });
+            };
+            match def.kind {
+                ItemKind::WeaknessAmmunition { damage, .. } => ("silver-bullet", damage),
+                _ => {
+                    return Err(Rejection::NoAmmo {
+                        item: "silver bullet".to_owned(),
+                    })
+                }
+            }
+        } else {
+            ("flintlock-shot", base_damage)
+        };
+        if self.state.hunter.item_count(ammo_item) == 0 {
+            return Err(Rejection::NoAmmo {
+                item: self.item_name(ammo_item),
+            });
+        }
+        let target_pos = match target {
+            Target::Actor(id) => self.live_actor(id)?.pos,
+            Target::Npc(npc) => {
+                self.require_npc_present(npc)?;
+                self.state.npcs[npc.0 as usize].pos
+            }
+        };
+        let map = self.state.current_map;
+        if self.state.hunter.pos.distance(target_pos) > i16::from(range) {
+            return Err(Rejection::OutOfRange);
+        }
+        if !has_line_of_sight(
+            &self.state,
+            &self.world,
+            map,
+            self.state.hunter.pos,
+            target_pos,
+        ) {
+            return Err(Rejection::NoLineOfSight);
+        }
+        self.state.hunter.remove_item(ammo_item, 1);
+        let sure = std::mem::take(&mut self.state.hunter.sure_shot);
+        match target {
+            Target::Actor(id) => {
+                let dormant = self.live_actor(id)?.dormant > 0;
+                self.hunter_ranged_strike(id, damage, silver, sure || dormant);
+            }
+            Target::Npc(npc) => {
+                self.ranged_attack_npc(npc, damage, sure, silver)?;
+            }
+        }
+        self.end_action();
+        Ok(())
+    }
+
+    fn cmd_manoeuvre(&mut self, id: &str, steps: &[Direction]) -> Result<(), Rejection> {
+        let Some(def) = self
+            .catalogue
+            .hunter
+            .manoeuvres
+            .iter()
+            .find(|m| m.id == id)
+            .cloned()
+        else {
+            return Err(Rejection::UnknownAbility { id: id.to_owned() });
+        };
+        if self.state.hunter.stamina < def.stamina_cost {
+            return Err(Rejection::StaminaShort {
+                needed: def.stamina_cost,
+            });
+        }
+        match def.effect {
+            ManoeuvreEffect::SureRangedShot => {
+                if !steps.is_empty() {
+                    return Err(Rejection::BadAbilityArguments);
+                }
+                self.state.hunter.stamina -= def.stamina_cost;
+                self.state.hunter.sure_shot = true;
+                self.log(
+                    EventKind::Combat,
+                    format!("You take a long breath and {}.", def.name.to_lowercase()),
+                );
+            }
+            ManoeuvreEffect::MeleeDamageMultiplier { numerator } => {
+                if !steps.is_empty() {
+                    return Err(Rejection::BadAbilityArguments);
+                }
+                self.state.hunter.stamina -= def.stamina_cost;
+                self.state.hunter.melee_multiplier = Some(numerator);
+                self.log(
+                    EventKind::Combat,
+                    "You set your weight for a heavy blow.".to_owned(),
+                );
+            }
+            ManoeuvreEffect::Dash { tiles } => {
+                if steps.len() != usize::from(tiles) {
+                    return Err(Rejection::BadAbilityArguments);
+                }
+                // Validate the whole path before moving.
+                let mut probe = self.state.hunter.pos;
+                for step in steps {
+                    probe = probe.step(*step);
+                    let terrain = self
+                        .state
+                        .terrain(&self.world, self.state.current_map, probe);
+                    if !probe.in_bounds() || !is_walkable(terrain) {
+                        return Err(Rejection::Blocked {
+                            what: "the ground ahead".to_owned(),
+                        });
+                    }
+                    if self.state.actor_at(self.state.current_map, probe).is_some()
+                        || self
+                            .state
+                            .npc_at(&self.world, self.state.current_map, probe)
+                            .is_some()
+                    {
+                        return Err(Rejection::Blocked {
+                            what: "someone in the way".to_owned(),
+                        });
+                    }
+                }
+                self.state.hunter.stamina -= def.stamina_cost;
+                self.state.hunter.pos = probe;
+                self.log(EventKind::Combat, "You sprint.".to_owned());
+            }
+        }
+        self.end_action();
+        Ok(())
+    }
+
+    fn cmd_signature(
+        &mut self,
+        id: &str,
+        dir: Option<Direction>,
+        target: Option<Target>,
+    ) -> Result<(), Rejection> {
+        let Some(def) = self
+            .catalogue
+            .hunter
+            .signatures
+            .iter()
+            .find(|s| s.id == id)
+            .cloned()
+        else {
+            return Err(Rejection::UnknownAbility { id: id.to_owned() });
+        };
+        if self.state.hunter.physical < def.physical_cost {
+            return Err(Rejection::PoolEmpty {
+                pool: PoolKind::Physical,
+                needed: def.physical_cost,
+            });
+        }
+        match def.effect {
+            SignatureEffect::SetSnare => {
+                let Some(dir) = dir else {
+                    return Err(Rejection::BadAbilityArguments);
+                };
+                let at = self.state.hunter.pos.step(dir);
+                let map = self.state.current_map;
+                let terrain = self.state.terrain(&self.world, map, at);
+                if !at.in_bounds() || !is_walkable(terrain) {
+                    return Err(Rejection::Blocked {
+                        what: "unsuitable ground".to_owned(),
+                    });
+                }
+                if self.state.snares.iter().any(|s| s.map == map && s.at == at) {
+                    return Err(Rejection::Blocked {
+                        what: "a snare already set there".to_owned(),
+                    });
+                }
+                self.state.hunter.physical -= def.physical_cost;
+                self.state.snares.push(Snare { map, at });
+                self.log(
+                    EventKind::Combat,
+                    "You rig a snare, quick and quiet.".to_owned(),
+                );
+            }
+            SignatureEffect::KillingBlow => {
+                let Some(Target::Actor(actor_id)) = target else {
+                    return Err(Rejection::BadAbilityArguments);
+                };
+                let (pos, eligible, dormant) = {
+                    let actor = self.live_actor(actor_id)?;
+                    let wounded = u32::from(actor.hp) * 100
+                        <= u32::from(actor.max_hp)
+                            * u32::from(self.catalogue.balance.combat.killing_blow_health_percent);
+                    (
+                        actor.pos,
+                        actor.trapped > 0 || actor.dormant > 0 || wounded,
+                        actor.dormant > 0,
+                    )
+                };
+                if !self.state.hunter.pos.is_adjacent(pos) {
+                    return Err(Rejection::NotAdjacent);
+                }
+                if !eligible {
+                    return Err(Rejection::BadAbilityArguments);
+                }
+                self.state.hunter.physical -= def.physical_cost;
+                let multiplier = self.take_melee_multiplier();
+                let damage = self.melee_damage() * u16::from(multiplier) / 2 * 2;
+                self.log(
+                    EventKind::Combat,
+                    "You measure the killing blow.".to_owned(),
+                );
+                self.hunter_strike(actor_id, damage, dormant, false);
+            }
+        }
+        self.end_action();
+        Ok(())
+    }
+
+    fn cmd_use_draught(&mut self) -> Result<(), Rejection> {
+        let heal = match self.catalogue.items.get("wound-draught").map(|d| &d.kind) {
+            Some(ItemKind::Draught { heal }) => *heal,
+            _ => 4,
+        };
+        if !self.state.hunter.remove_item("wound-draught", 1) {
+            return Err(Rejection::NoAmmo {
+                item: "wound draught".to_owned(),
+            });
+        }
+        self.state.hunter.hp = (self.state.hunter.hp + heal).min(self.state.hunter.max_hp);
+        self.log(
+            EventKind::Item,
+            "You drink the bitter draught; torn flesh knits.".to_owned(),
+        );
+        self.end_action();
+        Ok(())
+    }
+
+    fn cmd_use_charm(&mut self, target: Target) -> Result<(), Rejection> {
+        let Target::Actor(actor_id) = target else {
+            return Err(Rejection::NoSuchTarget);
+        };
+        let (pos, is_villain) = {
+            let actor = self.live_actor(actor_id)?;
+            (actor.pos, actor.kind == ActorKind::Villain)
+        };
+        if !self.state.hunter.pos.is_adjacent(pos) {
+            return Err(Rejection::NotAdjacent);
+        }
+        let villain_def = self.villain_def();
+        let Some(cadence) = villain_def.cadence.clone() else {
+            // Using the charm on a werewolf (or an ordinary enemy) wastes it.
+            if !self.state.hunter.remove_item("binding-charm", 1) {
+                return Err(Rejection::NoAmmo {
+                    item: "binding charm".to_owned(),
+                });
+            }
+            self.log(
+                EventKind::Item,
+                "The charm crumbles to dust. Whatever this thing is, grave-craft has no hold on it.".to_owned(),
+            );
+            self.end_action();
+            return Ok(());
+        };
+        if !is_villain {
+            if !self.state.hunter.remove_item("binding-charm", 1) {
+                return Err(Rejection::NoAmmo {
+                    item: "binding charm".to_owned(),
+                });
+            }
+            self.log(
+                EventKind::Item,
+                "The charm crumbles uselessly against mere flesh.".to_owned(),
+            );
+            self.end_action();
+            return Ok(());
+        }
+        if !self.state.hunter.remove_item("binding-charm", 1) {
+            return Err(Rejection::NoAmmo {
+                item: "binding charm".to_owned(),
+            });
+        }
+        if let Some(actor) = self.state.actor_mut(actor_id) {
+            actor.bound = cadence.bound_vulnerable_turns;
+        }
+        self.log(
+            EventKind::Telegraph,
+            "The charm flares against the revenant. Its shroud of shadow is stripped away!"
+                .to_owned(),
+        );
+        self.end_action();
+        Ok(())
+    }
+
+    // -- Investigation and social ----------------------------------------------
+
+    fn cmd_interact(&mut self, id: OpportunityId) -> Result<(), Rejection> {
+        if usize::from(id.0) >= self.world.opportunities.len() {
+            return Err(Rejection::NoSuchTarget);
+        }
+        if !self.state.discovered.contains(&id) {
+            return Err(Rejection::NotDiscovered);
+        }
+        if self.state.resolved.contains(&id) || self.state.lost.contains(&id) {
+            return Err(Rejection::AlreadyResolved);
+        }
+        let spec = self.world.opportunity(id).clone();
+        if spec.map != self.state.current_map {
+            return Err(Rejection::NothingThere);
+        }
+        match spec.anchor {
+            OpportunityAnchor::Tile(at) => {
+                if self.state.hunter.pos != at && !self.state.hunter.pos.is_adjacent(at) {
+                    return Err(Rejection::NotAdjacent);
+                }
+            }
+            OpportunityAnchor::Npc(npc) => {
+                self.require_npc_adjacent(npc)?;
+                let npc_state = &self.state.npcs[npc.0 as usize];
+                let spec_npc = self.world.npc(npc);
+                let hostile = spec_npc.disposition == crate::world::Disposition::Hostile
+                    && !npc_state.leveraged;
+                if npc_state.attacked || hostile {
+                    return Err(Rejection::NpcWillNotTalk);
+                }
+            }
+        }
+        // Pool cost, with the settlement-hostility surcharge on Social.
+        if let Some(pool) = spec.pool {
+            let mut cost = spec.cost;
+            if pool == PoolKind::Social && self.state.settlement_hostile {
+                cost += 1;
+            }
+            if self.state.hunter.pool(pool) < cost {
+                return Err(Rejection::PoolEmpty { pool, needed: cost });
+            }
+            self.state.hunter.spend_pool(pool, cost);
+        }
+        self.state.resolved.insert(id);
+        self.log(EventKind::Clue, spec.reveal.clone());
+        self.apply_grant(&spec);
+        self.cascade_discovery(id);
+        self.end_action();
+        Ok(())
+    }
+
+    fn apply_grant(&mut self, spec: &OpportunitySpec) {
+        match &spec.grants {
+            OpportunityGrant::IdentityClue => {
+                self.state.identity_clues.insert(spec.id);
+                let have = self.state.identity_clues.len();
+                if have >= 2 && !self.state.villain_uncovered {
+                    self.log(
+                        EventKind::Clue,
+                        "Two proofs corroborate. You could name your quarry now.".to_owned(),
+                    );
+                }
+            }
+            OpportunityGrant::LocationClue => {
+                self.state.villain_location_known = true;
+                self.log(
+                    EventKind::Clue,
+                    "You know where the thing rests.".to_owned(),
+                );
+            }
+            OpportunityGrant::Lead => {}
+            OpportunityGrant::Items { items } => {
+                for item in items {
+                    self.state.hunter.add_item(item, 1);
+                    let name = self.item_name(item);
+                    self.log(EventKind::Item, format!("Gained: {name}."));
+                }
+            }
+            OpportunityGrant::MysticFavour => {
+                self.state.hunter.mystic_bonus += 1;
+                self.state.hunter.favour_used = true;
+                self.log(
+                    EventKind::Social,
+                    "A favour granted: for a while, the other world will answer you.".to_owned(),
+                );
+            }
+            OpportunityGrant::RelationshipInfo => {
+                if let OpportunityAnchor::Npc(npc) = spec.anchor {
+                    self.reveal_link_of(npc);
+                }
+            }
+            OpportunityGrant::SecretInfo => {
+                if let OpportunityAnchor::Npc(npc) = spec.anchor {
+                    self.state.known_secrets.insert(npc);
+                    let text = self.world.npc(npc).secret.text.clone();
+                    self.log(EventKind::Social, text);
+                }
+            }
+            OpportunityGrant::Leverage => {
+                if let OpportunityAnchor::Npc(npc) = spec.anchor {
+                    self.state.npcs[npc.0 as usize].leveraged = true;
+                    let name = self.world.npc(npc).name.clone();
+                    self.log(
+                        EventKind::Social,
+                        format!("{name} pales. They will cooperate — for silence."),
+                    );
+                }
+            }
+            OpportunityGrant::Disproof { npc } => {
+                self.state.disproved_secrets.insert(*npc);
+                if let Some(disproof) = self.world.npc(*npc).secret.disproof.clone() {
+                    self.log(EventKind::Social, disproof);
+                }
+            }
+        }
+    }
+
+    /// Reveal the first undiscovered relationship link of this NPC.
+    fn reveal_link_of(&mut self, npc: NpcId) {
+        let links = self.world.npc(npc).links.clone();
+        for link in links {
+            let key = crate::world::link_key(npc, link.to);
+            if self.state.known_links.insert(key) {
+                self.log(EventKind::Social, link.discovered_text.clone());
+                return;
+            }
+        }
+        self.log(
+            EventKind::Social,
+            "Nothing new: you already know their entanglements.".to_owned(),
+        );
+    }
+
+    /// Newly-revealed opportunities gated on the one just resolved.
+    fn cascade_discovery(&mut self, resolved: OpportunityId) {
+        let unlocked: Vec<(OpportunityId, String)> = self
+            .world
+            .opportunities
+            .iter()
+            .filter(|opp| match opp.discovery {
+                DiscoveryRule::RevealedBy(source) | DiscoveryRule::SightOr(source) => {
+                    source == resolved && !self.state.discovered.contains(&opp.id)
+                }
+                DiscoveryRule::Sight => false,
+            })
+            .map(|opp| (opp.id, opp.name.clone()))
+            .collect();
+        for (id, name) in unlocked {
+            self.state.discovered.insert(id);
+            self.log(EventKind::Clue, format!("New lead: {name}."));
+        }
+    }
+
+    fn cmd_talk(&mut self, npc: NpcId) -> Result<(), Rejection> {
+        self.require_npc_adjacent(npc)?;
+        let npc_state = &self.state.npcs[npc.0 as usize];
+        if npc_state.attacked {
+            return Err(Rejection::NpcWillNotTalk);
+        }
+        let spec = self.world.npc(npc);
+        let line = match spec.disposition {
+            crate::world::Disposition::Friendly => {
+                format!(
+                    "{} greets you warmly and talks freely of small things.",
+                    spec.name
+                )
+            }
+            crate::world::Disposition::Wary => {
+                format!("{} answers you carefully, giving away little.", spec.name)
+            }
+            crate::world::Disposition::Hostile => {
+                format!("{} answers in single words, wishing you gone.", spec.name)
+            }
+        };
+        self.state.met_npcs.insert(npc);
+        self.log(EventKind::Social, line);
+        self.end_action();
+        Ok(())
+    }
+
+    fn cmd_buy_shot(&mut self, npc: NpcId) -> Result<(), Rejection> {
+        self.require_npc_adjacent(npc)?;
+        let spec = self.world.npc(npc);
+        let npc_state = &self.state.npcs[npc.0 as usize];
+        if !spec.trades || npc_state.attacked || self.state.settlement_hostile {
+            return Err(Rejection::NpcWillNotTalk);
+        }
+        if self.state.hunter.item_count("coin") < 2 {
+            return Err(Rejection::NotEnoughCoin { needed: 2 });
+        }
+        self.state.hunter.remove_item("coin", 2);
+        self.state.hunter.add_item("flintlock-shot", 1);
+        self.log(
+            EventKind::Item,
+            format!("{} sells you powder and ball.", spec.name),
+        );
+        self.end_action();
+        Ok(())
+    }
+
+    // -- Time-costing actions ----------------------------------------------------
+
+    fn cmd_travel(&mut self) -> Result<(), Rejection> {
+        if self.state.final_hunt {
+            return Err(Rejection::TravelBlockedByFinalHunt);
+        }
+        let Some(exit) = self.exit_at(self.state.hunter.pos).cloned() else {
+            return Err(Rejection::NotAtExit);
+        };
+        let fleeing = self.hostiles_aware_on_current_map();
+        let destination = self.world.map(exit.to_map).name.clone();
+        if fleeing {
+            self.log(
+                EventKind::Travel,
+                format!("You break away and flee toward {destination}."),
+            );
+        } else {
+            self.log(
+                EventKind::Travel,
+                format!("You take the road toward {destination}."),
+            );
+        }
+        self.advance_clock(ClockReason::Travel);
+        if self.state.outcome.is_some() {
+            return Ok(());
+        }
+        self.state.current_map = exit.to_map;
+        self.state.hunter.pos = exit.to_point;
+        self.clear_encounter_buffs();
+        self.log(EventKind::Travel, format!("You arrive at {destination}."));
+        if exit.ambush_route {
+            let chance = self.world.ambush_percent;
+            if self.state.rng.percent(chance) {
+                self.spawn_ambush(exit.to_point);
+            }
+        }
+        self.maybe_begin_final_hunt();
+        self.refresh_senses();
+        Ok(())
+    }
+
+    fn cmd_craft(&mut self, recipe_id: &str) -> Result<(), Rejection> {
+        if !self.at_feature(|kind| matches!(kind, FeatureKind::Workstation)) {
+            return Err(Rejection::NotAtWorkstation);
+        }
+        let Some(recipe) = self.catalogue.recipes.get(recipe_id).cloned() else {
+            return Err(Rejection::MissingIngredients {
+                recipe: recipe_id.to_owned(),
+            });
+        };
+        // Check inputs (duplicates encode quantity).
+        let mut needed = std::collections::BTreeMap::new();
+        for input in &recipe.inputs {
+            *needed.entry(input.clone()).or_insert(0u16) += 1;
+        }
+        for (item, count) in &needed {
+            if self.state.hunter.item_count(item) < *count {
+                return Err(Rejection::MissingIngredients {
+                    recipe: recipe.name.clone(),
+                });
+            }
+        }
+        for (item, count) in &needed {
+            self.state.hunter.remove_item(item, *count);
+        }
+        self.state.hunter.add_item(&recipe.output, 1);
+        let output = self.item_name(&recipe.output);
+        self.log(EventKind::Item, format!("You craft: {output}."));
+        self.end_action();
+        Ok(())
+    }
+
+    fn cmd_consecrate(&mut self) -> Result<(), Rejection> {
+        if self.state.final_hunt {
+            return Err(Rejection::TravelBlockedByFinalHunt);
+        }
+        if !self.at_feature(|kind| matches!(kind, FeatureKind::Altar)) {
+            return Err(Rejection::NotAtAltar);
+        }
+        if self.state.church_consecrated {
+            return Err(Rejection::AlreadyConsecrated);
+        }
+        self.state.church_consecrated = true;
+        self.log(
+            EventKind::Clock,
+            "You spend the evening at the rite. By its end the church ground is warded against the risen dead.".to_owned(),
+        );
+        self.advance_clock(ClockReason::CostlyAction);
+        self.maybe_begin_final_hunt();
+        self.refresh_senses();
+        Ok(())
+    }
+
+    fn cmd_open_grave(&mut self, feature_id: FeatureId) -> Result<(), Rejection> {
+        let map = self.state.current_map;
+        let Some(feature) = self.world.map(map).feature(feature_id).cloned() else {
+            return Err(Rejection::NotAtGrave);
+        };
+        let FeatureKind::Grave { contents } = feature.kind else {
+            return Err(Rejection::NotAtGrave);
+        };
+        if self.state.hunter.pos != feature.at && !self.state.hunter.pos.is_adjacent(feature.at) {
+            return Err(Rejection::NotAdjacent);
+        }
+        if self.state.opened_graves.contains(&feature_id) {
+            return Err(Rejection::GraveAlreadyOpened);
+        }
+        if self.state.hunter.physical < 1 {
+            return Err(Rejection::PoolEmpty {
+                pool: PoolKind::Physical,
+                needed: 1,
+            });
+        }
+        self.state.hunter.physical -= 1;
+        self.state.opened_graves.insert(feature_id);
+        self.log(
+            EventKind::Clue,
+            format!("You put your back into it and open {}.", feature.name),
+        );
+        match contents {
+            GraveContents::Villain => self.expose_dormant_villain(map, feature.at),
+            GraveContents::Mundane => self.log(
+                EventKind::Clue,
+                "Old bones, folded hands: an honest death, honestly buried.".to_owned(),
+            ),
+            GraveContents::Empty => self.log(
+                EventKind::Clue,
+                "Empty. The earth here never held a coffin at all.".to_owned(),
+            ),
+        }
+        self.end_action();
+        Ok(())
+    }
+
+    fn cmd_uncover(&mut self) -> Result<(), Rejection> {
+        if self.state.villain_uncovered {
+            return Err(Rejection::AlreadyUncovered);
+        }
+        let have = self.state.identity_clues.len() as u8;
+        if have < 2 {
+            return Err(Rejection::NeedMoreIdentityClues { have, need: 2 });
+        }
+        self.state.villain_uncovered = true;
+        self.state.villain_location_known = true;
+        let title = self.world.villain.title.clone();
+        self.log(
+            EventKind::Clue,
+            format!("The proofs agree. Your quarry is {title}. Now you may hunt."),
+        );
+        // Uncovering is a realisation, not an action: no world tick.
+        Ok(())
+    }
+
+    // -- Helpers -----------------------------------------------------------------
+
+    pub fn villain_def(&self) -> &rh_content::VillainDef {
+        &self.catalogue.villains[&self.world.villain.archetype]
+    }
+
+    fn live_actor(&self, id: ActorId) -> Result<&Actor, Rejection> {
+        self.state
+            .actor(id)
+            .filter(|actor| actor.hp > 0 && actor.map == self.state.current_map)
+            .ok_or(Rejection::NoSuchTarget)
+    }
+
+    fn require_npc_present(&self, npc: NpcId) -> Result<(), Rejection> {
+        let spec = self.world.npc(npc);
+        let npc_state = &self.state.npcs[npc.0 as usize];
+        if spec.map != self.state.current_map || !npc_state.alive || npc_state.fled {
+            return Err(Rejection::NpcUnavailable);
+        }
+        Ok(())
+    }
+
+    fn require_npc_adjacent(&self, npc: NpcId) -> Result<(), Rejection> {
+        self.require_npc_present(npc)?;
+        let pos = self.state.npcs[npc.0 as usize].pos;
+        if !self.state.hunter.pos.is_adjacent(pos) {
+            return Err(Rejection::NotAdjacent);
+        }
+        Ok(())
+    }
+
+    fn melee_damage(&self) -> u16 {
+        self.state
+            .hunter
+            .inventory
+            .keys()
+            .filter_map(
+                |item| match self.catalogue.items.get(item).map(|def| &def.kind) {
+                    Some(ItemKind::MeleeWeapon { damage }) => Some(*damage),
+                    _ => None,
+                },
+            )
+            .max()
+            .unwrap_or(1)
+    }
+
+    fn ranged_weapon(&self) -> Option<(u8, u16)> {
+        self.state.hunter.inventory.keys().find_map(|item| {
+            match self.catalogue.items.get(item).map(|def| &def.kind) {
+                Some(ItemKind::RangedWeapon { damage, range, .. }) => Some((*range, *damage)),
+                _ => None,
+            }
+        })
+    }
+
+    fn take_melee_multiplier(&mut self) -> u8 {
+        self.state.hunter.melee_multiplier.take().unwrap_or(2)
+    }
+
+    fn item_name(&self, id: &str) -> String {
+        self.catalogue
+            .items
+            .get(id)
+            .map(|def| def.name.clone())
+            .unwrap_or_else(|| id.to_owned())
+    }
+
+    fn exit_at(&self, at: Point) -> Option<&crate::world::ExitSpec> {
+        self.world
+            .map(self.state.current_map)
+            .exits
+            .iter()
+            .find(|exit| exit.at == at)
+    }
+
+    fn at_feature(&self, predicate: impl Fn(&FeatureKind) -> bool) -> bool {
+        self.world
+            .map(self.state.current_map)
+            .features
+            .iter()
+            .any(|feature| {
+                predicate(&feature.kind)
+                    && (self.state.hunter.pos == feature.at
+                        || self.state.hunter.pos.is_adjacent(feature.at))
+            })
+    }
+
+    fn hostiles_aware_on_current_map(&self) -> bool {
+        self.state
+            .actors
+            .iter()
+            .any(|actor| actor.map == self.state.current_map && actor.hp > 0 && actor.awake)
+    }
+
+    pub(crate) fn clear_encounter_buffs(&mut self) {
+        self.state.hunter.sure_shot = false;
+        self.state.hunter.melee_multiplier = None;
+    }
+
+    pub(crate) fn refresh_senses(&mut self) {
+        let radius = self.catalogue.balance.vision.fov_radius;
+        fov::refresh_visibility(&mut self.state, &self.world, radius);
+        self.discovery_pass();
+    }
+
+    /// Discover sight-based opportunities and meet visible NPCs.
+    fn discovery_pass(&mut self) {
+        let map = self.state.current_map;
+        // Meet NPCs the hunter can currently see.
+        let met: Vec<NpcId> = self
+            .world
+            .npcs
+            .iter()
+            .zip(self.state.npcs.iter())
+            .filter(|(spec, npc)| {
+                spec.map == map
+                    && npc.alive
+                    && !npc.fled
+                    && self.state.is_visible(npc.pos)
+                    && !self.state.met_npcs.contains(&spec.id)
+            })
+            .map(|(spec, _)| spec.id)
+            .collect();
+        for npc in met {
+            self.state.met_npcs.insert(npc);
+            let spec = self.world.npc(npc);
+            let archetype = self
+                .catalogue
+                .npcs
+                .archetypes
+                .get(&spec.archetype)
+                .map(|def| def.name.clone())
+                .unwrap_or_default();
+            self.log(
+                EventKind::Social,
+                format!("You mark {}, the {}.", spec.name, archetype.to_lowercase()),
+            );
+        }
+        // Discover opportunities whose anchor is now visible.
+        let discovered: Vec<(OpportunityId, String)> = self
+            .world
+            .opportunities
+            .iter()
+            .filter(|opp| {
+                if opp.map != map || self.state.discovered.contains(&opp.id) {
+                    return false;
+                }
+                let sight_allowed = matches!(
+                    opp.discovery,
+                    DiscoveryRule::Sight | DiscoveryRule::SightOr(_)
+                );
+                if !sight_allowed {
+                    return false;
+                }
+                match opp.anchor {
+                    OpportunityAnchor::Tile(at) => self.state.is_visible(at),
+                    OpportunityAnchor::Npc(npc) => {
+                        let npc_state = &self.state.npcs[npc.0 as usize];
+                        npc_state.alive && !npc_state.fled && self.state.is_visible(npc_state.pos)
+                    }
+                }
+            })
+            .map(|opp| (opp.id, opp.name.clone()))
+            .collect();
+        for (id, name) in discovered {
+            self.state.discovered.insert(id);
+            self.log(
+                EventKind::Clue,
+                format!("Something worth a closer look: {name}."),
+            );
+        }
+    }
+
+    fn spawn_ambush(&mut self, near: Point) {
+        let scheme = &self.catalogue.schemes[&self.world.villain.scheme];
+        let enemy = scheme.minion_enemy.clone();
+        let hp = self.catalogue.enemies[&enemy].health;
+        self.log(
+            EventKind::Travel,
+            "The undergrowth erupts — an ambush on the road!".to_owned(),
+        );
+        let map = self.state.current_map;
+        let spots = self.free_tiles_near(map, near, 3);
+        for spot in spots.into_iter().take(2) {
+            let id = self
+                .state
+                .spawn_actor(ActorKind::Enemy(enemy.clone()), map, spot, hp);
+            if let Some(actor) = self.state.actor_mut(id) {
+                actor.awake = true;
+            }
+        }
+    }
+
+    pub(crate) fn free_tiles_near(&self, map: MapId, near: Point, radius: i16) -> Vec<Point> {
+        let mut tiles: Vec<Point> = Vec::new();
+        for dy in -radius..=radius {
+            for dx in -radius..=radius {
+                let point = Point::new(near.x + dx, near.y + dy);
+                if point == near || !point.in_bounds() {
+                    continue;
+                }
+                if !is_walkable(self.state.terrain(&self.world, map, point)) {
+                    continue;
+                }
+                if self.state.tile_occupied(&self.world, map, point) {
+                    continue;
+                }
+                tiles.push(point);
+            }
+        }
+        tiles.sort_by_key(|point| (near.distance(*point), point.y, point.x));
+        tiles
+    }
+
+    fn expose_dormant_villain(&mut self, map: MapId, at: Point) {
+        let def = self.villain_def().clone();
+        let tier_hp = def.health + def.tier_bonus_health * u16::from(self.state.villain.tier);
+        let id = self.state.spawn_actor(ActorKind::Villain, map, at, tier_hp);
+        if let Some(actor) = self.state.actor_mut(id) {
+            actor.dormant = 3;
+            actor.awake = true;
+        }
+        self.state.villain.active = true;
+        self.state.villain.actor = Some(id);
+        self.state.villain_uncovered = true;
+        self.state.villain_location_known = true;
+        self.log(
+            EventKind::Telegraph,
+            format!(
+                "The coffin lid comes away — and the thing within is whole. {} lies before you, dreaming its errand.",
+                def.name
+            ),
+        );
+    }
+
+    /// Attack an NPC in melee: host reveal or innocent fallout.
+    fn attack_npc(&mut self, npc: NpcId, damage: u16, _ranged: bool) -> Result<(), Rejection> {
+        if self.world.villain.host == Some(npc) {
+            let at = self.state.npcs[npc.0 as usize].pos;
+            self.reveal_host(npc, at);
+            // The strike that outed it lands on the transformed villain.
+            if let Some(actor_id) = self.state.villain.actor {
+                let multiplier = self.take_melee_multiplier();
+                let final_damage = damage * u16::from(multiplier) / 2;
+                self.hunter_strike(actor_id, final_damage, false, false);
+            }
+            return Ok(());
+        }
+        self.harm_innocent(npc, damage);
+        Ok(())
+    }
+
+    fn ranged_attack_npc(
+        &mut self,
+        npc: NpcId,
+        damage: u16,
+        sure: bool,
+        silver: bool,
+    ) -> Result<(), Rejection> {
+        if self.world.villain.host == Some(npc) {
+            let at = self.state.npcs[npc.0 as usize].pos;
+            self.reveal_host(npc, at);
+            if let Some(actor_id) = self.state.villain.actor {
+                self.hunter_ranged_strike(actor_id, damage, silver, sure);
+            }
+            return Ok(());
+        }
+        self.harm_innocent(npc, damage);
+        Ok(())
+    }
+
+    fn reveal_host(&mut self, npc: NpcId, at: Point) {
+        let name = self.world.npc(npc).name.clone();
+        let def = self.villain_def().clone();
+        self.state.npcs[npc.0 as usize].fled = true;
+        let tier_hp = def.health + def.tier_bonus_health * u16::from(self.state.villain.tier);
+        let id = self
+            .state
+            .spawn_actor(ActorKind::Villain, self.state.current_map, at, tier_hp);
+        if let Some(actor) = self.state.actor_mut(id) {
+            actor.awake = true;
+        }
+        self.state.villain.active = true;
+        self.state.villain.actor = Some(id);
+        self.state.villain_uncovered = true;
+        self.state.villain_location_known = true;
+        self.log(
+            EventKind::Telegraph,
+            format!(
+                "{name}'s face comes apart like a torn mask. The {} stands where your neighbour stood!",
+                def.name
+            ),
+        );
+    }
+
+    fn harm_innocent(&mut self, npc: NpcId, damage: u16) {
+        let combat = &self.catalogue.balance.combat;
+        let hit = self.state.rng.percent(combat.melee_hit_percent);
+        let name = self.world.npc(npc).name.clone();
+        let killed = {
+            let npc_state = &mut self.state.npcs[npc.0 as usize];
+            npc_state.attacked = true;
+            if hit {
+                npc_state.hp = npc_state.hp.saturating_sub(damage.max(1));
+            }
+            if npc_state.hp == 0 {
+                npc_state.alive = false;
+                true
+            } else {
+                npc_state.fled = true;
+                false
+            }
+        };
+        if killed {
+            self.log(
+                EventKind::Combat,
+                format!("{name} falls. No curse leaves the body. You have murdered a villager."),
+            );
+        } else {
+            self.log(
+                EventKind::Combat,
+                format!("{name} screams and flees, bleeding. There was no monster in them."),
+            );
+        }
+        self.apply_innocent_fallout(npc);
+    }
+
+    fn apply_innocent_fallout(&mut self, npc: NpcId) {
+        self.state.settlement_hostile = true;
+        // Everything anchored to this NPC is lost.
+        let lost: Vec<OpportunityId> = self
+            .world
+            .opportunities
+            .iter()
+            .filter(|opp| opp.anchor == OpportunityAnchor::Npc(npc))
+            .filter(|opp| !self.state.resolved.contains(&opp.id))
+            .map(|opp| opp.id)
+            .collect();
+        for id in lost {
+            self.state.lost.insert(id);
+        }
+        self.log(
+            EventKind::Social,
+            "Doors bar as you pass. The settlement has turned against you; whatever that villager knew or held is beyond reach now.".to_owned(),
+        );
+    }
+
+    // -- Strikes against hostile actors -------------------------------------------
+
+    /// Resolve a hunter melee-class strike against an actor.
+    pub(crate) fn hunter_strike(&mut self, id: ActorId, damage: u16, coup: bool, _ranged: bool) {
+        let combat = self.catalogue.balance.combat.clone();
+        let hit = coup || self.state.rng.percent(combat.melee_hit_percent);
+        if !hit {
+            self.log(EventKind::Combat, "Your blow goes wide.".to_owned());
+            return;
+        }
+        let final_damage = if coup { damage * 2 } else { damage };
+        self.deal_damage_to_actor(id, final_damage, false);
+    }
+
+    pub(crate) fn hunter_ranged_strike(
+        &mut self,
+        id: ActorId,
+        damage: u16,
+        silver: bool,
+        sure: bool,
+    ) {
+        let combat = self.catalogue.balance.combat.clone();
+        let coup = self
+            .state
+            .actor(id)
+            .map(|actor| actor.dormant > 0)
+            .unwrap_or(false);
+        let hit = sure || coup || self.state.rng.percent(combat.ranged_hit_percent);
+        if !hit {
+            self.log(
+                EventKind::Combat,
+                "The shot cracks past its head.".to_owned(),
+            );
+            return;
+        }
+        let final_damage = if coup { damage * 2 } else { damage };
+        self.deal_damage_to_actor(id, final_damage, silver);
+    }
+
+    /// Apply damage with villain vulnerability gating; handles death and loot.
+    pub(crate) fn deal_damage_to_actor(&mut self, id: ActorId, damage: u16, silver: bool) {
+        let Some(actor) = self.state.actor(id) else {
+            return;
+        };
+        let is_villain = actor.kind == ActorKind::Villain;
+        let was_dormant = actor.dormant > 0;
+        let mut damage = damage;
+
+        if is_villain {
+            let def = self.villain_def().clone();
+            let vulnerable = self.villain_is_vulnerable(id);
+            if let Some(cadence) = &def.cadence {
+                if !vulnerable && !was_dormant {
+                    self.log(EventKind::Telegraph, cadence.guarded_telegraph.clone());
+                    return;
+                }
+                // Blows land twice as deep in a vulnerability window. The
+                // dormant coup already doubles at the strike level.
+                if vulnerable && !was_dormant {
+                    damage *= 2;
+                }
+            }
+            if silver {
+                if let Some(regen) = &def.regeneration {
+                    let already = self
+                        .state
+                        .actor(id)
+                        .map(|a| a.regen_stopped)
+                        .unwrap_or(true);
+                    if !already {
+                        if let Some(actor) = self.state.actor_mut(id) {
+                            actor.regen_stopped = true;
+                        }
+                        let _ = regen;
+                        self.log(
+                            EventKind::Telegraph,
+                            "The silver bites to the curse's heart. The wound does not close."
+                                .to_owned(),
+                        );
+                    }
+                }
+            }
+        }
+
+        // Waking a dormant villain.
+        if was_dormant {
+            if let Some(actor) = self.state.actor_mut(id) {
+                actor.dormant = 0;
+            }
+            if is_villain {
+                self.log(
+                    EventKind::Telegraph,
+                    "The thing's eyes open. It rises from the earth in one terrible motion."
+                        .to_owned(),
+                );
+            }
+        }
+
+        let (killed, kind, pos) = {
+            let Some(actor) = self.state.actor_mut(id) else {
+                return;
+            };
+            actor.hp = actor.hp.saturating_sub(damage);
+            actor.awake = true;
+            (actor.hp == 0, actor.kind.clone(), actor.pos)
+        };
+        let name = self.actor_name(&kind);
+        self.log(
+            EventKind::Combat,
+            format!("You strike the {name} for {damage}."),
+        );
+        if killed {
+            self.handle_actor_death(id, kind, pos);
+        }
+    }
+
+    pub(crate) fn villain_is_vulnerable(&self, id: ActorId) -> bool {
+        let Some(actor) = self.state.actor(id) else {
+            return false;
+        };
+        if actor.kind != ActorKind::Villain {
+            return true;
+        }
+        let def = self.villain_def();
+        let Some(cadence) = &def.cadence else {
+            // No cadence (werewolf): always woundable; regeneration defends it.
+            return true;
+        };
+        if actor.dormant > 0 || actor.bound > 0 {
+            return true;
+        }
+        if def.affected_by_consecration
+            && self.state.church_consecrated
+            && self
+                .world
+                .map(actor.map)
+                .consecration_area
+                .contains(&actor.pos)
+        {
+            return true;
+        }
+        actor.cadence == cadence.period - 1
+    }
+
+    pub(crate) fn actor_name(&self, kind: &ActorKind) -> String {
+        match kind {
+            ActorKind::Enemy(enemy) => self
+                .catalogue
+                .enemies
+                .get(enemy)
+                .map(|def| def.name.clone())
+                .unwrap_or_else(|| enemy.clone()),
+            ActorKind::Villain => self.villain_def().name.clone(),
+        }
+    }
+
+    fn handle_actor_death(&mut self, id: ActorId, kind: ActorKind, pos: Point) {
+        match kind {
+            ActorKind::Villain => {
+                self.state.villain.dead = true;
+                self.state.villain.active = false;
+                self.state.outcome = Some(Outcome::Victory);
+                let name = self.villain_def().name.clone();
+                self.log(
+                    EventKind::System,
+                    format!("The {name} comes apart into cold ash. The valley is delivered."),
+                );
+            }
+            ActorKind::Enemy(_) => {
+                let name = self.actor_name(&kind);
+                self.log(EventKind::Combat, format!("The {name} is slain."));
+                let chance = self.catalogue.balance.loot.drop_percent;
+                if self.state.rng.percent(chance) {
+                    self.drop_loot(pos);
+                }
+            }
+        }
+        let _ = id;
+    }
+
+    /// Seed-determined low-chance loot: ammunition, ingredients, coin, or a
+    /// clue hint. Certified routes never depend on these.
+    fn drop_loot(&mut self, _pos: Point) {
+        let table = [
+            "flintlock-shot",
+            "coin",
+            "moon-herb",
+            "bitter-root",
+            "clue-hint",
+        ];
+        let pick = table[self.state.rng.index(table.len())];
+        if pick == "clue-hint" {
+            // Reveal the nearest undiscovered sight-based opportunity here.
+            let map = self.state.current_map;
+            let hunter = self.state.hunter.pos;
+            let next = self
+                .world
+                .opportunities
+                .iter()
+                .filter(|opp| {
+                    opp.map == map
+                        && !self.state.discovered.contains(&opp.id)
+                        && matches!(
+                            opp.discovery,
+                            DiscoveryRule::Sight | DiscoveryRule::SightOr(_)
+                        )
+                })
+                .min_by_key(|opp| match opp.anchor {
+                    OpportunityAnchor::Tile(at) => hunter.distance(at),
+                    OpportunityAnchor::Npc(npc) => {
+                        hunter.distance(self.state.npcs[npc.0 as usize].pos)
+                    }
+                })
+                .map(|opp| (opp.id, opp.name.clone()));
+            if let Some((id, name)) = next {
+                self.state.discovered.insert(id);
+                self.log(
+                    EventKind::Clue,
+                    format!("Among its effects, a scrap that points somewhere: {name}."),
+                );
+            } else {
+                self.state.hunter.add_item("coin", 1);
+                self.log(EventKind::Item, "It carried a little coin.".to_owned());
+            }
+        } else {
+            self.state.hunter.add_item(pick, 1);
+            let name = self.item_name(pick);
+            self.log(EventKind::Item, format!("It dropped: {name}."));
+        }
+    }
+
+    // -- Clock --------------------------------------------------------------------
+
+    pub(crate) fn advance_clock(&mut self, reason: ClockReason) {
+        self.state.clock += 1;
+        let clock = self.state.clock;
+        self.log(
+            EventKind::Clock,
+            format!(
+                "The day turns. ({clock} of {} spent)",
+                self.catalogue.balance.clock.travel_turns
+            ),
+        );
+
+        // Physical restores on every global-clock advance.
+        let caps = &self.catalogue.hunter;
+        self.state.hunter.physical = (self.state.hunter.physical + 1).min(caps.physical_cap);
+        // Travel additionally restores every investigation pool.
+        if reason == ClockReason::Travel {
+            self.state.hunter.lore = (self.state.hunter.lore + 1).min(caps.lore_cap);
+            self.state.hunter.social = (self.state.hunter.social + 1).min(caps.social_cap);
+            self.state.hunter.mystic = (self.state.hunter.mystic + 1).min(caps.mystic_cap);
+        }
+
+        let clock_balance = self.catalogue.balance.clock.clone();
+        if clock == clock_balance.minor_event_turn {
+            self.fire_scheme_event(false);
+        }
+        if clock == clock_balance.major_event_turn {
+            self.fire_scheme_event(true);
+        }
+        // Final-hunt onset is triggered by the caller once the hunter's
+        // position has settled (travel arrival, respawn, rite's end), so the
+        // villain appears on the map the hunter actually occupies.
+    }
+
+    fn fire_scheme_event(&mut self, major: bool) {
+        let scheme = self.catalogue.schemes[&self.world.villain.scheme].clone();
+        let event = if major {
+            &scheme.major_event
+        } else {
+            &scheme.minor_event
+        };
+        self.log(EventKind::Clock, event.text.clone());
+
+        // Threat tier up: +health and the next enhanced behaviour.
+        let def = self.villain_def().clone();
+        self.state.villain.tier =
+            (self.state.villain.tier + 1).min(def.tier_behaviours.len() as u8);
+        let tier = self.state.villain.tier;
+        if let Some(behaviour) = def.tier_behaviours.get(usize::from(tier) - 1) {
+            self.log(EventKind::Telegraph, behaviour.telegraph.clone());
+        }
+        if let Some(actor_id) = self.state.villain.actor {
+            if let Some(actor) = self.state.actor_mut(actor_id) {
+                actor.max_hp += def.tier_bonus_health;
+                actor.hp += def.tier_bonus_health;
+            }
+        }
+
+        // Spawn minions on the event's map.
+        let site_map = self
+            .world
+            .maps
+            .iter()
+            .position(|map| map.template == event.site_map)
+            .map(|index| MapId(index as u8));
+        if let Some(map) = site_map {
+            let enemy = scheme.minion_enemy.clone();
+            let hp = self.catalogue.enemies[&enemy].health;
+            let anchor = self.world.map(map).entry;
+            let spots = self.free_tiles_near(map, anchor, 5);
+            for spot in spots.into_iter().take(usize::from(event.spawn_minions)) {
+                self.state
+                    .spawn_actor(ActorKind::Enemy(enemy.clone()), map, spot, hp);
+            }
+        }
+    }
+
+    pub(crate) fn maybe_begin_final_hunt(&mut self) {
+        if self.state.final_hunt
+            || self.state.villain.dead
+            || self.state.clock < self.catalogue.balance.clock.travel_turns
+        {
+            return;
+        }
+        self.state.final_hunt = true;
+        let def = self.villain_def().clone();
+        let map = self.state.current_map;
+
+        // The villain appears somewhere on the current map and pursues.
+        if let Some(actor_id) = self.state.villain.actor {
+            if let Some(actor) = self.state.actor_mut(actor_id) {
+                if actor.hp > 0 {
+                    actor.map = map;
+                    actor.awake = true;
+                    actor.dormant = 0;
+                }
+            }
+            let needs_respawn = self
+                .state
+                .actor(actor_id)
+                .map(|actor| actor.hp == 0)
+                .unwrap_or(true);
+            if !needs_respawn {
+                let far = self.farthest_free_tile(map);
+                if let Some(actor) = self.state.actor_mut(actor_id) {
+                    actor.pos = far;
+                }
+                self.log(
+                    EventKind::Clock,
+                    format!(
+                        "The sixth night falls. The {} is done waiting — it has come for you.",
+                        def.name
+                    ),
+                );
+                return;
+            }
+        }
+        let far = self.farthest_free_tile(map);
+        let tier_hp = def.health + def.tier_bonus_health * u16::from(self.state.villain.tier);
+        let id = self
+            .state
+            .spawn_actor(ActorKind::Villain, map, far, tier_hp);
+        if let Some(actor) = self.state.actor_mut(id) {
+            actor.awake = true;
+        }
+        self.state.villain.active = true;
+        self.state.villain.actor = Some(id);
+        self.state.villain_uncovered = true;
+        self.state.villain_location_known = true;
+        // If the villain was hiding in an NPC, that mask is now gone.
+        if let Some(host) = self.world.villain.host {
+            self.state.npcs[host.0 as usize].fled = true;
+        }
+        self.log(
+            EventKind::Clock,
+            format!(
+                "The sixth night falls. The {} drops all pretence — it has come for you.",
+                def.name
+            ),
+        );
+    }
+
+    fn farthest_free_tile(&self, map: MapId) -> Point {
+        let hunter = self.state.hunter.pos;
+        let mut best = hunter;
+        let mut best_distance = -1;
+        for y in 0..crate::geometry::MAP_HEIGHT {
+            for x in 0..crate::geometry::MAP_WIDTH {
+                let point = Point::new(x, y);
+                if !is_walkable(self.state.terrain(&self.world, map, point)) {
+                    continue;
+                }
+                if self.state.tile_occupied(&self.world, map, point) {
+                    continue;
+                }
+                let distance = hunter.distance(point);
+                if distance > best_distance {
+                    best_distance = distance;
+                    best = point;
+                }
+            }
+        }
+        best
+    }
+
+    // -- Hunter death ----------------------------------------------------------------
+
+    pub(crate) fn handle_hunter_death(&mut self) {
+        if self.state.final_hunt {
+            self.state.outcome = Some(Outcome::Defeat);
+            self.log(
+                EventKind::System,
+                "You fall, and this time there is no morning. The valley belongs to the dark now."
+                    .to_owned(),
+            );
+            return;
+        }
+        self.log(
+            EventKind::System,
+            "Darkness takes you... but not for good. You wake in the settlement, a day poorer, your effects intact.".to_owned(),
+        );
+        let settlement = self.world.map_by_role(rh_content::MapRole::Settlement);
+        self.state.current_map = settlement;
+        self.state.hunter.pos = self.world.map(settlement).entry;
+        self.state.hunter.hp = self.state.hunter.max_hp;
+        self.clear_encounter_buffs();
+        // A lost villain fight sends the villain back to its haunts, healed.
+        if let Some(actor_id) = self.state.villain.actor {
+            let lair = self.world.villain.lair;
+            if let Some(actor) = self.state.actor_mut(actor_id) {
+                if actor.hp > 0 {
+                    actor.map = lair.0;
+                    actor.pos = lair.1;
+                    actor.awake = false;
+                    actor.hp = actor.max_hp;
+                }
+            }
+        }
+        self.advance_clock(ClockReason::Death);
+        self.maybe_begin_final_hunt();
+        self.refresh_senses();
+    }
+
+    /// One world tick after a hunter action: enemies, NPCs, timers, senses.
+    fn end_action(&mut self) {
+        crate::ai::world_tick(self);
+        self.state.local_turn += 1;
+        let cap = self.catalogue.hunter.stamina_cap;
+        let regen = self.catalogue.balance.combat.stamina_regen_per_turn;
+        self.state.hunter.stamina = (self.state.hunter.stamina + regen).min(cap);
+        if self.state.outcome.is_none() && self.state.hunter.hp == 0 {
+            self.handle_hunter_death();
+        }
+        if self.state.outcome.is_none() {
+            self.refresh_senses();
+        }
+    }
+}

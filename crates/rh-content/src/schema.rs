@@ -337,13 +337,24 @@ pub struct ItemDef {
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
 pub enum ItemKind {
-    MeleeWeapon { damage: u16 },
-    RangedWeapon { damage: u16, range: u8, ammo: String },
+    MeleeWeapon {
+        damage: u16,
+    },
+    RangedWeapon {
+        damage: u16,
+        range: u8,
+        ammo: String,
+    },
     Ammunition,
     /// Special ammunition that also carries a weakness payload.
-    WeaknessAmmunition { damage: u16, stops_regeneration: bool },
+    WeaknessAmmunition {
+        damage: u16,
+        stops_regeneration: bool,
+    },
     /// Consumable drink; restores health, consumes the encounter action.
-    Draught { heal: u16 },
+    Draught {
+        heal: u16,
+    },
     /// Consumable used adjacent to a villain with a cadence (binding charm).
     BindingCharm,
     Ingredient,

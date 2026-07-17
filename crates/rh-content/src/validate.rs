@@ -31,12 +31,27 @@ fn check_balance(cat: &Catalogue, issues: &mut Vec<String>) {
     for (label, value) in [
         ("combat.melee_hit_percent", b.combat.melee_hit_percent),
         ("combat.ranged_hit_percent", b.combat.ranged_hit_percent),
-        ("combat.trapped_attack_penalty_percent", b.combat.trapped_attack_penalty_percent),
-        ("combat.pounce_attack_bonus_percent", b.combat.pounce_attack_bonus_percent),
-        ("combat.killing_blow_health_percent", b.combat.killing_blow_health_percent),
+        (
+            "combat.trapped_attack_penalty_percent",
+            b.combat.trapped_attack_penalty_percent,
+        ),
+        (
+            "combat.pounce_attack_bonus_percent",
+            b.combat.pounce_attack_bonus_percent,
+        ),
+        (
+            "combat.killing_blow_health_percent",
+            b.combat.killing_blow_health_percent,
+        ),
         ("loot.drop_percent", b.loot.drop_percent),
-        ("generator.ambush_percent_min", b.generator.ambush_percent_min),
-        ("generator.ambush_percent_max", b.generator.ambush_percent_max),
+        (
+            "generator.ambush_percent_min",
+            b.generator.ambush_percent_min,
+        ),
+        (
+            "generator.ambush_percent_max",
+            b.generator.ambush_percent_max,
+        ),
     ] {
         if value > 100 {
             issues.push(format!("balance: {label} is {value}, above 100 percent"));
@@ -69,7 +84,9 @@ fn check_balance(cat: &Catalogue, issues: &mut Vec<String>) {
 fn check_hunter(cat: &Catalogue, issues: &mut Vec<String>) {
     for item in &cat.hunter.starting_items {
         if !cat.items.contains_key(item) {
-            issues.push(format!("hunter: starting item '{item}' is not in items.toml"));
+            issues.push(format!(
+                "hunter: starting item '{item}' is not in items.toml"
+            ));
         }
     }
     if cat.hunter.mystic_cap != 0 {
@@ -111,9 +128,9 @@ fn check_items_and_recipes(cat: &Catalogue, issues: &mut Vec<String>) {
         if let ItemKind::RangedWeapon { ammo, .. } = &item.kind {
             match cat.items.get(ammo).map(|a| &a.kind) {
                 Some(ItemKind::Ammunition) | Some(ItemKind::WeaknessAmmunition { .. }) => {}
-                Some(_) => {
-                    issues.push(format!("items: '{id}' ammo '{ammo}' is not an ammunition kind"))
-                }
+                Some(_) => issues.push(format!(
+                    "items: '{id}' ammo '{ammo}' is not an ammunition kind"
+                )),
                 None => issues.push(format!("items: '{id}' references unknown ammo '{ammo}'")),
             }
         }
@@ -121,11 +138,16 @@ fn check_items_and_recipes(cat: &Catalogue, issues: &mut Vec<String>) {
     for (id, recipe) in &cat.recipes {
         for input in &recipe.inputs {
             if !cat.items.contains_key(input) {
-                issues.push(format!("recipes: '{id}' input '{input}' is not in items.toml"));
+                issues.push(format!(
+                    "recipes: '{id}' input '{input}' is not in items.toml"
+                ));
             }
         }
         if !cat.items.contains_key(&recipe.output) {
-            issues.push(format!("recipes: '{id}' output '{}' is not in items.toml", recipe.output));
+            issues.push(format!(
+                "recipes: '{id}' output '{}' is not in items.toml",
+                recipe.output
+            ));
         }
         if recipe.inputs.is_empty() {
             issues.push(format!("recipes: '{id}' has no inputs"));
@@ -170,7 +192,9 @@ fn check_villains(cat: &Catalogue, issues: &mut Vec<String>) {
                     ));
                 }
                 if villain.pounce.is_none() {
-                    issues.push(format!("villains: NPC-host villain '{id}' must have a pounce"));
+                    issues.push(format!(
+                        "villains: NPC-host villain '{id}' must have a pounce"
+                    ));
                 }
             }
             Concealment::DormantGrave => {
@@ -197,7 +221,10 @@ fn check_schemes(cat: &Catalogue, issues: &mut Vec<String>) {
                 scheme.minion_enemy
             ));
         }
-        for (label, event) in [("minor", &scheme.minor_event), ("major", &scheme.major_event)] {
+        for (label, event) in [
+            ("minor", &scheme.minor_event),
+            ("major", &scheme.major_event),
+        ] {
             if !cat.maps.contains_key(&event.site_map) {
                 issues.push(format!(
                     "schemes: '{id}' {label} event site map '{}' does not exist",
@@ -211,7 +238,10 @@ fn check_schemes(cat: &Catalogue, issues: &mut Vec<String>) {
 fn check_clues(cat: &Catalogue, issues: &mut Vec<String>) {
     for (id, clue) in &cat.clues {
         if clue.archetype != "any" && !cat.villains.contains_key(&clue.archetype) {
-            issues.push(format!("clues: '{id}' archetype '{}' is unknown", clue.archetype));
+            issues.push(format!(
+                "clues: '{id}' archetype '{}' is unknown",
+                clue.archetype
+            ));
         }
         for origin in &clue.origins {
             if !cat.origins.contains_key(origin) {
@@ -223,16 +253,18 @@ fn check_clues(cat: &Catalogue, issues: &mut Vec<String>) {
         }
         let pool_matches = matches!(
             (clue.action, clue.pool),
-            (OpportunityAction::Examine | OpportunityAction::Track, PoolKind::Lore)
-                | (
-                    OpportunityAction::Gossip
-                        | OpportunityAction::Persuade
-                        | OpportunityAction::Spy,
-                    PoolKind::Social
-                )
-                | (OpportunityAction::Commune, PoolKind::Mystic)
+            (
+                OpportunityAction::Examine | OpportunityAction::Track,
+                PoolKind::Lore
+            ) | (
+                OpportunityAction::Gossip | OpportunityAction::Persuade | OpportunityAction::Spy,
+                PoolKind::Social
+            ) | (OpportunityAction::Commune, PoolKind::Mystic)
                 | (OpportunityAction::Force, PoolKind::Physical)
-                | (OpportunityAction::Scavenge, PoolKind::Lore | PoolKind::Physical)
+                | (
+                    OpportunityAction::Scavenge,
+                    PoolKind::Lore | PoolKind::Physical
+                )
         );
         if !pool_matches {
             issues.push(format!(
@@ -285,15 +317,22 @@ fn check_npcs(cat: &Catalogue, issues: &mut Vec<String>) {
             issues.push(format!("npcs: archetype '{id}' has an empty name pool"));
         }
         if !slot_ids.contains(&npc.work_slot.as_str()) {
-            issues.push(format!("npcs: archetype '{id}' work slot '{}' not found", npc.work_slot));
+            issues.push(format!(
+                "npcs: archetype '{id}' work slot '{}' not found",
+                npc.work_slot
+            ));
         }
         for secret in &npc.secrets {
             if !cat.npcs.secrets.contains_key(secret) {
-                issues.push(format!("npcs: archetype '{id}' secret '{secret}' is unknown"));
+                issues.push(format!(
+                    "npcs: archetype '{id}' secret '{secret}' is unknown"
+                ));
             }
         }
         if npc.secrets.is_empty() {
-            issues.push(format!("npcs: archetype '{id}' needs at least one secret template"));
+            issues.push(format!(
+                "npcs: archetype '{id}' needs at least one secret template"
+            ));
         }
     }
     if cat.npcs.archetypes.len() < 4 {
@@ -304,12 +343,10 @@ fn check_npcs(cat: &Catalogue, issues: &mut Vec<String>) {
     }
     for (id, secret) in &cat.npcs.secrets {
         match (secret.false_secret, &secret.disproof) {
-            (true, None) => {
-                issues.push(format!("npcs: false secret '{id}' must carry a disproof"))
-            }
-            (false, Some(_)) => {
-                issues.push(format!("npcs: true secret '{id}' must not carry a disproof"))
-            }
+            (true, None) => issues.push(format!("npcs: false secret '{id}' must carry a disproof")),
+            (false, Some(_)) => issues.push(format!(
+                "npcs: true secret '{id}' must not carry a disproof"
+            )),
             _ => {}
         }
     }
@@ -336,16 +373,23 @@ fn check_maps(cat: &Catalogue, issues: &mut Vec<String>) {
 
     for (id, map) in &cat.maps {
         if map.rows.len() != MAP_HEIGHT {
-            issues.push(format!("maps: '{id}' has {} rows, expected {MAP_HEIGHT}", map.rows.len()));
+            issues.push(format!(
+                "maps: '{id}' has {} rows, expected {MAP_HEIGHT}",
+                map.rows.len()
+            ));
         }
         for (y, row) in map.rows.iter().enumerate() {
             let width = row.chars().count();
             if width != MAP_WIDTH {
-                issues.push(format!("maps: '{id}' row {y} has {width} glyphs, expected {MAP_WIDTH}"));
+                issues.push(format!(
+                    "maps: '{id}' row {y} has {width} glyphs, expected {MAP_WIDTH}"
+                ));
             }
             for (x, glyph) in row.chars().enumerate() {
                 if !map.legend.contains_key(&glyph) {
-                    issues.push(format!("maps: '{id}' glyph '{glyph}' at {x},{y} not in legend"));
+                    issues.push(format!(
+                        "maps: '{id}' glyph '{glyph}' at {x},{y} not in legend"
+                    ));
                 }
             }
         }
@@ -388,7 +432,10 @@ fn check_maps(cat: &Catalogue, issues: &mut Vec<String>) {
         }
         for exit in &map.exits {
             if !cat.maps.contains_key(&exit.to) {
-                issues.push(format!("maps: '{id}' exit leads to unknown map '{}'", exit.to));
+                issues.push(format!(
+                    "maps: '{id}' exit leads to unknown map '{}'",
+                    exit.to
+                ));
             }
             match terrain_at(exit.at) {
                 Some(terrain) if is_walkable(terrain) => {}
@@ -432,7 +479,9 @@ fn check_maps(cat: &Catalogue, issues: &mut Vec<String>) {
         let reciprocal = pairs.iter().filter(|(f, t)| f == to && t == from).count();
         let forward = pairs.iter().filter(|(f, t)| f == from && t == to).count();
         if reciprocal != forward {
-            issues.push(format!("maps: exits between '{from}' and '{to}' are not paired"));
+            issues.push(format!(
+                "maps: exits between '{from}' and '{to}' are not paired"
+            ));
         }
     }
     for (a, b) in [
@@ -441,7 +490,9 @@ fn check_maps(cat: &Catalogue, issues: &mut Vec<String>) {
         ("settlement", "outlying"),
     ] {
         if !pairs.iter().any(|(f, t)| *f == a && *t == b) {
-            issues.push(format!("maps: the triangle is missing a route from '{a}' to '{b}'"));
+            issues.push(format!(
+                "maps: the triangle is missing a route from '{a}' to '{b}'"
+            ));
         }
     }
 }
@@ -500,5 +551,8 @@ pub fn is_forceable(terrain: Terrain) -> bool {
 
 /// Whether this terrain blocks line of sight (and pounce lanes).
 pub fn is_opaque(terrain: Terrain) -> bool {
-    matches!(terrain, Terrain::Wall | Terrain::Tree | Terrain::Rubble | Terrain::BarredDoor)
+    matches!(
+        terrain,
+        Terrain::Wall | Terrain::Tree | Terrain::Rubble | Terrain::BarredDoor
+    )
 }

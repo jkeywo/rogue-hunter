@@ -55,7 +55,10 @@ impl Catalogue {
 
         let mut maps = BTreeMap::new();
         for (name, source) in sources {
-            if let Some(stem) = name.strip_prefix("maps/").and_then(|n| n.strip_suffix(".toml")) {
+            if let Some(stem) = name
+                .strip_prefix("maps/")
+                .and_then(|n| n.strip_suffix(".toml"))
+            {
                 let template: MapTemplate = parse(name, source)?;
                 maps.insert(stem.to_owned(), template);
             }

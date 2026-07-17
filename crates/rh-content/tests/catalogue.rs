@@ -16,12 +16,21 @@ fn embedded_catalogue_loads_and_validates() {
     assert_eq!(catalogue.hunter.stamina_cap, 4);
 
     // Both villain archetypes with their concealment styles.
-    assert_eq!(catalogue.villains["werewolf"].concealment, Concealment::NpcHost);
-    assert_eq!(catalogue.villains["revenant"].concealment, Concealment::DormantGrave);
+    assert_eq!(
+        catalogue.villains["werewolf"].concealment,
+        Concealment::NpcHost
+    );
+    assert_eq!(
+        catalogue.villains["revenant"].concealment,
+        Concealment::DormantGrave
+    );
 
     // The three ordinary enemy families.
     for family in ["wolf", "bandit", "restless-dead"] {
-        assert!(catalogue.enemies.contains_key(family), "missing enemy family {family}");
+        assert!(
+            catalogue.enemies.contains_key(family),
+            "missing enemy family {family}"
+        );
     }
 
     // Eight villain combinations need two origins and two schemes.
