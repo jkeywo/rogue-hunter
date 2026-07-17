@@ -67,6 +67,21 @@ impl Direction {
         Direction::NorthWest,
     ];
 
+    /// All eight directions with the four orthogonals first. A breadth-first
+    /// search that visits neighbours in this order breaks ties toward
+    /// orthogonal steps, so equal-length paths prefer straight movement over
+    /// diagonal.
+    pub const ORTHOGONAL_FIRST: [Direction; 8] = [
+        Direction::North,
+        Direction::East,
+        Direction::South,
+        Direction::West,
+        Direction::NorthEast,
+        Direction::SouthEast,
+        Direction::SouthWest,
+        Direction::NorthWest,
+    ];
+
     pub const fn delta(self) -> (i16, i16) {
         match self {
             Direction::North => (0, -1),
@@ -139,6 +154,24 @@ mod tests {
     fn distance_is_chebyshev() {
         assert_eq!(Point::new(0, 0).distance(Point::new(3, 1)), 3);
         assert_eq!(Point::new(5, 5).distance(Point::new(5, 5)), 0);
+    }
+
+    #[test]
+    fn orthogonal_first_lists_all_orthogonals_before_diagonals() {
+        // The pathfinding tie-break depends on every orthogonal direction
+        // coming before any diagonal in this order.
+        let is_diagonal = |dir: Direction| dir.delta().0 != 0 && dir.delta().1 != 0;
+        let first_diagonal = Direction::ORTHOGONAL_FIRST
+            .iter()
+            .position(|d| is_diagonal(*d))
+            .unwrap();
+        assert_eq!(first_diagonal, 4, "four orthogonals should come first");
+        // Same eight directions, just reordered.
+        let mut a = Direction::ALL;
+        let mut b = Direction::ORTHOGONAL_FIRST;
+        a.sort_by_key(|d| d.delta());
+        b.sort_by_key(|d| d.delta());
+        assert_eq!(a, b);
     }
 
     #[test]

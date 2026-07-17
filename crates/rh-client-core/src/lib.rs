@@ -1057,8 +1057,10 @@ impl ClientSession {
         let mut queue = std::collections::VecDeque::new();
         queue.push_back(start);
         let mut goal = None;
+        // Orthogonal-first so equal-length paths favour straight steps over
+        // diagonal ones (matches how players expect click-to-move to walk).
         'search: while let Some(point) = queue.pop_front() {
-            for dir in Direction::ALL {
+            for dir in Direction::ORTHOGONAL_FIRST {
                 let next = point.step(dir);
                 if !next.in_bounds() || came[index(next)].is_some() || next == start {
                     continue;
