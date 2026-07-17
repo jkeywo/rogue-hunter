@@ -129,7 +129,7 @@ pub fn hunt_viability(
             if loadout.dormant_opening && loadout.physical > 0 {
                 // Coup de grace on the dormant thing in its grave.
                 let opener =
-                    u32::from(blade) * power_numerator * 1000 / 2 * 2 /* killing blow */ * 2 /* coup */;
+                    u32::from(blade) * power_numerator * 1000 / 2 * 2 /* killing blow */ * 3 /* coup */;
                 remaining = remaining.saturating_sub(opener);
                 turns += 1;
             }

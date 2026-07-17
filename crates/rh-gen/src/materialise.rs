@@ -368,12 +368,27 @@ impl<'a> Builder<'a> {
                     "outlying"
                 };
                 let map_id = self.map_id(map_template);
-                let graves: Vec<(FeatureId, Point, String)> = self.maps[map_id.0 as usize]
+                // Prefer graves reachable without forcing anything: gated
+                // crypt niches stay optional content, never the mandatory
+                // hunt site.
+                let world_map = &self.maps[map_id.0 as usize];
+                let entry = world_map.entry;
+                let all_graves: Vec<(FeatureId, Point, String)> = world_map
                     .features
                     .iter()
                     .filter(|feature| matches!(feature.kind, FeatureKind::Grave { .. }))
                     .map(|feature| (feature.id, feature.at, feature.name.clone()))
                     .collect();
+                let open_graves: Vec<(FeatureId, Point, String)> = all_graves
+                    .iter()
+                    .filter(|(_, at, _)| reachable(&world_map.tiles, entry, *at, None))
+                    .cloned()
+                    .collect();
+                let graves = if open_graves.is_empty() {
+                    all_graves
+                } else {
+                    open_graves
+                };
                 if graves.is_empty() {
                     return Err(format!("no graves on '{map_template}' for the villain"));
                 }

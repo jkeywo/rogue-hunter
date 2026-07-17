@@ -1220,7 +1220,8 @@ impl Sim {
             self.log(EventKind::Combat, "Your blow goes wide.".to_owned());
             return;
         }
-        let final_damage = if coup { damage * 2 } else { damage };
+        // A coup de grace on a sleeping thing lands with terrible weight.
+        let final_damage = if coup { damage * 3 } else { damage };
         self.deal_damage_to_actor(id, final_damage, false);
     }
 
@@ -1245,7 +1246,8 @@ impl Sim {
             );
             return;
         }
-        let final_damage = if coup { damage * 2 } else { damage };
+        // A coup de grace on a sleeping thing lands with terrible weight.
+        let final_damage = if coup { damage * 3 } else { damage };
         self.deal_damage_to_actor(id, final_damage, silver);
     }
 

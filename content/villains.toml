@@ -37,7 +37,7 @@ telegraph = "Grown vast and terrible, the beast's claws strike deeper."
 [revenant]
 name = "Revenant"
 glyph = "R"
-health = 22
+health = 20
 melee_damage = 3
 hit_percent = 70
 tier_bonus_health = 3

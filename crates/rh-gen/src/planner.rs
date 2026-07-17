@@ -709,12 +709,19 @@ fn goal(ctx: &Ctx, state: &PState) -> Option<u16> {
             .map(|index| u16::from(state.items[index]))
             .unwrap_or(0)
     };
+    // Opening the villain's grave itself costs a Physical point; without it
+    // the fight starts with no snare or Killing Blow in reserve.
+    let physical_at_fight = if ctx.dormant_opening {
+        state.physical.saturating_sub(1)
+    } else {
+        state.physical
+    };
     let loadout = HuntLoadout {
         hunter_hp: ctx.catalogue.hunter.health,
         draughts: item("wound-draught"),
         silver_bullets: item("silver-bullet"),
         binding_charms: item("binding-charm"),
-        physical: state.physical,
+        physical: physical_at_fight,
         on_consecrated_ground: state.consecrated && ctx.villain_map == SETTLEMENT,
         dormant_opening: ctx.dormant_opening,
     };
