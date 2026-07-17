@@ -1,0 +1,426 @@
+entities:
+  - system: rogue-hunter-runtime
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Rogue Hunter Runtime
+      summary: Deterministic, authoritative early-modern folk-horror roguelike simulation shared by terminal and WebAssembly clients.
+      references: [seeded-mystery-generator, clue-graph-validator, command-replay, terminal-client, web-client]
+
+  - component: headless-simulation-foundation
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Headless simulation first
+      summary: Implement the deterministic simulation, graph-first generator, solvability planner, and replay harness before either UI client. Terminal and WASM clients are views over that command/state interface.
+      references: [seeded-mystery-generator, clue-graph-validator, command-replay, terminal-client, web-client]
+    architecture:
+      kind: authoritative simulation
+      owns: [authoritative-run-state]
+
+  - state: authoritative-run-state
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Authoritative run state
+      summary: The headless simulation alone owns generated world state, global clock, local tactical turn, actors, resources, discoveries, inventory, event log, and replay cursor.
+    architecture:
+      classification: authoritative
+      owner: headless-simulation-foundation
+
+  - component: semantic-command-boundary
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Semantic command boundary
+      summary: Keyboard, mouse, replay, terminal, and browser inputs are translated into one validated semantic command before the authoritative simulation changes state.
+      references: [headless-simulation-foundation, command-replay]
+    architecture:
+      kind: command validator
+
+  - component: generation-inspector
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Developer-only generation inspector
+      summary: The headless toolchain exposes seed, clue graph, certified routes, node costs, and candidate rejection reasons to make generator failures diagnosable.
+      references: [headless-simulation-foundation, clue-graph-validator, command-replay]
+
+  - component: seeded-mystery-generator
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Graph-first mystery generator
+      summary: Builds two feasible costed clue paths first, then materialises a settlement, wilderness, outlying site, NPCs, opportunities, items, encounters, villain, and event clock from authored tables.
+      references: [clue-graph-validator, investigation-pools, villain-composition, three-map-world]
+
+  - component: authored-content-catalogue
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Validated declarative content catalogue
+      summary: Monsters, origins, schemes, items, clues, NPCs, and map templates are human-editable declarative content, checked by schema and generator validation in CI while Rust owns runtime rules.
+      references: [seeded-mystery-generator, clue-graph-validator]
+
+  - component: clue-graph-validator
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Clue graph and viability validator
+      summary: Validates an early hunt-ready route by turn 3, which may use obscure actions, and an independent more obvious hunt-ready fallback by turn 5. Both must be resource-feasible and satisfy a final-hunt combat heuristic of at least 75 percent viability before a generated world is returned.
+      references: [investigation-pools, villain-composition, final-hunt-rules, combat-viability-threshold]
+    architecture:
+      kind: deterministic validator
+      classification: authoritative
+
+  - component: three-map-world
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Three-map tactical world
+      summary: "Generates 32 by 20 settlement, wilderness, and outlying-site grids connected as a triangle. Travel uses paired generated exit tiles: reaching one is local movement, while using it advances the global clock and places the hunter at its paired destination exit. Settlement routes are safe; the wilderness shortcut has a seed-defined ambush chance. Each map reserves limited deliberate cover pockets for tactical counterplay."
+      references: [travel-clock, encounter-turn-rules]
+
+  - component: map-visibility
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Region map and local fog of war
+      summary: The three-region travel map is visible from the start. Local tactical maps use fog of war, and opportunities are only rendered after discovery or information reveals them.
+      references: [three-map-world, terminal-client, web-client]
+
+  - component: travel-clock
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Six-turn travel clock
+      summary: Travel, fleeing, death, and explicitly costly actions advance the global clock. All local movement and interaction remain turn-based tactical actions but do not advance it. Generated schemes trigger a minor event on turn 2 and a major event on turn 4; each raises a stackable villain threat tier with 3 extra health and one enhanced behaviour. The sixth turn begins the final hunt.
+      references: [final-hunt-rules]
+
+  - component: global-clock-action-gate
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Time-costing action gate
+      summary: Only travel, fleeing, death, and explicitly marked costly actions advance the global clock. A voluntary action that would exceed the final-hunt deadline, including map travel, is rejected before state changes.
+      references: [travel-clock, final-hunt-rules, semantic-command-boundary]
+
+  - component: investigation-pools
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Lore, Social, and Mystic pools
+      summary: The fixed MVP hunter has caps Lore 2, Social 2, Mystic 0. Travel restores one point to every pool up to its cap; an optional mystical-NPC favour may grant one temporary over-cap Mystic point.
+      references: [mvp-hunter, seek-mystical-favour]
+
+  - component: physical-and-stamina-resources
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Physical points and encounter stamina
+      summary: The fixed hunter has Physical 2, which fuels powerful signature abilities and visible forceful opportunities such as opening random graves, forcing barred doors, and shifting rubble; it restores one point on every global-clock advance. The hunter has Stamina 4, which fuels special moves and regenerates each encounter turn so moves can be saved for a burst.
+      references: [mvp-hunter, encounter-turn-rules]
+
+  - component: hunter-combat-abilities
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Generic manoeuvres and hunter signatures
+      summary: "Generic Stamina manoeuvres are shared by all future hunters: Aim costs 2 Stamina and makes the next ranged attack certain to hit; Power Attack costs 2 and gives the next melee attack 1.5 times damage; Sprint costs 1 and moves two tiles in one action. The fixed Huntress has Set Snare, which costs 1 Physical point and traps the first enemy entering an adjacent tile for three turns; trapped enemies cannot move, pounce, or dash and retain adjacent attacks at minus 25 percentage points to hit. Killing Blow costs 1 Physical point and deals double melee damage to an immobile enemy or one at 50 percent health or less."
+      references: [physical-and-stamina-resources, encounter-turn-rules]
+
+  - component: villain-composition
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Folklore villain composition
+      summary: Supports and solver-validates all eight combinations of Werewolf or Revenant, two origins, and two schemes. Two corroborating identity clues formally uncover the hunt. A Werewolf is secretly one generated NPC; a Revenant lies dormant in a generated grave, potentially near the church. The hunter may gamble by attacking villagers without proof or spending 1 Physical point opening random graves; an innocent attack causes settlement hostility and loses that NPC's resources and information but does not advance the global clock. Origins modify signs and weaknesses; schemes determine events and minions.
+      references: [final-hunt-rules]
+
+  - component: ordinary-enemy-roster
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Wolves, bandits, and restless dead
+      summary: The MVP ordinary-enemy roster supplies generated early threats and scheme minions for both villain archetypes.
+      references: [encounter-turn-rules, villain-composition]
+
+  - component: deterministic-low-chance-loot
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Seed-determined low-chance enemy loot
+      summary: Ordinary enemies have an initial 15 percent, seed-determined drop chance for ammunition, ingredients, coin, or clues. Generator validation must not depend on a lucky combat drop for either hunt-ready route.
+      references: [ordinary-enemy-roster, clue-graph-validator, command-replay]
+
+  - component: final-hunt-rules
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Final hunt and recovery rules
+      summary: On the sixth turn the villain appears somewhere on the current map and pursues the hunter. Death keeps inventory and discoveries, respawns in settlement, and loses a turn. Time-expiring voluntary actions are blocked.
+      references: [encounter-turn-rules, command-replay]
+
+  - component: encounter-turn-rules
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Shared-map roguelike encounters
+      summary: Every investigation grid is always turn-based. The fixed Huntress has 12 health; ordinary enemies have roughly 3 to 6 and villains roughly 18 to 24, all authored-data tuning. The hunter carries a melee weapon and three ordinary flintlock shots; commands are move, melee, ranged attack, item use, and wait; active enemies act after every hunter action. Local turns do not advance the global clock.
+      references: [weakness-preparation]
+
+  - component: weakness-preparation
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Crafting and weakness counters
+      summary: Lore or Mystic gathering supplies ingredients. Free workstation crafting creates useful or useless items, including a silver bullet from church-candle or wilderness-mined silver. A silver bullet against a Werewolf deals massive damage and stops regeneration; Aim makes the next ranged shot certain to hit. Weaknesses do not gate early hunts.
+      references: [combat-viability-threshold]
+
+  - component: wound-draught
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Craftable wound draught
+      summary: A crafted healing item restores 4 hunter health but consumes the encounter action, allowing recovery from bad rolls without removing tactical risk.
+      references: [weakness-preparation, encounter-turn-rules]
+
+  - component: werewolf-pounce-ai
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Werewolf pounce and obstacle tactics
+      summary: The Werewolf uses a three-turn-cooldown pounce along a clear line. Obstacles that break the lane deny the leap, making local positioning and hunter special moves primary defensive tactics.
+      references: [encounter-turn-rules, weakness-preparation]
+
+  - component: church-consecration-rite
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Revenant church counter
+      summary: An optional one-turn rite consecrates the settlement church. A Revenant is normally vulnerable once every five encounter turns and takes no direct damage otherwise; in the warded space it takes ongoing damage and remains vulnerable. The rite is useless against a Werewolf.
+      references: [travel-clock, final-hunt-rules]
+
+  - component: revenant-cadence-ai
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Revenant vulnerability and dash cadence
+      summary: The Revenant's five-turn vulnerability cadence shares a dash cooldown. It retreats before its vulnerable turn or dashes at a distant hunter, unless consecrated ground keeps it vulnerable.
+      references: [encounter-turn-rules, church-consecration-rite]
+
+  - component: revenant-binding-charm
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Portable Revenant counter
+      summary: A consumable craftable binding charm, used adjacent to a Revenant, forces five consecutive encounter turns of vulnerability without stopping its dash and provides the non-church validated preparation route.
+      references: [weakness-preparation, revenant-cadence-ai, clue-graph-validator]
+
+  - component: command-replay
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Deterministic semantic replay
+      summary: A displayed base seed and semantic command log reproduce generation, combat rolls, ambushes, saves, browser sessions, terminal sessions, and time-travel diagnostics exactly. The pair is encoded as a compact share code for copy/paste, bug reports, and shared runs.
+
+  - component: replay-save-persistence
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Replay save persistence
+      summary: "Active runs persist as seed-plus-command-log replay saves: local files in the native client and browser local storage in the web client."
+      references: [command-replay, terminal-client, web-client]
+
+  - component: terminal-client
+    core:
+      status: proposed
+      confidence: confirmed
+      title: Terminal ASCII client
+      summary: Native PC Bevy plus Ratatui presentation client that renders simulation state and maps keyboard and mouse clicks to semantic commands. Hover inspects visible state without changing the simulation.
+      references: [command-replay]
+
+  - component: web-client
+    core:
+      status: proposed
+      confidence: confirmed
+      title: GitHub Pages ASCII WebAssembly client
+      summary: Purpose-built Canvas and HTML browser client using the same WebAssembly simulation state and semantic command contract as the native client. Hover inspects visible state; clicks map to semantic commands.
+      references: [command-replay]
+
+  - component: ci-and-pages-release
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Required checks and Pages release
+      summary: Every pull request runs PASM validation, replay checks, the bounded local generator corpus, and native and WASM builds. Only a successful default-branch build deploys the browser client to GitHub Pages.
+      references: [clue-graph-validator, command-replay, terminal-client, web-client]
+
+  - component: hunter-grimoire
+    core:
+      status: accepted
+      confidence: confirmed
+      title: In-game monster grimoire
+      summary: A fully unlocked in-game reference documents every MVP monster, origin, scheme, pattern, weakness, and term in fiction rather than numeric rules. Exact timing is observable through clear runtime messages, such as a Revenant vulnerability announcement.
+      references: [villain-composition, terminal-client, web-client]
+
+  - component: event-log
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Persistent event log
+      summary: Shared observable state records combat rolls, monster telegraphs, regeneration, pounces, clue discoveries, and clock events for terminal, browser, and replay views.
+      references: [command-replay, terminal-client, web-client, encounter-turn-rules]
+
+  - component: opening-splash-screen
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Opening splash screen
+      summary: The terminal and browser begin with a concise introduction to the monster-hunting premise and current key bindings, then offer New Run, Enter Seed, and Paste Replay Code.
+      references: [terminal-client, web-client]
+
+  - component: mouse-inspection-and-actions
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Mouse inspection and semantic actions
+      summary: Both clients let hover inspect visible tiles, actors, opportunities, and UI. Clicks select targets and issue the same validated semantic actions as keyboard controls, without bypassing simulation rules.
+      references: [terminal-client, web-client, command-replay]
+
+  - component: case-report
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Post-run case report
+      summary: Completed and failed runs reveal the generated villain, origin, scheme, hidden clues, certified routes, and replay share code for learning and debugging.
+      references: [command-replay, clue-graph-validator, terminal-client, web-client]
+
+  - role: mvp-hunter
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Fixed MVP hunter
+      summary: Fixed, non-levelling hunter profile used by the initial generator and solver.
+
+  - verb: investigate-opportunity
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Investigate a visible opportunity
+      summary: Spend an available Lore, Social, or Mystic point to resolve a visible clue, relationship, ingredient, or preparation opportunity.
+    game_design:
+      architecture_links: [clue-graph-validator]
+      owner_role: mvp-hunter
+      costs: [one matching investigation point]
+      produces_facts: [discovered clue or acquired ingredient]
+
+  - component: visible-opportunity-affordances
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Visible opportunities and missing-pool explanations
+      summary: Once discovered, an opportunity remains visible. If its required Lore, Social, Mystic, or Physical point is unavailable, the UI describes the blocked action and missing requirement instead of hiding it.
+      references: [investigation-pools, physical-and-stamina-resources, terminal-client, web-client]
+
+  - resource: investigation-points
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Investigation points
+      summary: Per-sphere renewable capacity used to expose and resolve generated opportunities.
+    game_design:
+      sources: [initial hunter caps, travel refresh, temporary mystical favour]
+      sinks: [Lore investigations, Social investigations, Mystic investigations]
+
+  - information: hidden-villain-facts
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Hidden villain identity, location, signs, and weaknesses
+      summary: Generated villain facts are revealed through the clue graph. Optional false NPC information must have reachable disproof.
+    game_design:
+      enforcement_links: [clue-graph-validator]
+      visibility: partially-known
+      permitted_viewers: [mvp-hunter]
+      reveal_conditions: [discovered clue or acquired ingredient]
+
+  - component: npc-relationship-map
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Discovered NPC relationship map
+      summary: Generated NPCs appear once met. Relationship edges remain hidden until discovered through Social actions or spying, making the social web a deduction tool.
+      references: [investigation-pools, terminal-client, web-client]
+
+  - component: npc-routines
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Local-turn NPC routines
+      summary: Villagers and neutral NPCs take local turns to move, work, and talk, making generated relationships observable and Social opportunities spatially alive.
+      references: [npc-relationship-map, encounter-turn-rules]
+
+  - component: social-action-costs
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Free conversation and Social costs
+      summary: Ordinary NPC conversation is free. Gossip, persuasion, spying, secret exposure, and favour requests spend Social points when they resolve a consequential generated opportunity.
+      references: [investigation-pools, npc-routines]
+
+  - action: seek-mystical-favour
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Seek a mystical favour
+      summary: Optional Social spend and favour route granting one temporary Mystic point above the hunter maximum.
+    game_design:
+      architecture_links: [clue-graph-validator]
+      owner_role: mvp-hunter
+      costs: [one Social point, generated favour]
+      produces_facts: [temporary Mystic point]
+
+  - failure-state: time-expired
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Hunt deadline exhausted
+      summary: The run ends when the final-hunt deadline is exceeded.
+    game_design:
+      consequences: [terminal game over]
+      terminal: true
+
+  - tuning: combat-viability-threshold
+    core:
+      status: provisional
+      confidence: confirmed
+      title: Certified route combat viability
+      summary: Minimum planner-estimated final-fight chance for a generated route; players may attempt riskier hunts.
+    game_design:
+      affected_mechanics: [clue-graph-validator, final-hunt-rules]
+      intended_directional_effect: Higher values make generated winning routes more prepared and less reliant on luck.
+      bounds: 0.50 to 0.95; initial value 0.75
+      maturity: provisional
+
+  - tuning: generator-validation-budget
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Generator validation performance budget
+      summary: The deterministic local seed corpus must finish in under 30 seconds and the CI corpus in under five minutes while covering every villain combination.
+    game_design:
+      affected_mechanics: [seeded-mystery-generator, clue-graph-validator]
+      intended_directional_effect: Larger corpora increase generator confidence but must remain within the local and CI feedback budgets.
+      bounds: local under 30 seconds; CI under 5 minutes
+      maturity: provisional
+
+  - playtest-claim: generator-produces-readable-mysteries
+    core:
+      status: proposed
+      confidence: confirmed
+      title: Generated mysteries remain readable
+      summary: Players can see opportunities, understand unavailable investigation requirements, and identify why a discovered fact matters.
+    game_design:
+      claim: A player can form and revise a plausible hunt plan from visible opportunities and discovered facts without hidden UI gating.
+      supports: [seeded-mystery-generator, investigation-pools, hidden-villain-facts]

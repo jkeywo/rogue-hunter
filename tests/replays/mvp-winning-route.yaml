@@ -1,0 +1,12 @@
+scenario:
+  id: mvp-winning-route
+  initial_facts: [seeded world, visible opportunities]
+  steps:
+    - kind: action
+      actor: mvp-hunter
+      value: investigate-opportunity
+    - kind: reveal
+      value: hidden-villain-facts
+    - kind: action
+      actor: mvp-hunter
+      value: seek-mystical-favour

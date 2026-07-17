@@ -1,0 +1,131 @@
+entities:
+  - resource: physical-points
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Physical points
+      summary: The fixed Huntress has a maximum of two Physical points. They fuel signature abilities and forceful visible opportunities, then recover one at each global-clock advance.
+    game_design:
+      sources: [initial Huntress profile, global-clock refresh]
+      sinks: [Set Snare, Killing Blow, open random grave, forceful opportunities]
+
+  - resource: encounter-stamina
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Encounter stamina
+      summary: The fixed Huntress has four Stamina. It is spent on generic manoeuvres and refreshes on each local tactical turn.
+    game_design:
+      sources: [initial Huntress profile, local-turn refresh]
+      sinks: [Aim, Power Attack, Sprint]
+
+  - action: take-travel-turn
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Travel through a paired exit
+      summary: Move through a paired map exit, advance the global clock, refresh eligible point pools, resolve scheduled scheme events, and arrive at the paired exit.
+    game_design:
+      architecture_links: [semantic-command-boundary]
+      owner_role: mvp-hunter
+      costs: [one global turn]
+      produces_facts: [global clock advanced]
+
+  - action: open-random-grave
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Open a random grave
+      summary: Spend one Physical point to inspect a grave without corroborating clues. It may expose the dormant Revenant, mundane contents, or an empty grave, but no validated route depends on it.
+    game_design:
+      architecture_links: [semantic-command-boundary]
+      owner_role: mvp-hunter
+      costs: [one Physical point]
+      produces_facts: [grave contents learned]
+
+  - action: uncover-villain
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Formally uncover the villain
+      summary: Combine two corroborating identity clues to expose the Werewolf NPC or Revenant grave and enable a prepared early hunt.
+    game_design:
+      architecture_links: [clue-graph-validator]
+      owner_role: mvp-hunter
+      produces_facts: [villain uncovered]
+
+  - action: craft-countermeasure
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Craft a countermeasure
+      summary: Freely craft any available recipe at a workstation, including useful weakness counters and irrelevant items.
+    game_design:
+      architecture_links: [clue-graph-validator]
+      owner_role: mvp-hunter
+      produces_facts: [effective countermeasure]
+
+  - action: initiate-early-hunt
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Initiate a prepared early hunt
+      summary: Start the villain encounter before the final hunt after identity and a viable countermeasure have been obtained.
+    game_design:
+      architecture_links: [clue-graph-validator]
+      owner_role: mvp-hunter
+      produces_facts: [early hunt initiated]
+
+  - failure-state: innocent-villager-fallout
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Innocent villager fallout
+      summary: Attacking or killing an innocent villager makes the settlement hostile and removes that NPC's information and resources, without advancing the global clock.
+    game_design:
+      consequences: [settlement hostility, lost NPC information, lost NPC resources]
+      terminal: false
+      recovery_paths: [independent generated alternate route]
+
+  - failure-state: hunter-death
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Hunter death and respawn
+      summary: Hunter death preserves inventory and discoveries, respawns the hunter in the settlement, and advances the global clock by one turn.
+    game_design:
+      consequences: [respawn in settlement, global clock advanced]
+      terminal: false
+      recovery_paths: [continue the current run with retained inventory and discoveries]
+
+  - information: grimoire-knowledge
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Fully unlocked fictional grimoire knowledge
+      summary: Every monster, origin, scheme, pattern, weakness, and term is available in fictional prose from the beginning. Exact mechanics are demonstrated through runtime telegraphs instead.
+    game_design:
+      visibility: public
+      permitted_viewers: [mvp-hunter]
+
+  - tuning: certified-route-deadlines
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Hunt-ready route deadlines
+      summary: Generated worlds require a potentially obscure hunt-ready route by global turn three and a more obvious independent fallback by global turn five.
+    game_design:
+      affected_mechanics: [seeded-mystery-generator, clue-graph-validator]
+      intended_directional_effect: Tighter deadlines favour more direct generated routes and increase pressure on the player.
+      bounds: early route at or before turn 3; obvious fallback at or before turn 5
+      maturity: accepted
+
+  - playtest-claim: early-route-and-obvious-fallback
+    core:
+      status: proposed
+      confidence: confirmed
+      title: Certified routes are distinct and readable
+      summary: Every generated run provides an early, potentially obscure hunt-ready route and a later, more legible independent fallback.
+    game_design:
+      claim: Players can discover a credible early plan through unusual actions or follow a more obvious fallback without either route relying on a lucky drop.
+      supports: [clue-graph-validator, certified-route-deadlines, deterministic-low-chance-loot]

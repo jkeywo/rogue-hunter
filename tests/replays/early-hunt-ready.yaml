@@ -1,0 +1,16 @@
+scenario:
+  id: early-hunt-ready
+  initial_facts: [identity clue one, identity clue two, countermeasure materials]
+  steps:
+    - kind: action
+      actor: mvp-hunter
+      value: uncover-villain
+      requires_facts: [identity clue one, identity clue two]
+    - kind: action
+      actor: mvp-hunter
+      value: craft-countermeasure
+      requires_facts: [countermeasure materials]
+    - kind: action
+      actor: mvp-hunter
+      value: initiate-early-hunt
+      requires_facts: [villain uncovered, effective countermeasure]

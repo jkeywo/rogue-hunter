@@ -1,0 +1,16 @@
+scenario:
+  id: fallback-hunt-ready
+  initial_facts: [obvious identity clue one, obvious identity clue two, obvious countermeasure materials]
+  steps:
+    - kind: action
+      actor: mvp-hunter
+      value: uncover-villain
+      requires_facts: [obvious identity clue one, obvious identity clue two]
+    - kind: action
+      actor: mvp-hunter
+      value: craft-countermeasure
+      requires_facts: [obvious countermeasure materials]
+    - kind: action
+      actor: mvp-hunter
+      value: initiate-early-hunt
+      requires_facts: [villain uncovered, effective countermeasure]
