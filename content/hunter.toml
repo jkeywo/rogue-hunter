@@ -1,0 +1,51 @@
+# The fixed MVP hunter. Character choice is an explicit deferral; the
+# generator and solver track exactly this profile.
+
+name = "The Huntress"
+glyph = "@"
+health = 12
+lore_cap = 2
+social_cap = 2
+mystic_cap = 0
+physical_cap = 2
+stamina_cap = 4
+starting_items = ["hunting-blade", "flintlock", "flintlock-shot", "flintlock-shot", "flintlock-shot"]
+
+# Generic stamina manoeuvres, shared by all future hunters.
+
+[[manoeuvres]]
+id = "aim"
+name = "Aim"
+stamina_cost = 2
+effect = { kind = "sure-ranged-shot" }
+description = "Steady the flintlock. Your next ranged shot this encounter cannot miss."
+
+[[manoeuvres]]
+id = "power-attack"
+name = "Power Attack"
+stamina_cost = 2
+effect = { kind = "melee-damage-multiplier", numerator = 3 }
+description = "Put your weight behind the next blow. Your next melee strike deals half again its damage."
+
+[[manoeuvres]]
+id = "sprint"
+name = "Sprint"
+stamina_cost = 1
+effect = { kind = "dash", tiles = 2 }
+description = "Move two tiles in a single action."
+
+# Hunter-specific Physical-point signatures expressing the Huntress's identity.
+
+[[signatures]]
+id = "set-snare"
+name = "Set Snare"
+physical_cost = 1
+effect = { kind = "set-snare" }
+description = "Rig a hunting snare on an adjacent tile. The first enemy to step in is held fast for three turns: it cannot move, pounce, or dash, and its flailing blows falter."
+
+[[signatures]]
+id = "killing-blow"
+name = "Killing Blow"
+physical_cost = 1
+effect = { kind = "killing-blow" }
+description = "A single perfect strike for double damage, against a foe that is held fast or already gravely wounded."

@@ -1,0 +1,85 @@
+# Wilderness tactical map, 32x20. Deep wood crossed by a trail: settlement
+# east, outlying site south. Abandoned silver mine north-west behind fallen
+# rubble; standing stones and herb clearings off the trail.
+
+name = "The Deep Wood"
+role = "wilderness"
+description = "Old forest pressing close on a rutted trail. The shortcut to the manor runs through here — when the road is watched, so does trouble."
+
+rows = [
+  "################################",
+  "#,,TTT,,,,,,,TTT,,,,,,,TTT,,,,,#",
+  "#,,,,,,,,T,,,,,,,,,T,,,,,,,TT,,#",
+  "#,##%##,,,,,,,,,,,,,,,,,,,,,,,,#",
+  "#,#...#,TT,,,,TTT,,,,,,TT,,,,,,#",
+  "#,#####,,,,,,,,,,,,,,,,,,,,,,,,#",
+  "#,,,,,,,,,,,,,,,,,,,,,,,,,TTT,,#",
+  "#,,,TT,,,,,,TTT,,,,,,,,,,,,,,,,#",
+  "#,,,,,,,,,,,,,,,,,,,,,,,TT,,,,,#",
+  "#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#",
+  "#:::::::::::::::::::::::::::::::",
+  "#,,,,,,,,,,,,,,,,:,,,,,,,,,,,,,#",
+  "#,,TT,,,,,,,,,,,,:,,,,,TT,,,,,,#",
+  "#,,,,,,,,,,,,,,,,:,,,,,,,,,,,,,#",
+  "#,,,,,TTT,,,,,,,,:,,,,,,,,,,,,,#",
+  "#,,,,,,,,,,,,,,,,:,,,,,,TTT,,,,#",
+  "#,TT,,,,,,,,,,,,,:,,,,,,,,,,,,,#",
+  "#,,,,,,,,,,,,,,,,:,,,,,,,,,,,,,#",
+  "#,,,,,,,,,,,,,,,,:,,,,,,,,,,,,,#",
+  "#################:##############",
+]
+
+[legend]
+"#" = "wall"
+"." = "floor"
+"," = "grass"
+":" = "road"
+"%" = "rubble"
+"T" = "tree"
+
+[[slots]]
+id = "mine"
+kind = "wilds"
+at = [4, 4]
+
+[[slots]]
+id = "herb-clearing-north"
+kind = "wilds"
+at = [8, 8]
+
+[[slots]]
+id = "herb-clearing-south"
+kind = "wilds"
+at = [26, 12]
+
+[[slots]]
+id = "standing-stones"
+kind = "wilds"
+at = [25, 16]
+
+[[slots]]
+id = "wolf-den"
+kind = "wilds"
+at = [10, 14]
+
+[[slots]]
+id = "ambush-site"
+kind = "wilds"
+at = [17, 13]
+
+[[exits]]
+to = "settlement"
+at = [31, 10]
+
+[[exits]]
+to = "outlying"
+at = [17, 19]
+
+[[cover_pockets]]
+tiles = [[3, 1], [4, 1], [5, 1]]
+
+[[cover_pockets]]
+tiles = [[14, 4], [15, 4], [16, 4]]
+
+[[cover_pockets]]
+tiles = [[24, 15], [25, 15], [26, 15]]

@@ -1,0 +1,53 @@
+# Splash-screen text and key bindings shown before a run begins.
+
+splash_title = "ROGUE HUNTER"
+
+splash_intro = [
+  "Something is killing the valley folk, and the valley has sent for you.",
+  "You have six days. Walk the settlement, the deep wood, and the forsaken manor; trade words and watch faces; read the signs the thing cannot help but leave. Prove its name twice over, prepare its death, and take the hunt to it — or let the sixth night come, and it will take the hunt to you.",
+  "Everything you learn, you keep. Even dying only costs you a day. Days are the one thing you cannot craft.",
+]
+
+[[key_bindings]]
+keys = "Arrows / HJKL+YUBN"
+action = "Move / melee an adjacent enemy"
+
+[[key_bindings]]
+keys = "F"
+action = "Fire the flintlock (choose a target)"
+
+[[key_bindings]]
+keys = "E"
+action = "Interact: investigate, talk, travel, craft, loot"
+
+[[key_bindings]]
+keys = "A / P / S"
+action = "Aim / Power Attack / Sprint (stamina)"
+
+[[key_bindings]]
+keys = "X / K"
+action = "Set Snare / Killing Blow (Physical)"
+
+[[key_bindings]]
+keys = "I"
+action = "Inventory / use an item"
+
+[[key_bindings]]
+keys = "G / R / V"
+action = "Grimoire / Relationships / Region map"
+
+[[key_bindings]]
+keys = "L"
+action = "Event log"
+
+[[key_bindings]]
+keys = "Space / ."
+action = "Wait a turn"
+
+[[key_bindings]]
+keys = "Mouse"
+action = "Hover to inspect; click to move, target, or act"
+
+[[key_bindings]]
+keys = "Esc"
+action = "Menu / cancel"

@@ -1,0 +1,130 @@
+# Settlement tactical map, 32x20. Church and graveyard north-west, forge
+# north-east, market square centre, houses and inn south. Roads lead west to
+# the wilderness and south to the outlying manor.
+
+name = "The Settlement"
+role = "settlement"
+description = "A huddle of stone and thatch around a church, a forge, and a market square. Safe by daylight. Probably."
+
+rows = [
+  "################################",
+  "#.......#,,,,,,,,,,,,,,,#......#",
+  "#.A.....+,n,,n,,n,,,,,,,#.W....#",
+  "#.......#,,,,,,,,,,,,,,,+......#",
+  "#.......#,n,,n,,n,,,,,,,#......#",
+  "#.......#,,,,,,,,,,,,,,,########",
+  "####+####,,,,,,,,,,,,,,,,,,,,,,#",
+  "#,,,:,,,,,,,,,,,,,,,,,,,,,,,,,,#",
+  "#,,,:,,,,,,,,TT,,,,,,,,,,,,,,,,#",
+  "#,,,:,,,,,,,,TT,,,,,,,,,,,,,,,,#",
+  ":::::::::::::::::::::::::::,,,,#",
+  "#,,,,,,,,,,,,,,,,,,,,,,,,,:,,,,#",
+  "#,,,,,,,,,,,,,,,,,,,,,,,,,:,,,,#",
+  "#,,####+##,,,,,####+####,,:,,,,#",
+  "#,,#.....#,,,,,#.......#,,:,,,,#",
+  "#,,#.....#,,,,,#.......#,,:,,,,#",
+  "#,,#.....#,,,,,#.......#,,:,,,,#",
+  "#,,#######,,,,,#########,,:,,,,#",
+  "#,,,,,,,,,,,,,,,,,,,,,,,,,:,,,,#",
+  "##########################:#####",
+]
+
+[legend]
+"#" = "wall"
+"." = "floor"
+"," = "grass"
+":" = "road"
+"n" = "grave"
+"+" = "door"
+"A" = "altar"
+"W" = "workstation"
+"T" = "tree"
+
+[[slots]]
+id = "church-altar"
+kind = "church"
+at = [2, 2]
+
+[[slots]]
+id = "church-candles"
+kind = "church"
+at = [5, 2]
+
+[[slots]]
+id = "church-records"
+kind = "church"
+at = [3, 4]
+
+[[slots]]
+id = "forge"
+kind = "workstation"
+at = [26, 2]
+
+[[slots]]
+id = "grave-1"
+kind = "grave"
+at = [10, 2]
+
+[[slots]]
+id = "grave-2"
+kind = "grave"
+at = [13, 2]
+
+[[slots]]
+id = "grave-3"
+kind = "grave"
+at = [16, 2]
+
+[[slots]]
+id = "grave-4"
+kind = "grave"
+at = [10, 4]
+
+[[slots]]
+id = "grave-5"
+kind = "grave"
+at = [13, 4]
+
+[[slots]]
+id = "grave-6"
+kind = "grave"
+at = [16, 4]
+
+[[slots]]
+id = "graveyard-gate"
+kind = "npc"
+at = [10, 5]
+
+[[slots]]
+id = "kill-site"
+kind = "kill-site"
+at = [16, 8]
+
+[[slots]]
+id = "market-stall"
+kind = "npc"
+at = [10, 11]
+
+[[slots]]
+id = "square"
+kind = "npc"
+at = [15, 11]
+
+[[slots]]
+id = "inn-hearth"
+kind = "npc"
+at = [19, 15]
+
+[[exits]]
+to = "wilderness"
+at = [0, 10]
+
+[[exits]]
+to = "outlying"
+at = [26, 19]
+
+[[cover_pockets]]
+tiles = [[13, 8], [14, 8], [13, 9], [14, 9]]
+
+[[cover_pockets]]
+tiles = [[3, 13], [4, 13], [5, 13], [6, 13]]

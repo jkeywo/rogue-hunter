@@ -1,0 +1,124 @@
+# NPC archetypes, secret templates, and relationship kinds. Each run casts
+# three NPCs: the mystical archetype plus two others, wired into a triangle
+# of relationship links. False secrets must be optional and falsifiable.
+
+[archetypes.priest]
+name = "Priest"
+glyph = "P"
+name_pool = ["Father Ambrose", "Father Caleb", "Parson Grey"]
+work_slot = "church-altar"
+can_host_villain = true
+mystical = false
+secrets = ["skimming-tithes", "false-witch", "hidden-debt"]
+description = "Keeper of the church and its records. His faith is real; his accounts may not be."
+
+[archetypes.blacksmith]
+name = "Blacksmith"
+glyph = "B"
+name_pool = ["Marta Reed", "Old Hew", "Goodman Tarn"]
+work_slot = "forge"
+can_host_villain = true
+mystical = false
+secrets = ["hidden-debt", "poaching-past", "secret-love"]
+description = "Keeps the forge hot and the settlement shod. Strong arms, short words."
+
+[archetypes.innkeeper]
+name = "Innkeeper"
+glyph = "I"
+name_pool = ["Widow Hale", "Master Pell", "Goodwife Brandy"]
+work_slot = "inn-hearth"
+can_host_villain = true
+mystical = false
+secrets = ["hidden-debt", "secret-love", "false-curse"]
+description = "Hears everything said in the taproom and forgets none of it."
+
+[archetypes.herbalist]
+name = "Herbalist"
+glyph = "H"
+name_pool = ["Mother Wren", "Sylvie of the Hedge", "Old Nan"]
+work_slot = "market-stall"
+can_host_villain = false
+mystical = true
+secrets = ["false-witch", "secret-love"]
+description = "Sells simples at the market and knows older arts than she admits. The right favour opens doors no key fits."
+
+[archetypes.gravedigger]
+name = "Gravedigger"
+glyph = "G"
+name_pool = ["Sexton Mould", "Digger Finch", "Quiet Tobias"]
+work_slot = "graveyard-gate"
+can_host_villain = true
+mystical = false
+secrets = ["poaching-past", "false-curse", "hidden-debt"]
+description = "Digs the graves and, lately, will not look at them."
+
+[archetypes.poacher]
+name = "Poacher"
+glyph = "O"
+name_pool = ["Wat Snare", "Bess Longstride", "Crooked Jem"]
+work_slot = "square"
+can_host_villain = true
+mystical = false
+secrets = ["poaching-past", "hidden-debt", "secret-love"]
+description = "Knows every trail in the wood by night. Officially, has never set foot there."
+
+# --- Secret templates -------------------------------------------------------
+
+[secrets.hidden-debt]
+name = "A Hidden Debt"
+false_secret = false
+text = "{npc} owes more coin than two good years could repay, and the creditor is losing patience."
+
+[secrets.secret-love]
+name = "A Secret Love"
+false_secret = false
+text = "{npc} keeps a love the settlement would never forgive, and meets after dark to keep it."
+
+[secrets.poaching-past]
+name = "A Poacher's Past"
+false_secret = false
+text = "{npc} once took the lord's deer, and a man went to the gallows for it in their place."
+
+[secrets.skimming-tithes]
+name = "Skimmed Tithes"
+false_secret = false
+text = "{npc} has been thinning the tithe-box for years, a penny at a time."
+
+[secrets.false-witch]
+name = "Named a Witch"
+false_secret = true
+text = "They whisper that {npc} works black arts by candlelight and speaks with the dead."
+disproof = "The 'black arts' are letters: {npc} has been secretly teaching the mill-children to read, against the steward's wishes."
+
+[secrets.false-curse]
+name = "The Family Curse"
+false_secret = true
+text = "They say {npc}'s line is cursed, and that the trouble in the valley follows their blood."
+disproof = "The parish record is plain: the 'curse' was invented two generations back in a lawsuit over grazing rights. There is nothing in it."
+
+# --- Relationship kinds -----------------------------------------------------
+
+[[relationship_kinds]]
+id = "kin"
+name = "Kin"
+discovered_text = "{a} and {b} are close kin, though they do not advertise it."
+
+[[relationship_kinds]]
+id = "rivals"
+name = "Old Rivals"
+discovered_text = "{a} and {b} have hated each other for years, and it is more than habit."
+
+[[relationship_kinds]]
+id = "lovers"
+name = "Secret Lovers"
+discovered_text = "{a} and {b} meet after dark, and it is not to talk business."
+
+[[relationship_kinds]]
+id = "debtor"
+name = "Debtor and Creditor"
+discovered_text = "{a} owes {b} a great deal of money, and both pretend otherwise in company."
+
+[[relationship_kinds]]
+id = "old-friends"
+name = "Old Friends"
+discovered_text = "{a} and {b} came up together and trust each other with anything — almost anything."

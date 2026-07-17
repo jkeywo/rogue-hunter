@@ -1,0 +1,68 @@
+# Villain archetypes. Threat tiers stack: each raises health by
+# tier_bonus_health and unlocks the next tier behaviour in order.
+
+[werewolf]
+name = "Werewolf"
+glyph = "W"
+health = 20
+melee_damage = 3
+hit_percent = 70
+tier_bonus_health = 3
+concealment = "npc-host"
+weakness_item = "silver-bullet"
+affected_by_consecration = false
+description = "By day a neighbour; by night a beast. It heals as fast as it is hurt, unless the wound is silver."
+
+[werewolf.pounce]
+range = 6
+cooldown = 3
+telegraph = "The beast gathers itself — its eyes fix on a clear run at you!"
+
+[werewolf.regeneration]
+per_turn = 1
+telegraph = "Torn flesh knits closed before your eyes."
+
+[[werewolf.tier_behaviours]]
+id = "swift-hunter"
+name = "Swift Hunter"
+effect = { kind = "pounce-cooldown", turns = 2 }
+telegraph = "The beast has fed. It moves quicker now, hungrier."
+
+[[werewolf.tier_behaviours]]
+id = "savage"
+name = "Savage"
+effect = { kind = "bonus-melee-damage", amount = 1 }
+telegraph = "Grown vast and terrible, the beast's claws strike deeper."
+
+[revenant]
+name = "Revenant"
+glyph = "R"
+health = 22
+melee_damage = 3
+hit_percent = 70
+tier_bonus_health = 3
+concealment = "dormant-grave"
+weakness_item = "binding-charm"
+affected_by_consecration = true
+description = "A corpse risen with a purpose. No blade bites it, save in the moments its shroud of grave-shadow thins."
+
+[revenant.cadence]
+period = 5
+dash_tiles = 4
+bound_vulnerable_turns = 5
+consecrated_damage_per_turn = 1
+vulnerable_telegraph = "The revenant's shroud of shadow thins — strike now, while it can bleed!"
+dash_telegraph = "The revenant flows across the ground like spilled ink."
+guarded_telegraph = "Your blow passes through grave-shadow as through smoke."
+
+[[revenant.tier_behaviours]]
+id = "spectral-speed"
+name = "Spectral Speed"
+effect = { kind = "dash-cooldown", turns = 4 }
+telegraph = "The revenant's stride lengthens; the dark carries it faster."
+
+[[revenant.tier_behaviours]]
+id = "grave-chill"
+name = "Grave Chill"
+effect = { kind = "bonus-melee-damage", amount = 1 }
+telegraph = "A killing cold gathers about the revenant's hands."

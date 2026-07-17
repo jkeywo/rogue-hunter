@@ -1,0 +1,73 @@
+# Items. Combat values are authored tuning, not code constants.
+
+[hunting-blade]
+name = "Hunting Blade"
+glyph = "/"
+kind = { kind = "melee-weapon", damage = 2 }
+description = "A long working knife, kept wickedly sharp."
+
+[flintlock]
+name = "Flintlock"
+glyph = "}"
+kind = { kind = "ranged-weapon", damage = 3, range = 8, ammo = "flintlock-shot" }
+description = "A horse-pistol that throws a heavy ball. Slow to trust, loud as judgement."
+
+[flintlock-shot]
+name = "Flintlock Shot"
+glyph = "*"
+kind = { kind = "ammunition" }
+description = "A cast lead ball and a measure of powder."
+
+[silver-bullet]
+name = "Silver Bullet"
+glyph = "*"
+kind = { kind = "weakness-ammunition", damage = 8, stops_regeneration = true }
+description = "A ball of true silver. Against the beast it bites to the curse's heart, and what it wounds does not heal."
+
+[wound-draught]
+name = "Wound Draught"
+glyph = "!"
+kind = { kind = "draught", heal = 4 }
+description = "A bitter physic of moon-herb. Drinking it costs you the moment, but knits torn flesh."
+
+[binding-charm]
+name = "Binding Charm"
+glyph = "&"
+kind = { kind = "binding-charm" }
+description = "Grave-dust and moon-herb sewn in a caul. Pressed close to the risen dead, it strips their shroud of shadow for five long breaths."
+
+[silver]
+name = "Raw Silver"
+glyph = "$"
+kind = { kind = "ingredient" }
+description = "A fist of pale metal, cold to the touch."
+
+[moon-herb]
+name = "Moon-herb"
+glyph = "\""
+kind = { kind = "ingredient" }
+description = "A silver-leafed herb that only shows itself by night."
+
+[grave-dust]
+name = "Grave-dust"
+glyph = "\""
+kind = { kind = "ingredient" }
+description = "Earth from a consecrated grave, dry as old paper."
+
+[bitter-root]
+name = "Bitter-root"
+glyph = "\""
+kind = { kind = "ingredient" }
+description = "A twisted root that numbs the tongue and cleans a wound."
+
+[coin]
+name = "Coin"
+glyph = "$"
+kind = { kind = "coin" }
+description = "Honest silver pennies. Good for trade, useless against the dark."
+
+[iron-charm]
+name = "Iron Charm"
+glyph = "&"
+kind = { kind = "curio" }
+description = "A comforting trinket of cold iron. The folk swear by it. The folk are wrong."

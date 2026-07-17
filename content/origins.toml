@@ -1,0 +1,12 @@
+# Origins change the villain's signs: which sites carry identity clues and
+# how the mystery reads. Weakness counters remain archetypal.
+
+[ancient-curse]
+name = "An Ancient Curse"
+sign_sites = ["grave", "church", "wilds"]
+description = "The evil is old. Its signs lie in parish records, weathered stones, and dreams that are not dreams."
+
+[bitter-betrayal]
+name = "A Bitter Betrayal"
+sign_sites = ["npc", "kill-site", "outlying-site"]
+description = "The evil is fresh, born of a wrong done between the living. Its signs are grudges, whispers, and blood not yet dry."

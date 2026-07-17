@@ -1,0 +1,297 @@
+# Clue templates. The generator instantiates these into placed opportunities.
+# Placeholders: {npc} the implicated NPC, {grave} the villain's grave,
+# {villain} the villain's name. Obscurity: 0 obvious .. 3 niche; certified
+# fallback routes must stay within the fallback obscurity budget.
+
+# --- Werewolf identity ------------------------------------------------------
+
+[torn-cloth]
+name = "Torn Cloth"
+archetype = "werewolf"
+category = "identity"
+action = "examine"
+pool = "lore"
+site = "kill-site"
+obscurity = 0
+prompt = "The kill is savage, but something pale is snagged where the body was dragged."
+reveal = "A scrap of good cloth, torn by teeth — and you have seen {npc} wearing its match."
+
+[tracks-to-town]
+name = "Tracks to Town"
+archetype = "werewolf"
+category = "identity"
+action = "track"
+pool = "lore"
+site = "wilds"
+obscurity = 1
+prompt = "Pad-marks the size of plates cross the trail here, heading for the settlement."
+reveal = "You follow the pad-marks until, at the field's edge, they become boot-prints — walking calmly toward {npc}'s door."
+
+[absent-neighbour]
+name = "The Absent Neighbour"
+archetype = "werewolf"
+category = "identity"
+action = "gossip"
+pool = "social"
+site = "npc"
+obscurity = 0
+prompt = "The villagers are eager to talk about the night of the killing."
+reveal = "Everyone has an account of that night — everyone except {npc}, whom nobody saw from dusk until grey dawn."
+
+[moonlit-sighting]
+name = "Moonlit Sighting"
+archetype = "werewolf"
+category = "identity"
+action = "spy"
+pool = "social"
+site = "npc"
+obscurity = 1
+prompt = "Someone in the settlement keeps strange hours. It would be worth watching quietly."
+reveal = "From the shadows you watch {npc} slip out under the moon, walking stiffly, as if the skin fit wrong."
+
+[beast-dream]
+name = "The Beast Dream"
+archetype = "werewolf"
+origins = ["ancient-curse"]
+category = "identity"
+action = "commune"
+pool = "mystic"
+site = "wilds"
+obscurity = 2
+prompt = "The old stones hum with something that wants to be seen."
+reveal = "The vision comes: the beast at its kill, raising a head that is all wolf — save for the eyes, which are {npc}'s."
+
+[old-bloodline]
+name = "The Old Bloodline"
+archetype = "werewolf"
+origins = ["ancient-curse"]
+category = "identity"
+action = "examine"
+pool = "lore"
+site = "church"
+obscurity = 2
+prompt = "The parish registers go back three hundred years, and someone has been careless with the old pages."
+reveal = "The curse runs in a bloodline the registers trace generation by generation — down to {npc}."
+
+[grudge-witness]
+name = "The Sworn Grudge"
+archetype = "werewolf"
+origins = ["bitter-betrayal"]
+category = "identity"
+action = "persuade"
+pool = "social"
+site = "npc"
+obscurity = 1
+prompt = "There is old bad blood here. Someone knows who swore revenge, and could be persuaded to say."
+reveal = "At last it spills out: it was {npc} who was wronged, {npc} who swore before witnesses to make the valley pay."
+
+[untouched-garden]
+name = "The Untouched Garden"
+archetype = "werewolf"
+origins = ["bitter-betrayal"]
+category = "identity"
+action = "examine"
+pool = "lore"
+site = "npc"
+obscurity = 2
+prompt = "Every cottage garden grows the same herbs — almost every one."
+reveal = "In {npc}'s garden every herb thrives except wolfsbane, which lies torn out and burned by the wall."
+
+# --- Werewolf location ------------------------------------------------------
+
+[den-tracks]
+name = "The Den"
+archetype = "werewolf"
+category = "location"
+action = "track"
+pool = "lore"
+site = "wilds"
+obscurity = 1
+prompt = "Old kills litter the undergrowth. Something beds down near here."
+reveal = "You find the den: a hollow of cracked bones. The beast returns here when the settlement is too watchful."
+
+[shepherds-account]
+name = "The Shepherd's Account"
+archetype = "werewolf"
+category = "location"
+action = "persuade"
+pool = "social"
+site = "npc"
+obscurity = 0
+prompt = "The shepherds drive their flocks wide of the high pasture and will not say why."
+reveal = "The oldest shepherd finally speaks: the beast walks the tree-line at dusk, and dens in the deep wood."
+
+# --- Revenant identity ------------------------------------------------------
+
+[burial-ledger]
+name = "The Burial Ledger"
+archetype = "revenant"
+category = "identity"
+action = "examine"
+pool = "lore"
+site = "church"
+obscurity = 0
+prompt = "The sexton's ledger sits chained to the vestry desk."
+reveal = "One plot is entered twice — dug, filled, and dug again a week later. No name, only a mark: {grave}."
+
+[disturbed-earth]
+name = "Disturbed Earth"
+archetype = "revenant"
+category = "identity"
+action = "examine"
+pool = "lore"
+site = "grave"
+obscurity = 0
+prompt = "The graves here are old and settled — most of them."
+reveal = "This earth has been moved from below. The sod lies wrong, pushed up like a trapdoor gently closed."
+
+[sextons-fear]
+name = "The Sexton's Fear"
+archetype = "revenant"
+category = "identity"
+action = "persuade"
+pool = "social"
+site = "npc"
+obscurity = 1
+prompt = "The gravedigger drinks like a man trying to forget his own trade."
+reveal = "He grips your wrist: 'I saw the earth breathe over {grave}. Rise and fall, like a sleeper. I'll dig no more there.'"
+
+[cold-candles]
+name = "The Cold Candles"
+archetype = "revenant"
+origins = ["ancient-curse"]
+category = "identity"
+action = "examine"
+pool = "lore"
+site = "church"
+obscurity = 2
+prompt = "During the litany for the dead, the altar candles behave strangely."
+reveal = "At one name in the litany every flame gutters blue and cold. The name belongs to the one buried at {grave}."
+
+[widows-grief]
+name = "The Widow's Grief"
+archetype = "revenant"
+origins = ["bitter-betrayal"]
+category = "identity"
+action = "gossip"
+pool = "social"
+site = "npc"
+obscurity = 1
+prompt = "There is a grief in this settlement that has curdled into something else."
+reveal = "The whispers agree: a great wrong was done to the one buried at {grave}, and the wrong was never paid for."
+
+[grave-chill-omen]
+name = "The Grave Chill"
+archetype = "revenant"
+origins = ["ancient-curse"]
+category = "identity"
+action = "commune"
+pool = "mystic"
+site = "grave"
+obscurity = 2
+prompt = "Among the graves, one patch of air is cold enough to ache."
+reveal = "You open yourself to the cold and it shows you: hands folded on a breastless chest, eyes open in the dark of {grave}, waiting."
+
+[crypt-scratches]
+name = "Scratches in the Crypt"
+archetype = "revenant"
+category = "identity"
+action = "force"
+pool = "physical"
+site = "outlying-site"
+obscurity = 3
+prompt = "The crypt door has been barred from the outside — recently, and in haste."
+reveal = "Inside, the dust is scored with drag-marks that lead out through the wall's old breach, toward the graves at {grave}."
+
+[restless-lament]
+name = "The Restless Lament"
+archetype = "revenant"
+origins = ["bitter-betrayal"]
+category = "identity"
+action = "commune"
+pool = "mystic"
+site = "outlying-site"
+obscurity = 2
+prompt = "The old manor's silence has a note in it, if you dare to listen."
+reveal = "The lament names its own grave: wronged, unavenged, and lying in {grave} — but not for much longer."
+
+# --- Revenant location ------------------------------------------------------
+
+[plot-map]
+name = "The Plot Map"
+archetype = "revenant"
+category = "location"
+action = "examine"
+pool = "lore"
+site = "church"
+obscurity = 1
+prompt = "A vestry drawer holds the parish plot map, annotated in a shaking hand."
+reveal = "The map marks every plot and names its occupant. Now you know exactly where {grave} lies."
+
+[gravediggers-map]
+name = "The Gravedigger's Knowledge"
+archetype = "revenant"
+category = "location"
+action = "persuade"
+pool = "social"
+site = "npc"
+obscurity = 0
+prompt = "Nobody knows the ground here better than the one who digs it."
+reveal = "He walks you the rows and points without looking: '{grave}. That one. Do what you came to do.'"
+
+# --- Weakness and ingredient sources ---------------------------------------
+
+[silver-candlesticks]
+name = "The Silver Candlesticks"
+archetype = "werewolf"
+category = "weakness"
+action = "examine"
+pool = "lore"
+site = "church"
+obscurity = 0
+prompt = "The altar candlesticks are old, heavy, and untarnished."
+reveal = "They are true silver — enough, melted down, to cast a bullet the curse cannot heal."
+
+[mine-lode]
+name = "The Abandoned Lode"
+archetype = "werewolf"
+category = "weakness"
+action = "track"
+pool = "lore"
+site = "wilds"
+obscurity = 1
+prompt = "The old mine was abandoned when the vein pinched out — or so the story goes."
+reveal = "The story lied. Past the fallen rubble a thread of true silver still glints in the rock."
+
+[herbwifes-tip]
+name = "The Herbwife's Tip"
+archetype = "any"
+category = "ingredient-source"
+action = "gossip"
+pool = "social"
+site = "npc"
+obscurity = 0
+prompt = "The old women trade remedies at the market stall."
+reveal = "They tell you where moon-herb and bitter-root grow thick: the clearings off the forest trail."
+
+[wardens-dust]
+name = "The Warden's Dust"
+archetype = "revenant"
+category = "weakness"
+action = "commune"
+pool = "mystic"
+site = "grave"
+obscurity = 2
+prompt = "Consecrated earth remembers what it holds."
+reveal = "The oldest grave gives up its handful of dust freely, as if glad to be of use against the thing that mocks all graves."
+
+[sextons-spade]
+name = "The Sexton's Spade"
+archetype = "revenant"
+category = "weakness"
+action = "persuade"
+pool = "social"
+site = "npc"
+obscurity = 1
+prompt = "Grave-dust for a binding charm must be freely given, not stolen."
+reveal = "The gravedigger fills a pouch from the old consecrated rows and presses it on you. 'Sew it tight. Use it close.'"

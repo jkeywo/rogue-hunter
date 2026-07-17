@@ -1,0 +1,122 @@
+# Outlying site tactical map, 32x20: the forsaken manor. Manor house with a
+# barred cellar, an old crypt full of graves, and a squatters' campsite.
+# Trail north to the wilderness, road west to the settlement.
+
+name = "The Forsaken Manor"
+role = "outlying-site"
+description = "A manor abandoned to damp and worse. The family crypt still stands in the grounds, and someone barred its door from the outside."
+
+rows = [
+  "################:###############",
+  "#,,,,,,,,,,,,,,,:,,,,,,,,,TT,,,#",
+  "#,TT,,,,,,,,,,,,:,,,,,,,,,,,,,,#",
+  "#,,,,,,#########+##########,,,,#",
+  "#,,,,,,#...................#,,,#",
+  "#,,,,,,#...................#,,,#",
+  "#,,,,,,#...................#,,,#",
+  "#,,,,,,#....##+##...##=##..#,,,#",
+  "#,,,,,,#....#...#...#...#..#,,,#",
+  "#,,,,,,#....#...#...#...#..#,,,#",
+  "#,,,,,,#....#...#...#...#..#,,,#",
+  "#,,,,,,#....#####...#####..#,,,#",
+  "#,,,,,,####################,,,,#",
+  ":,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#",
+  "#,TT,,,,,,,,,,,,,,,,#########,,#",
+  "#,,,,,,,,,,,,,,,,,,,#n.n.n.n#,,#",
+  "#,,,,,,,,,,,,,,,,,,,=.......#,,#",
+  "#,,,,,,,,,,,,,,,,,,,#n.n.n.n#,,#",
+  "#,,,,,,,,,,,,,,,,,,,#########,,#",
+  "################################",
+]
+
+[legend]
+"#" = "wall"
+"." = "floor"
+"," = "grass"
+":" = "road"
+"n" = "grave"
+"+" = "door"
+"=" = "barred-door"
+"T" = "tree"
+
+[[slots]]
+id = "manor-hall"
+kind = "outlying-site"
+at = [17, 5]
+
+[[slots]]
+id = "manor-study"
+kind = "outlying-site"
+at = [14, 9]
+
+[[slots]]
+id = "manor-cellar"
+kind = "outlying-site"
+at = [22, 9]
+
+[[slots]]
+id = "well"
+kind = "outlying-site"
+at = [12, 13]
+
+[[slots]]
+id = "campsite"
+kind = "outlying-site"
+at = [4, 16]
+
+[[slots]]
+id = "crypt-1"
+kind = "grave"
+at = [21, 15]
+
+[[slots]]
+id = "crypt-2"
+kind = "grave"
+at = [23, 15]
+
+[[slots]]
+id = "crypt-3"
+kind = "grave"
+at = [25, 15]
+
+[[slots]]
+id = "crypt-4"
+kind = "grave"
+at = [27, 15]
+
+[[slots]]
+id = "crypt-5"
+kind = "grave"
+at = [21, 17]
+
+[[slots]]
+id = "crypt-6"
+kind = "grave"
+at = [23, 17]
+
+[[slots]]
+id = "crypt-7"
+kind = "grave"
+at = [25, 17]
+
+[[slots]]
+id = "crypt-8"
+kind = "grave"
+at = [27, 17]
+
+[[exits]]
+to = "wilderness"
+at = [16, 0]
+
+[[exits]]
+to = "settlement"
+at = [0, 13]
+
+[[cover_pockets]]
+tiles = [[26, 1], [27, 1]]
+
+[[cover_pockets]]
+tiles = [[2, 2], [3, 2]]
+
+[[cover_pockets]]
+tiles = [[2, 14], [3, 14]]

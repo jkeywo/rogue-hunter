@@ -1,0 +1,29 @@
+# Ordinary enemy families: generated early threats and scheme minions.
+
+[wolf]
+name = "Wolf"
+glyph = "w"
+health = 4
+melee_damage = 2
+hit_percent = 65
+behaviour = "pack-hunter"
+description = "A lean grey wolf, bolder than it should be. It runs straight at what it means to kill."
+
+[bandit]
+name = "Bandit"
+glyph = "b"
+health = 5
+melee_damage = 2
+hit_percent = 60
+behaviour = "skirmisher"
+ranged = { damage = 2, hit_percent = 55, range = 5 }
+description = "A road-thief with a short pistol and no scruples. Keeps distance while it can."
+
+[restless-dead]
+name = "Restless Dead"
+glyph = "z"
+health = 6
+melee_damage = 2
+hit_percent = 60
+behaviour = "shambler"
+description = "A corpse that did not stay put. Slow, patient, and terribly strong when it closes."

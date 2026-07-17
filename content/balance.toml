@@ -1,0 +1,33 @@
+# Rogue Hunter — global tuning. All gameplay numbers live in authored data.
+# Percentages are whole percent; viability is permille (750 = 75%).
+
+[combat]
+melee_hit_percent = 75
+ranged_hit_percent = 65
+trapped_attack_penalty_percent = 25
+pounce_attack_bonus_percent = 10
+snare_hold_turns = 3
+stamina_regen_per_turn = 1
+killing_blow_health_percent = 50
+
+[clock]
+travel_turns = 6
+minor_event_turn = 2
+major_event_turn = 4
+
+[loot]
+drop_percent = 15
+
+[generator]
+early_route_deadline = 3
+fallback_route_deadline = 5
+fallback_obscurity_budget = 3
+route_effort_budget = 14
+route_travel_budget = 4
+viability_threshold_permille = 750
+ambush_percent_min = 20
+ambush_percent_max = 60
+min_cover_pockets_per_map = 2
+
+[vision]
+fov_radius = 8

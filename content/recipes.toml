@@ -1,0 +1,26 @@
+# Workstation recipes. Crafting is free at any workstation; gathering the
+# ingredients is the real cost. Useless recipes are deliberate texture.
+
+[silver-bullet]
+name = "Cast a Silver Bullet"
+inputs = ["silver", "flintlock-shot"]
+output = "silver-bullet"
+description = "Melt true silver over the forge and cast it about a lead core."
+
+[wound-draught]
+name = "Brew a Wound Draught"
+inputs = ["moon-herb", "bitter-root"]
+output = "wound-draught"
+description = "Steep moon-herb with bitter-root into a physic against torn flesh."
+
+[binding-charm]
+name = "Sew a Binding Charm"
+inputs = ["grave-dust", "moon-herb"]
+output = "binding-charm"
+description = "Sew grave-dust and moon-herb into a caul to strip the risen dead of their shadow."
+
+[iron-charm]
+name = "Hammer an Iron Charm"
+inputs = ["coin", "coin"]
+output = "iron-charm"
+description = "Beat two pennies into a warding knot. Old wives praise it; monsters do not notice it."

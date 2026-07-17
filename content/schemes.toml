@@ -1,0 +1,37 @@
+# Schemes control the timed events and which minion family serves the
+# villain. The minor event fires on the minor_event_turn, the major on the
+# major_event_turn; each raises the villain's threat tier.
+
+[reign-of-fear]
+name = "Reign of Fear"
+minion_enemy = "wolf"
+description = "The villain means to rule this valley through terror, and every death feeds its legend."
+
+[reign-of-fear.minor_event]
+name = "The Torn Shepherd"
+text = "Word runs through the settlement: a shepherd has been found on the green, torn apart. The killer grows bolder."
+site_map = "settlement"
+spawn_minions = 1
+
+[reign-of-fear.major_event]
+name = "Death in the Night"
+text = "Screams in the dark. Come morning a villager lies dead behind a barred door, and the settlement is mad with fear."
+site_map = "settlement"
+spawn_minions = 2
+
+[hidden-design]
+name = "A Hidden Design"
+minion_enemy = "bandit"
+description = "The deaths are not the point. The villain is assembling something, and pays desperate men to guard the work."
+
+[hidden-design.minor_event]
+name = "The Fouled Font"
+text = "The church font is found fouled with grave-earth. Whatever was done here at midnight, the priest cannot meet your eye."
+site_map = "settlement"
+spawn_minions = 1
+
+[hidden-design.major_event]
+name = "Witch-light at the Manor"
+text = "Witch-light burned in the old manor through the night, and something was carried out before dawn. The design nears completion."
+site_map = "outlying"
+spawn_minions = 2
