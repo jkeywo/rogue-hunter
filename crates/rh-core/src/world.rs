@@ -227,6 +227,9 @@ pub struct OpportunitySpec {
     pub requires: Option<OpportunityId>,
     /// Resolving this clears the anchored tile's terrain (forced door/rubble).
     pub clears_terrain: bool,
+    /// Covert actions (spying, examining, tracking) need no cooperation
+    /// from a hostile NPC anchor; conversational actions do.
+    pub covert: bool,
     pub prompt: String,
     pub reveal: String,
 }

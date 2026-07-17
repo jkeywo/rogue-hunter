@@ -21,7 +21,7 @@ description = "A cast lead ball and a measure of powder."
 [silver-bullet]
 name = "Silver Bullet"
 glyph = "*"
-kind = { kind = "weakness-ammunition", damage = 8, stops_regeneration = true }
+kind = { kind = "weakness-ammunition", damage = 10, stops_regeneration = true }
 description = "A ball of true silver. Against the beast it bites to the curse's heart, and what it wounds does not heal."
 
 [wound-draught]

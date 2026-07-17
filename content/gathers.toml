@@ -59,6 +59,17 @@ discovery = { kind = "sight" }
 prompt = "Someone camped in the manor grounds recently, and left in a hurry."
 reveal = "A spilled powder horn, a cast ball, a dropped penny. Their hurry is your gain."
 
+[buy-simples]
+name = "Buy simples at the market stall"
+map = "settlement"
+slot = "market-stall"
+pool = "social"
+cost = 1
+items = ["moon-herb", "bitter-root"]
+discovery = { kind = "sight" }
+prompt = "The herb-stall sells remedies to those the seller likes the look of."
+reveal = "A little talk, a little coin, and the bundle changes hands: moon-herb and bitter-root, fresh-cut."
+
 [sweep-the-crypt]
 name = "Gather dust from the old niches"
 map = "outlying"

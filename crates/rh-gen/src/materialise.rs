@@ -440,6 +440,7 @@ impl<'a> Builder<'a> {
                         grants: OpportunityGrant::Lead,
                         requires: None,
                         clears_terrain: true,
+                        covert: false,
                         prompt: prompt.to_owned(),
                         reveal: reveal.to_owned(),
                     });
@@ -469,8 +470,10 @@ impl<'a> Builder<'a> {
             .map(|(id, template)| (id.clone(), template.clone()))
             .collect();
 
-        // Identity: two obvious ones anchor the fallback pair; two more join
-        // them so the early route has obscure options.
+        // Identity: two obvious ones anchor the fallback pair, and two
+        // route-grade extras (obscurity <= 2) give the early route options.
+        // Whatever niche identity clues remain are placed as bonus content:
+        // players may use them, but no certified route needs to.
         let mut identity: Vec<&(String, ClueTemplate)> = fitting
             .iter()
             .filter(|(_, template)| template.category == ClueCategory::Identity)
@@ -485,14 +488,27 @@ impl<'a> Builder<'a> {
         let mut chosen: Vec<(String, ClueTemplate)> = Vec::new();
         chosen.push(identity[0].clone());
         chosen.push(identity[1].clone());
-        let mut rest: Vec<&(String, ClueTemplate)> = identity[2..].to_vec();
+        let mut route_grade: Vec<&(String, ClueTemplate)> = identity[2..]
+            .iter()
+            .copied()
+            .filter(|(_, template)| template.obscurity <= 2)
+            .collect();
+        let mut bonus: Vec<&(String, ClueTemplate)> = identity[2..]
+            .iter()
+            .copied()
+            .filter(|(_, template)| template.obscurity > 2)
+            .collect();
         for _ in 0..2 {
-            if rest.is_empty() {
+            if route_grade.is_empty() {
                 break;
             }
-            let pick = self.rng.index(rest.len());
-            chosen.push(rest.remove(pick).clone());
+            let pick = self.rng.index(route_grade.len());
+            chosen.push(route_grade.remove(pick).clone());
         }
+        // Unpicked route-grade clues and the niche remainder still exist in
+        // the world as bonus leads.
+        chosen.extend(route_grade.drain(..).cloned());
+        chosen.extend(bonus.drain(..).cloned());
 
         // One location clue.
         let locations: Vec<&(String, ClueTemplate)> = fitting
@@ -576,6 +592,10 @@ impl<'a> Builder<'a> {
             grants,
             requires,
             clears_terrain: false,
+            covert: matches!(
+                template.action,
+                OpportunityAction::Spy | OpportunityAction::Examine | OpportunityAction::Track
+            ),
             prompt: fill(&template.prompt),
             reveal: fill(&template.reveal),
         });
@@ -759,6 +779,7 @@ impl<'a> Builder<'a> {
                 },
                 requires,
                 clears_terrain: false,
+                covert: false,
                 prompt: gather.prompt.clone(),
                 reveal: gather.reveal.clone(),
             });
@@ -787,6 +808,7 @@ impl<'a> Builder<'a> {
                 grants: OpportunityGrant::SecretInfo,
                 requires: None,
                 clears_terrain: false,
+                covert: true,
                 prompt: format!(
                     "{} keeps something close. Patience would show it.",
                     npc.name
@@ -815,6 +837,7 @@ impl<'a> Builder<'a> {
                     grants: OpportunityGrant::Disproof { npc: npc.id },
                     requires: None,
                     clears_terrain: false,
+                    covert: true,
                     prompt: format!(
                         "If the whispers about {} were true, the parish records would show it.",
                         npc.name
@@ -837,6 +860,7 @@ impl<'a> Builder<'a> {
                     grants: OpportunityGrant::Leverage,
                     requires: None,
                     clears_terrain: false,
+                    covert: false,
                     prompt: format!(
                         "What you know about {} would loosen their tongue.",
                         npc.name
@@ -860,6 +884,7 @@ impl<'a> Builder<'a> {
                 grants: OpportunityGrant::RelationshipInfo,
                 requires: None,
                 clears_terrain: false,
+                covert: false,
                 prompt: format!("Everyone is tangled with everyone here. {} too.", npc.name),
                 reveal: String::new(),
             });
@@ -880,6 +905,7 @@ impl<'a> Builder<'a> {
                     grants: OpportunityGrant::MysticFavour,
                     requires: None,
                     clears_terrain: false,
+                    covert: false,
                     prompt: format!(
                         "{} knows older arts than she sells. The right asking might borrow them.",
                         npc.name

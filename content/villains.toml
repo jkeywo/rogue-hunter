@@ -4,9 +4,9 @@
 [werewolf]
 name = "Werewolf"
 glyph = "W"
-health = 20
+health = 18
 melee_damage = 3
-hit_percent = 70
+hit_percent = 60
 tier_bonus_health = 3
 concealment = "npc-host"
 weakness_item = "silver-bullet"

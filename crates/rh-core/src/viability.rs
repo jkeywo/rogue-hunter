@@ -61,10 +61,10 @@ pub fn hunt_viability(
             _ => None,
         })
         .unwrap_or(2);
-    // Alternating plain and power-attack swings (stamina regen sustains it).
-    let average_swing_millis =
-        (u32::from(blade) * power_numerator * 1000 / 2 + u32::from(blade) * 1000) / 2;
-    let melee_dpt = average_swing_millis * u32::from(combat.melee_hit_percent) / 100;
+    // Plain swings every turn: priming Power Attack costs an action, which
+    // makes the primed cycle a damage LOSS at MVP blade values. The
+    // multiplier only pays off against a sleeping target (the coup opener).
+    let melee_dpt = u32::from(blade) * 1000 * u32::from(combat.melee_hit_percent) / 100;
 
     // --- Villain durability and offence. -----------------------------------
     let villain_hp =
@@ -165,6 +165,9 @@ pub fn hunt_viability(
     let mut survive = (effective_hp / incoming) as i32;
     survive += i32::from(loadout.physical.min(2)) * 3; // snare denial
     survive -= i32::from(loadout.draughts) as i32; // drinking costs actions
+    if loadout.on_consecrated_ground {
+        survive += 1; // the ward burns the revenant even as it approaches
+    }
 
     let viability = 500 + (survive - turns_to_kill) * 75;
     viability.clamp(0, 1000) as u16

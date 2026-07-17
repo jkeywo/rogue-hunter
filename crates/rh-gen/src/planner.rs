@@ -35,7 +35,7 @@ const ITEM_CAP: [u8; 8] = [1, 2, 2, 2, 2, 2, 1, 2];
 
 const SETTLEMENT: u8 = 0;
 /// Safety valve for pathological graphs; recorded as a rejection reason.
-const NODE_BUDGET: u32 = 80_000;
+const NODE_BUDGET: u32 = 200_000;
 
 /// Planner view of one opportunity node in the clue graph.
 #[derive(Debug, Clone)]
@@ -76,6 +76,10 @@ pub struct PlannerConfig {
 struct PState {
     turn: u8,
     map: u8,
+    /// Within-turn symmetry breaking: ops resolve in ascending index order,
+    /// resetting when the clock advances. Safe because gates always carry
+    /// lower indices than their dependents.
+    min_op: u8,
     lore: u8,
     social: u8,
     mystic_bonus: u8,
@@ -94,6 +98,7 @@ struct PState {
 struct MemoKey {
     turn: u8,
     map: u8,
+    min_op: u8,
     lore: u8,
     social: u8,
     mystic_bonus: u8,
@@ -109,6 +114,7 @@ impl PState {
         MemoKey {
             turn: self.turn,
             map: self.map,
+            min_op: self.min_op,
             lore: self.lore,
             social: self.social,
             mystic_bonus: self.mystic_bonus,
@@ -431,6 +437,18 @@ fn build_ctx<'a>(catalogue: &'a Catalogue, world: &'a World) -> Result<Ctx<'a>, 
             ops.len()
         ));
     }
+    // The within-turn canonical ordering requires every gate (revealed_by /
+    // requires) to carry a lower index than its dependent; materialisation
+    // places force ops and clues before gathers, so this holds by
+    // construction. Verify rather than assume.
+    let gate_check = |gate: Option<usize>, index: usize, what: &str| -> Result<(), String> {
+        match gate {
+            Some(gate_index) if gate_index >= index => Err(format!(
+                "op #{index} has {what} gate #{gate_index} out of canonical order"
+            )),
+            _ => Ok(()),
+        }
+    };
     // Wire knowledge and access gates as op indices.
     let by_id: Vec<OpportunityId> = ops.iter().map(|op| op.id).collect();
     for (index, spec_id) in by_id.iter().enumerate() {
@@ -448,6 +466,8 @@ fn build_ctx<'a>(catalogue: &'a Catalogue, world: &'a World) -> Result<Ctx<'a>, 
             _ => None,
         };
         ops[index].requires = spec.requires.and_then(find);
+        gate_check(ops[index].revealed_by, index, "revealed-by")?;
+        gate_check(ops[index].requires, index, "requires")?;
     }
 
     // Where the hunt is initiated: the host walks the settlement; a dormant
@@ -573,6 +593,7 @@ fn search(ctx: &Ctx, cfg: &PlannerConfig) -> Result<CertifiedRoute, String> {
     let start = PState {
         turn: 0,
         map: SETTLEMENT,
+        min_op: 0,
         lore: hunter.lore_cap,
         social: hunter.social_cap,
         mystic_bonus: 0,
@@ -584,10 +605,36 @@ fn search(ctx: &Ctx, cfg: &PlannerConfig) -> Result<CertifiedRoute, String> {
         obscurity: 0,
         legs: 0,
     };
-    let mut memo: HashSet<MemoKey> = HashSet::new();
+    // Iterative deepening on the deadline: minimal-turn routes live in far
+    // smaller search spaces, so find them before opening the full tree.
+    // Each iteration gets its own node budget so the final, full-deadline
+    // search is never starved by earlier exhaustive failures.
     let mut nodes = 0u32;
-    let mut path: Vec<(u8, String, Option<OpportunityId>)> = Vec::new();
-    match dfs(ctx, cfg, start, &mut memo, &mut nodes, &mut path) {
+    let mut found_route = None;
+    for deadline in 0..=cfg.deadline {
+        let sub_cfg = PlannerConfig {
+            deadline,
+            forbidden: cfg.forbidden,
+            obscurity_budget: cfg.obscurity_budget,
+            allow_favour: cfg.allow_favour,
+            label: cfg.label.clone(),
+        };
+        let mut memo: HashSet<MemoKey> = HashSet::new();
+        let mut path: Vec<(u8, String, Option<OpportunityId>)> = Vec::new();
+        nodes = 0;
+        if let Some(found) = dfs(
+            ctx,
+            &sub_cfg,
+            start.clone(),
+            &mut memo,
+            &mut nodes,
+            &mut path,
+        ) {
+            found_route = Some(found);
+            break;
+        }
+    }
+    match found_route {
         Some(found) => {
             let favour_index = ctx.ops.iter().position(|op| op.grants == OpGrant::Favour);
             let uses_favour = favour_index
@@ -729,6 +776,10 @@ fn candidate_actions(ctx: &Ctx, cfg: &PlannerConfig, state: &PState) -> Vec<Acti
     for index in ctx.op_order.iter().copied() {
         let op = &ctx.ops[index];
         let bit = 1u64 << index;
+        // Within-turn canonical ordering: indices ascend until the clock moves.
+        if (index as u8) < state.min_op {
+            continue;
+        }
         if state.resolved & bit != 0 || cfg.forbidden & bit != 0 || op.map != state.map {
             continue;
         }
@@ -802,8 +853,19 @@ fn candidate_actions(ctx: &Ctx, cfg: &PlannerConfig, state: &PState) -> Vec<Acti
             }
         }
         // The consecration rite costs a global turn; it only ever pays off
-        // when the hunt happens on settlement ground.
-        if !state.consecrated && state.turn + 1 <= cfg.deadline && ctx.villain_map == SETTLEMENT {
+        // against a consecration-vulnerable villain hunted on settlement
+        // ground. (Against the beast, the rite is candle-smoke.)
+        let rite_matters = ctx
+            .catalogue
+            .villains
+            .get(&ctx.world.villain.archetype)
+            .map(|def| def.affected_by_consecration)
+            .unwrap_or(false);
+        if !state.consecrated
+            && state.turn + 1 <= cfg.deadline
+            && ctx.villain_map == SETTLEMENT
+            && rite_matters
+        {
             actions.push(Action::Consecrate);
         }
     }
@@ -832,6 +894,7 @@ fn apply_action(
         Action::Resolve(index) => {
             let op = &ctx.ops[*index];
             next.resolved |= 1 << index;
+            next.min_op = (*index as u8) + 1;
             next.effort += u16::from(op.cost);
             next.obscurity += u16::from(op.obscurity);
             match op.pool {
@@ -869,6 +932,7 @@ fn apply_action(
         Action::Consecrate => {
             next.consecrated = true;
             next.turn += 1;
+            next.min_op = 0;
             let caps = &ctx.catalogue.hunter;
             next.physical = (next.physical + 1).min(caps.physical_cap);
             (
@@ -880,6 +944,7 @@ fn apply_action(
         Action::Travel(destination) => {
             next.map = *destination;
             next.turn += 1;
+            next.min_op = 0;
             next.legs += 1;
             next.effort += 2;
             let caps = &ctx.catalogue.hunter;

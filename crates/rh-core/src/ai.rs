@@ -365,8 +365,14 @@ fn revenant_act(
         }
     }
 
+    // Consecrated ground keeps the shroud open: with nothing to protect by
+    // retreating, the revenant goes all-in (per the revenant-cadence-ai spec).
+    let on_ward = def.affected_by_consecration
+        && sim.state.church_consecrated
+        && sim.world.map(map).consecration_area.contains(&pos);
+
     let distance = pos.distance(hunter);
-    if dash_ready && next_vulnerable && distance <= 2 && !was_bound {
+    if dash_ready && next_vulnerable && distance <= 2 && !was_bound && !on_ward {
         // Retreat before the shroud thins.
         if dash_move(sim, id, hunter, cadence.dash_tiles, false) {
             if let Some(actor) = sim.state.actor_mut(id) {
@@ -495,7 +501,8 @@ fn chase_or_attack(sim: &mut Sim, id: ActorId, damage: u16, hit_percent: u8) {
     }
 }
 
-/// Greedy step toward a goal, preferring tiles that shrink the distance.
+/// Step toward a goal: greedy when open ground allows it, breadth-first
+/// pathing when walls demand navigation (into buildings, around corners).
 fn step_toward(sim: &mut Sim, id: ActorId, goal: Point) {
     let map = sim.state.current_map;
     let Some(pos) = sim.state.actor(id).map(|actor| actor.pos) else {
@@ -513,8 +520,50 @@ fn step_toward(sim: &mut Sim, id: ActorId, goal: Point) {
     if let Some(next) = options.first().copied() {
         if next.distance(goal) < pos.distance(goal) {
             move_actor(sim, id, next);
+            return;
         }
     }
+    // Blocked by architecture: path properly.
+    if let Some(next) = bfs_step(sim, pos, goal) {
+        move_actor(sim, id, next);
+    }
+}
+
+/// First step of a breadth-first path from `from` toward (adjacent to) `goal`.
+fn bfs_step(sim: &Sim, from: Point, goal: Point) -> Option<Point> {
+    use crate::geometry::{MAP_HEIGHT, MAP_WIDTH};
+    let map = sim.state.current_map;
+    let index = |point: Point| point.y as usize * MAP_WIDTH as usize + point.x as usize;
+    let mut parent: Vec<Option<Point>> = vec![None; (MAP_WIDTH * MAP_HEIGHT) as usize];
+    let mut queue = std::collections::VecDeque::new();
+    queue.push_back(from);
+    let mut reached: Option<Point> = None;
+    'search: while let Some(point) = queue.pop_front() {
+        for dir in Direction::ALL {
+            let next = point.step(dir);
+            if !next.in_bounds() || parent[index(next)].is_some() || next == from {
+                continue;
+            }
+            if !is_walkable(sim.state.terrain(&sim.world, map, next))
+                || sim.state.tile_occupied(&sim.world, map, next)
+            {
+                continue;
+            }
+            parent[index(next)] = Some(point);
+            if next.is_adjacent(goal) || next == goal {
+                reached = Some(next);
+                break 'search;
+            }
+            queue.push_back(next);
+        }
+    }
+    let mut current = reached?;
+    let mut first = current;
+    while let Some(previous) = parent[index(current)] {
+        first = current;
+        current = previous;
+    }
+    Some(first)
 }
 
 /// Step that increases distance from a threat. Returns true if moved.
@@ -668,6 +717,11 @@ fn npc_routines(sim: &mut Sim) {
         {
             let npc = &sim.state.npcs[index];
             if !npc.alive || npc.fled {
+                continue;
+            }
+            // Villagers notice an approaching hunter and pause to be spoken
+            // to, so conversation does not become a footrace.
+            if npc.pos.distance(sim.state.hunter.pos) <= 2 {
                 continue;
             }
         }

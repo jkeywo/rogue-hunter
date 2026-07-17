@@ -9,36 +9,32 @@ splash_intro = [
 ]
 
 [[key_bindings]]
-keys = "Arrows / HJKL+YUBN"
+keys = "Arrows / hjkl+yubn"
 action = "Move / melee an adjacent enemy"
 
 [[key_bindings]]
-keys = "F"
-action = "Fire the flintlock (choose a target)"
-
-[[key_bindings]]
-keys = "E"
+keys = "e / Enter"
 action = "Interact: investigate, talk, travel, craft, loot"
 
 [[key_bindings]]
-keys = "A / P / S"
+keys = "f / F"
+action = "Fire the flintlock / fire a silver bullet"
+
+[[key_bindings]]
+keys = "a / p / s"
 action = "Aim / Power Attack / Sprint (stamina)"
 
 [[key_bindings]]
-keys = "X / K"
+keys = "x / K"
 action = "Set Snare / Killing Blow (Physical)"
 
 [[key_bindings]]
-keys = "I"
-action = "Inventory / use an item"
+keys = "q / c"
+action = "Drink a wound draught / press a binding charm"
 
 [[key_bindings]]
-keys = "G / R / V"
-action = "Grimoire / Relationships / Region map"
-
-[[key_bindings]]
-keys = "L"
-action = "Event log"
+keys = "g / r / v / L"
+action = "Grimoire / Faces / the Valley / the Record"
 
 [[key_bindings]]
 keys = "Space / ."
@@ -50,4 +46,4 @@ action = "Hover to inspect; click to move, target, or act"
 
 [[key_bindings]]
 keys = "Esc"
-action = "Menu / cancel"
+action = "Cancel / back"

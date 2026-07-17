@@ -1,0 +1,155 @@
+# Design and technical decisions made during MVP implementation.
+# Each entity records a decision, its rationale, and what it binds.
+
+entities:
+  - decision: bevy-ratatui-native-client
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Native client keeps Bevy plus Ratatui
+      summary: The native terminal client uses Bevy (minimal features, no renderer) with the bevy_ratatui plugin, per the original spec and an explicit product decision; the engine foundation stays in place for the deferred graphical-tiles future even though the MVP view is pure ASCII.
+      references: [terminal-client]
+
+  - decision: single-pcg32-stream
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Hand-rolled PCG32 as the single simulation PRNG
+      summary: One PCG-XSH-RR 64/32 stream, seeded through SplitMix64, drives generation and then continues into runtime events. The generator is implemented in-crate with the reference constants and a pinned-sequence test so no dependency upgrade can silently change replays.
+      references: [command-replay, seeded-mystery-generator]
+
+  - decision: integer-only-simulation-math
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Integer-only rules math
+      summary: All rules arithmetic uses integers - whole percent for hit chances, permille for viability, millis fixed-point inside the combat heuristic - so native x86-64 and wasm32 builds cannot diverge through floating-point behaviour.
+      references: [command-replay, combat-viability-threshold]
+
+  - decision: toml-content-embedded
+    core:
+      status: accepted
+      confidence: confirmed
+      title: TOML content embedded at compile time
+      summary: The authored catalogue is hand-editable TOML under content/, chosen for first-class Rust serde support. Files are embedded with include_str! so terminal, browser, and CI builds ship byte-identical content, which the replay contract depends on. Schema validation is serde deny_unknown_fields plus a cross-reference pass that runs in every build and as a CI gate.
+      references: [authored-content-catalogue]
+
+  - decision: share-code-format
+    core:
+      status: accepted
+      confidence: confirmed
+      title: RH1 share-code format
+      summary: "A replay is postcard-serialized {version, seed, semantic command log}, given a CRC32 trailer against hand-copy typos, base64url-encoded without padding, and prefixed RH1-. Codes embed a format version and mismatches are rejected outright: any rules change legitimately invalidates old logs."
+      references: [command-replay, replay-save-persistence]
+
+  - decision: postcard-fnv-state-digest
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Postcard plus FNV-1a state digests
+      summary: Run states are digested by postcard-serializing them (target-independent varint encoding) and hashing with FNV-1a 64. The same seed and command log must produce the same digest on native and WASM builds; CI replay checks compare these.
+      references: [command-replay]
+
+  - decision: workspace-crate-architecture
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Eight-crate headless-first workspace
+      summary: "rh-content (catalogue), rh-core (authoritative sim), rh-gen (generator and planner), rh-replay (run harness, share codes, autoplayer), rh-client-core (shared session and viewmodel), rh-cli (developer toolchain), rh-terminal (Bevy and Ratatui), rh-web (wasm Canvas/HTML). Clients depend only on rh-client-core so both stay thin views over identical state and commands."
+      references: [headless-simulation-foundation, semantic-command-boundary]
+
+  - decision: eight-way-grid-bresenham
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Eight-way movement and symmetric Bresenham sight
+      summary: Movement and adjacency are 8-way Chebyshev. Lines of sight and pounce lanes share one symmetric Bresenham walk, so what the hunter can see and what a monster can leap along always agree.
+      references: [encounter-turn-rules, werewolf-pounce-ai, map-visibility]
+
+  - decision: opportunity-graph-model
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Typed opportunity nodes with knowledge and access gates
+      summary: The clue graph materialises as typed opportunities (identity, location, lead, item grants, mystic favour, social texture) with two gate kinds - knowledge (revealed-by another node) and physical access (a structural force node such as a barred door). Structural nodes stay open to both certified routes since forced terrain stays forced in play.
+      references: [seeded-mystery-generator, clue-graph-validator, physical-and-stamina-resources]
+
+  - decision: route-certification-strategy
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Fallback-first pairing with minimised routes
+      summary: The planner certifies the obvious fallback first, penalises its used nodes, then finds the early route in what remains, retrying alternative fallbacks and the reverse assignment before rejecting a candidate. Found routes are minimised by re-search so neither consumes nodes it does not need. Penalties are node-level per the generator contract; routes may consult the same NPC about different things.
+      references: [clue-graph-validator, certified-route-deadlines]
+
+  - decision: viability-model-calibration
+    core:
+      status: provisional
+      confidence: confirmed
+      title: Empirically calibrated viability heuristic
+      summary: The combat heuristic races expected damage-per-turn with a flat credit for snare denial and an action cost for drinking draughts. Constants were calibrated against deterministic autoplayer runs rather than theory - tightening the model further made too many worlds uncertifiable - and the threshold itself stays authored tuning.
+      references: [combat-viability-threshold, clue-graph-validator]
+
+  - decision: vulnerability-double-damage
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Vulnerability windows double damage taken
+      summary: A cadence villain in a vulnerability window (natural, bound, or on consecrated ground) takes double damage, making the telegraphed windows tactically decisive. The coup de grace on a dormant villain doubles at strike level instead so the two bonuses do not stack.
+      references: [revenant-cadence-ai, church-consecration-rite, revenant-binding-charm]
+
+  - decision: npc-conversation-pause
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Villagers pause for an approaching hunter
+      summary: NPC routines suspend while the hunter is within two tiles, so conversation is never a footrace against a moving villager while relationships stay observable from further away.
+      references: [npc-routines, social-action-costs]
+
+  - decision: covert-actions-bypass-hostility
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Covert actions need no cooperation
+      summary: Spying, examining, and tracking anchored on an NPC work even when that NPC is hostile - watching someone requires no consent. Conversational actions (gossip, persuasion, favours, exposure) still require a non-hostile or leveraged subject.
+      references: [social-action-costs, visible-opportunity-affordances]
+
+  - decision: innocent-fallout-model
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Fallout removes the victim and taxes Social play
+      summary: Attacking an innocent villager marks the settlement hostile - consequential Social actions cost one extra point and trading stops - and every opportunity anchored on the victim is lost. No global-clock cost, per the spec; certified route independence guarantees a run stays winnable.
+      references: [innocent-villager-fallout]
+
+  - decision: death-respawn-model
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Death resets the fight, not the knowledge
+      summary: On death before the final hunt the hunter respawns at the settlement with full health, keeping inventory and discoveries, and the clock advances one turn. An exposed villain returns to its lair fully healed but keeps its threat tier and any silver-stopped regeneration. Death during the final hunt is defeat.
+      references: [final-hunt-rules, hunter-death]
+
+  - decision: autoplayer-golden-replays
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Autoplayer-minted golden replays
+      summary: A deterministic route-following autoplayer proves generated runs are playable start to finish, and its winning command logs serve as the CI replay checks - each golden run is re-executed from its share code and must reproduce the exact state digest.
+      references: [command-replay, ci-and-pages-release]
+
+  - decision: minion-spawn-placement
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Event minions lurk at the map's far reaches
+      summary: Scheme-event minions spawn at walkable tiles maximising distance from both the map's central entry and its exits, so they read as guards over the villain's work rather than ambushes on the front door.
+      references: [travel-clock, ordinary-enemy-roster]
+
+  - decision: favour-single-point
+    core:
+      status: accepted
+      confidence: confirmed
+      title: The favour is one point, once
+      summary: The mystical favour grants exactly one temporary over-cap Mystic point once per run, so at most one Mystic-pool opportunity can ever be taken in a run. The planner models this and the certified routes may lean on it at most once between them.
+      references: [seek-mystical-favour, investigation-pools]

@@ -60,7 +60,7 @@ at = [25, 16]
 [[slots]]
 id = "wolf-den"
 kind = "wilds"
-at = [10, 14]
+at = [5, 17]
 
 [[slots]]
 id = "ambush-site"

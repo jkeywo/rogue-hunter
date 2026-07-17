@@ -522,7 +522,9 @@ impl Sim {
                 let spec_npc = self.world.npc(npc);
                 let hostile = spec_npc.disposition == crate::world::Disposition::Hostile
                     && !npc_state.leveraged;
-                if npc_state.attacked || hostile {
+                // Covert actions (spying, examining, tracking) need no
+                // cooperation; conversation with the hostile does.
+                if npc_state.attacked || (hostile && !spec.covert) {
                     return Err(Rejection::NpcWillNotTalk);
                 }
             }
@@ -1324,7 +1326,10 @@ impl Sim {
         }
     }
 
-    pub(crate) fn villain_is_vulnerable(&self, id: ActorId) -> bool {
+    /// Whether the villain currently takes damage (vulnerability window,
+    /// binding, consecrated ground, or dormancy). Public so clients and the
+    /// autoplayer can present and act on the telegraphed state.
+    pub fn villain_is_vulnerable(&self, id: ActorId) -> bool {
         let Some(actor) = self.state.actor(id) else {
             return false;
         };
@@ -1352,7 +1357,8 @@ impl Sim {
         actor.cadence == cadence.period - 1
     }
 
-    pub(crate) fn actor_name(&self, kind: &ActorKind) -> String {
+    /// Display name for an actor kind (clients and the autoplayer use it).
+    pub fn actor_name(&self, kind: &ActorKind) -> String {
         match kind {
             ActorKind::Enemy(enemy) => self
                 .catalogue
@@ -1508,7 +1514,34 @@ impl Sim {
         if let Some(map) = site_map {
             let enemy = scheme.minion_enemy.clone();
             let hp = self.catalogue.enemies[&enemy].health;
-            let anchor = self.world.map(map).entry;
+            // Minions gather at the scheme's mark — the kill site if the map
+            // has one, else the map's far reaches — drawn to the villain's
+            // work rather than camped on the roads travellers arrive by.
+            let world_map = self.world.map(map);
+            let kill_site = world_map
+                .features
+                .iter()
+                .find(|feature| feature.name.contains("kill site"))
+                .map(|feature| feature.at);
+            let anchor = kill_site.unwrap_or_else(|| {
+                let entry = world_map.entry;
+                let mut best = entry;
+                let mut best_distance = -1;
+                for y in 0..crate::geometry::MAP_HEIGHT {
+                    for x in 0..crate::geometry::MAP_WIDTH {
+                        let point = Point::new(x, y);
+                        if !is_walkable(self.state.terrain(&self.world, map, point)) {
+                            continue;
+                        }
+                        let distance = entry.distance(point);
+                        if distance > best_distance {
+                            best_distance = distance;
+                            best = point;
+                        }
+                    }
+                }
+                best
+            });
             let spots = self.free_tiles_near(map, anchor, 5);
             for spot in spots.into_iter().take(usize::from(event.spawn_minions)) {
                 self.state
