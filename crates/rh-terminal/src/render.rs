@@ -128,7 +128,10 @@ fn draw_run(frame: &mut Frame, run: &RunView, status: &str) -> Rect {
                 .fg(Color::Yellow)
                 .add_modifier(Modifier::BOLD),
         ),
-        Line::styled(run.health_line.clone(), Style::default().fg(Color::LightRed)),
+        Line::styled(
+            run.health_line.clone(),
+            Style::default().fg(Color::LightRed),
+        ),
         Line::raw(run.pools_line.clone()),
         Line::raw(run.stamina_line.clone()),
         Line::raw(""),
@@ -340,7 +343,12 @@ fn draw_text_entry(
     );
 }
 
-fn draw_list(frame: &mut Frame, title: &str, entries: &[(String, String)], selected: Option<usize>) {
+fn draw_list(
+    frame: &mut Frame,
+    title: &str,
+    entries: &[(String, String)],
+    selected: Option<usize>,
+) {
     let area = frame.area();
     let columns = Layout::default()
         .direction(Direction::Horizontal)

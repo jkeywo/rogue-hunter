@@ -13,9 +13,7 @@ use bevy::app::{App, AppExit, ScheduleRunnerPlugin};
 use bevy::prelude::*;
 use bevy_ratatui::event::{KeyMessage, MouseMessage, PasteMessage};
 use bevy_ratatui::{RatatuiContext, RatatuiPlugins};
-use ratatui::crossterm::event::{
-    KeyCode, KeyEventKind, KeyModifiers, MouseButton, MouseEventKind,
-};
+use ratatui::crossterm::event::{KeyCode, KeyEventKind, KeyModifiers, MouseButton, MouseEventKind};
 use ratatui::layout::Rect;
 use rh_client_core::{ClientSession, Intent, Screen};
 use rh_core::geometry::{Direction, Point};
@@ -48,9 +46,7 @@ fn main() {
     }
 
     App::new()
-        .add_plugins(
-            MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(Duration::from_millis(16))),
-        )
+        .add_plugins(MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(Duration::from_millis(16))))
         .add_plugins(RatatuiPlugins {
             enable_mouse_capture: true,
             ..Default::default()
@@ -105,8 +101,7 @@ fn input_system(
         // Quit from the splash screen; Ctrl+Q anywhere.
         let on_splash = matches!(client.session.screen, Screen::Splash { .. });
         if (key.code == KeyCode::Esc && on_splash && client.session.modal.is_none())
-            || (key.code == KeyCode::Char('q')
-                && key.modifiers.contains(KeyModifiers::CONTROL))
+            || (key.code == KeyCode::Char('q') && key.modifiers.contains(KeyModifiers::CONTROL))
         {
             exit.write_default();
             return;
@@ -128,10 +123,7 @@ fn input_system(
                 && row >= area.y
                 && row < area.y + area.height
             {
-                Some(Point::new(
-                    (column - area.x) as i16,
-                    (row - area.y) as i16,
-                ))
+                Some(Point::new((column - area.x) as i16, (row - area.y) as i16))
             } else {
                 None
             }
@@ -174,8 +166,7 @@ fn translate_key(session: &ClientSession, code: KeyCode) -> Option<Intent> {
         };
     }
     // Menu-style screens want list navigation on arrows.
-    let in_menu = session.modal.is_some()
-        || !matches!(session.screen, Screen::Run);
+    let in_menu = session.modal.is_some() || !matches!(session.screen, Screen::Run);
     match code {
         KeyCode::Esc => Some(Intent::Cancel),
         KeyCode::Enter => Some(Intent::Confirm),

@@ -462,8 +462,7 @@ impl<'a> Builder<'a> {
             .filter(|(_, template)| {
                 (template.archetype == "any" || template.archetype == self.combo.villain)
                     && (template.origins.is_empty()
-                        || template
-                            .origins.contains(&self.combo.origin))
+                        || template.origins.contains(&self.combo.origin))
             })
             .map(|(id, template)| (id.clone(), template.clone()))
             .collect();
