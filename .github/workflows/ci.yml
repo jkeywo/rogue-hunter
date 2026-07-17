@@ -1,0 +1,90 @@
+# Required checks per the PASM ci-and-pages-release contract: PASM
+# validation, replay checks, the bounded generator corpus, and native and
+# WASM builds. Only a successful default-branch build deploys GitHub Pages.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  pasm:
+    name: PASM validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PASM tooling
+        run: pip install -e .
+      - name: Validate the spec
+        run: pasm validate pasm/spec
+      - name: Validate scenario replays
+        run: |
+          for scenario in tests/replays/*.yaml; do
+            pasm scenario "$scenario"
+          done
+
+  native:
+    name: Native build, tests, replay checks, corpus
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.95.0
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Formatting
+        run: cargo fmt --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Tests (content schema, sim, generator corpus, golden replays)
+        run: cargo test --workspace
+      - name: CI generator corpus (bounded, all villain combinations)
+        run: cargo run --release -p rh-cli -- corpus --count 256 --budget-seconds 300
+
+  wasm:
+    name: WASM build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.95.0
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-pack
+      - name: Build the browser client
+        run: wasm-pack build crates/rh-web --target web --release --out-dir ../../web/pkg
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+  deploy:
+    name: Deploy GitHub Pages
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [pasm, native, wasm]
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
