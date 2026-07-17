@@ -96,6 +96,12 @@ impl WebClient {
         self.persist();
     }
 
+    /// Fire the action at `index` in the on-screen action panel (a click).
+    pub fn do_action(&mut self, index: u32) {
+        self.session.handle(Intent::DoAction(index as usize));
+        self.persist();
+    }
+
     /// The current share code for the clipboard button.
     pub fn share_code(&self) -> Option<String> {
         self.session.share_code()
@@ -119,6 +125,7 @@ impl WebClient {
                 show(&document, "fullscreen", false)?;
                 self.draw_map(&document, run)?;
                 set_html(&document, "side", &side_html(run))?;
+                set_html(&document, "actions", &actions_html(run))?;
                 set_html(&document, "log", &log_html(run, &view.status))?;
                 match &run.overlay {
                     Some(overlay) => {
@@ -193,6 +200,7 @@ impl WebClient {
             "r" => Some(Intent::Relationships),
             "v" => Some(Intent::RegionMap),
             "L" => Some(Intent::EventLog),
+            ";" => Some(Intent::ToggleLook),
             _ => None,
         }
     }
@@ -243,6 +251,17 @@ impl WebClient {
                     (y as f64 + 0.5) * CELL_H,
                 )?;
             }
+        }
+        // The look cursor: an outline box over the inspected tile.
+        if let Some(cursor) = run.cursor {
+            context.set_stroke_style_str(if run.looking { "#ffd75f" } else { "#87afff" });
+            context.set_line_width(2.0);
+            context.stroke_rect(
+                f64::from(cursor.x) * CELL_W + 1.0,
+                f64::from(cursor.y) * CELL_H + 1.0,
+                CELL_W - 2.0,
+                CELL_H - 2.0,
+            );
         }
         Ok(())
     }
@@ -304,16 +323,35 @@ fn side_html(run: &RunView) -> String {
         escape(&run.stamina_line)
     ));
     html.push_str(&format!("<p>{}</p>", escape(&run.pools_line)));
-    html.push_str("<h3>Leads</h3><ul class=\"leads\">");
-    if run.leads.is_empty() {
-        html.push_str("<li class=\"dim\">none discovered here</li>");
+    let look_title = if run.looking { "Look (cursor)" } else { "Look" };
+    html.push_str(&format!("<h3>{look_title}</h3>"));
+    match &run.inspect {
+        Some(text) => html.push_str(&format!("<p class=\"look\">{}</p>", escape(text))),
+        None => html.push_str("<p class=\"dim\">Hover a tile, or press ; to look around.</p>"),
     }
-    for lead in &run.leads {
-        html.push_str(&format!("<li>{}</li>", escape(lead)));
-    }
-    html.push_str("</ul><h3>Pack</h3><ul>");
+    html.push_str("<h3>Pack</h3><ul>");
     for item in &run.inventory {
         html.push_str(&format!("<li>{}</li>", escape(item)));
+    }
+    html.push_str("</ul>");
+    html
+}
+
+fn actions_html(run: &RunView) -> String {
+    let mut html = String::from("<h3>Actions</h3><ul class=\"actionlist\">");
+    for (index, action) in run.actions.iter().enumerate() {
+        let disabled = if action.enabled { "" } else { " disabled" };
+        let note = match &action.note {
+            Some(note) => format!("<span class=\"note\"> ({})</span>", escape(note)),
+            None => String::new(),
+        };
+        html.push_str(&format!(
+            "<li class=\"action{disabled}\" data-action=\"{index}\">\
+               <span class=\"akey\">{}</span> {}{}</li>",
+            escape(&action.key),
+            escape(&action.label),
+            note
+        ));
     }
     html.push_str("</ul>");
     html
@@ -328,19 +366,9 @@ fn log_html(run: &RunView, status: &str) -> String {
             escape(text)
         ));
     }
-    if let Some(inspect) = &run.inspect {
-        html.push_str(&format!(
-            "<div class=\"inspect\">&gt; {}</div>",
-            escape(inspect)
-        ));
-    }
     if !status.is_empty() {
         html.push_str(&format!("<div class=\"status\">{}</div>", escape(status)));
     }
-    html.push_str(&format!(
-        "<div class=\"hints\">{}</div>",
-        escape(&run.hints)
-    ));
     html.push_str("</div>");
     html
 }

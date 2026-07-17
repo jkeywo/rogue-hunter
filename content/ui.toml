@@ -37,12 +37,16 @@ keys = "g / r / v / L"
 action = "Grimoire / Faces / the Valley / the Record"
 
 [[key_bindings]]
+keys = ";"
+action = "Look mode: detach a cursor to examine any tile"
+
+[[key_bindings]]
 keys = "Space / ."
 action = "Wait a turn"
 
 [[key_bindings]]
 keys = "Mouse"
-action = "Hover to inspect; click to move, target, or act"
+action = "Hover any tile to inspect it; click the map or an action to act"
 
 [[key_bindings]]
 keys = "Esc"

@@ -79,13 +79,30 @@ pub enum MenuAction {
     Nothing,
 }
 
+/// One row of the on-screen action panel: a labelled, keyed, clickable
+/// affordance. Disabled entries stay visible with a reason, never hidden.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ActionEntry {
+    /// Key hint shown to the player (e.g. "e", "f", ";").
+    pub key: String,
+    pub label: String,
+    /// Whether the action can be taken right now.
+    pub enabled: bool,
+    /// Short note: a cost, or why it is unavailable.
+    pub note: Option<String>,
+    /// The intent a click on this row fires.
+    pub intent: Intent,
+}
+
 pub struct ClientSession {
     pub catalogue: Catalogue,
     pub screen: Screen,
     pub modal: Option<Modal>,
     pub run: Option<RunSession>,
-    /// Hovered map tile for inspection.
+    /// Hovered map tile for inspection (mouse).
     pub hover: Option<Point>,
+    /// Detached look cursor (keyboard look mode); `None` when not looking.
+    pub look_cursor: Option<Point>,
     /// One-line status: last rejection reason or notable event.
     pub status: String,
     /// Random-ish seed source for "New Run" (clients pass a clock value).
@@ -100,6 +117,7 @@ impl ClientSession {
             modal: None,
             run: None,
             hover: None,
+            look_cursor: None,
             status: String::new(),
             seed_nonce,
         }
@@ -293,6 +311,8 @@ impl ClientSession {
             Ok(run) => {
                 self.run = Some(run);
                 self.modal = None;
+                self.look_cursor = None;
+                self.hover = None;
                 self.screen = Screen::Run;
                 self.status = format!("Seed {seed}.");
             }
@@ -312,7 +332,39 @@ impl ClientSession {
             self.handle_modal(intent);
             return;
         }
+        // Look mode intercepts movement to drive the detached cursor.
+        if self.look_cursor.is_some() {
+            match &intent {
+                Intent::Move(dir) => {
+                    self.move_cursor(*dir);
+                    return;
+                }
+                Intent::ToggleLook | Intent::Cancel => {
+                    self.look_cursor = None;
+                    self.status = "Look mode off.".into();
+                    return;
+                }
+                Intent::Hover(point) => {
+                    self.hover = Some(*point);
+                    return;
+                }
+                Intent::HoverClear => {
+                    self.hover = None;
+                    return;
+                }
+                // Any other action leaves look mode, then takes effect.
+                _ => self.look_cursor = None,
+            }
+        }
+        // A click on the on-screen action panel dispatches that row's intent.
+        if let Intent::DoAction(index) = intent {
+            if let Some(entry) = self.available_actions().into_iter().nth(index) {
+                self.handle(entry.intent);
+            }
+            return;
+        }
         match intent {
+            Intent::ToggleLook => self.enter_look_mode(),
             Intent::Move(dir) => self.apply(Command::Move(dir)),
             Intent::Wait => self.apply(Command::Wait),
             Intent::Aim => self.apply(Command::Manoeuvre {
@@ -476,6 +528,172 @@ impl ClientSession {
         if let Err(rejection) = run.apply(command) {
             self.status = rejection.to_string();
         }
+    }
+
+    // -- Look mode -------------------------------------------------------------
+
+    fn enter_look_mode(&mut self) {
+        let start = self.run.as_ref().map(|run| run.sim.state.hunter.pos);
+        if let Some(start) = start {
+            self.look_cursor = Some(self.hover.unwrap_or(start));
+            self.status = "Look mode: move the cursor, Esc to leave.".into();
+        }
+    }
+
+    fn move_cursor(&mut self, dir: Direction) {
+        if let Some(cursor) = self.look_cursor {
+            let next = cursor.step(dir);
+            if next.in_bounds() {
+                self.look_cursor = Some(next);
+            }
+        }
+    }
+
+    /// The tile currently being inspected: the mouse hover if any, else the
+    /// keyboard look cursor. Both clients render a marker here.
+    pub fn look_point(&self) -> Option<Point> {
+        self.hover.or(self.look_cursor)
+    }
+
+    /// Whether keyboard look mode is engaged.
+    pub fn is_looking(&self) -> bool {
+        self.look_cursor.is_some()
+    }
+
+    // -- Action panel ----------------------------------------------------------
+
+    /// The context-sensitive list of actions offered on the right of the
+    /// screen. Every entry is keyed and clickable; disabled ones stay visible
+    /// with a reason. Clicking row `i` dispatches `entry.intent`.
+    pub fn available_actions(&self) -> Vec<ActionEntry> {
+        let Some(run) = self.run.as_ref() else {
+            return Vec::new();
+        };
+        let state = &run.sim.state;
+        let hunter = &state.hunter;
+        let mut actions: Vec<ActionEntry> = Vec::new();
+
+        let mut push =
+            |key: &str, label: &str, enabled: bool, note: Option<String>, intent: Intent| {
+                actions.push(ActionEntry {
+                    key: key.to_owned(),
+                    label: label.to_owned(),
+                    enabled,
+                    note,
+                    intent,
+                });
+            };
+
+        push("e", "Interact", true, None, Intent::Interact);
+        push(";", "Look around", true, None, Intent::ToggleLook);
+        push(".", "Wait", true, None, Intent::Wait);
+
+        let targets = !self.fire_targets().is_empty();
+        let shots = hunter.item_count("flintlock-shot");
+        push(
+            "f",
+            "Fire flintlock",
+            targets && shots > 0,
+            if shots == 0 {
+                Some("out of shot".into())
+            } else if !targets {
+                Some("nothing in sight".into())
+            } else {
+                None
+            },
+            Intent::Fire,
+        );
+        if hunter.item_count("silver-bullet") > 0 {
+            push(
+                "F",
+                "Fire silver bullet",
+                targets,
+                (!targets).then(|| "nothing in sight".into()),
+                Intent::FireSilver,
+            );
+        }
+
+        let stamina = hunter.stamina;
+        push(
+            "a",
+            "Aim (sure next shot)",
+            stamina >= 2,
+            (stamina < 2).then(|| "2 stamina".into()),
+            Intent::Aim,
+        );
+        push(
+            "p",
+            "Power Attack",
+            stamina >= 2,
+            (stamina < 2).then(|| "2 stamina".into()),
+            Intent::PowerAttack,
+        );
+        push(
+            "s",
+            "Sprint (move 2)",
+            stamina >= 1,
+            (stamina < 1).then(|| "1 stamina".into()),
+            Intent::Sprint,
+        );
+
+        let physical = hunter.physical;
+        push(
+            "x",
+            "Set Snare",
+            physical >= 1,
+            (physical < 1).then(|| "1 Physical".into()),
+            Intent::SetSnare,
+        );
+        let adjacent_foe = self.adjacent_hostile().is_some();
+        push(
+            "K",
+            "Killing Blow",
+            physical >= 1 && adjacent_foe,
+            if physical < 1 {
+                Some("1 Physical".into())
+            } else if !adjacent_foe {
+                Some("no foe adjacent".into())
+            } else {
+                None
+            },
+            Intent::KillingBlow,
+        );
+
+        if hunter.item_count("wound-draught") > 0 {
+            push("q", "Drink Wound Draught", true, None, Intent::Draught);
+        }
+        if hunter.item_count("binding-charm") > 0 {
+            let adjacent_villain = self.adjacent_villain();
+            push(
+                "c",
+                "Press Binding Charm",
+                adjacent_villain,
+                (!adjacent_villain).then(|| "no revenant adjacent".into()),
+                Intent::Charm,
+            );
+        }
+
+        push("g", "Grimoire", true, None, Intent::Grimoire);
+        push("r", "Faces & ties", true, None, Intent::Relationships);
+        push("v", "The Valley (map)", true, None, Intent::RegionMap);
+        push("L", "The Record (log)", true, None, Intent::EventLog);
+
+        actions
+    }
+
+    fn adjacent_villain(&self) -> bool {
+        let Some(run) = self.run.as_ref() else {
+            return false;
+        };
+        let state = &run.sim.state;
+        let hunter = state.hunter.pos;
+        let map = state.current_map;
+        state.actors.iter().any(|actor| {
+            actor.map == map
+                && actor.hp > 0
+                && actor.kind == ActorKind::Villain
+                && hunter.is_adjacent(actor.pos)
+        })
     }
 
     fn adjacent_hostile(&self) -> Option<Target> {
@@ -865,6 +1083,17 @@ impl ClientSession {
             if let Some(npc_id) = state.npc_at(&sim.world, map, point) {
                 let spec = sim.world.npc(npc_id);
                 parts.push(format!("{}, the {}", spec.name, spec.archetype));
+                // Leads that involve talking to this villager.
+                for opp in &sim.world.opportunities {
+                    if opp.map == map
+                        && state.discovered.contains(&opp.id)
+                        && !state.resolved.contains(&opp.id)
+                        && !state.lost.contains(&opp.id)
+                        && opp.anchor == OpportunityAnchor::Npc(npc_id)
+                    {
+                        parts.push(format!("Lead: {}", opp.name));
+                    }
+                }
             }
         }
         if let Some(feature) = sim.world.map(map).feature_at(point) {

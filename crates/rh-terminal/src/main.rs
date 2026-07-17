@@ -14,7 +14,6 @@ use bevy::prelude::*;
 use bevy_ratatui::event::{KeyMessage, MouseMessage, PasteMessage};
 use bevy_ratatui::{RatatuiContext, RatatuiPlugins};
 use ratatui::crossterm::event::{KeyCode, KeyEventKind, KeyModifiers, MouseButton, MouseEventKind};
-use ratatui::layout::Rect;
 use rh_client_core::{ClientSession, Intent, Screen};
 use rh_core::geometry::{Direction, Point};
 
@@ -22,8 +21,8 @@ use rh_core::geometry::{Direction, Point};
 pub struct Client {
     pub session: ClientSession,
     pub save_path: PathBuf,
-    /// Interior of the map widget from the last frame, for mouse hit-testing.
-    pub map_area: Rect,
+    /// Interactive regions from the last frame, for mouse hit-testing.
+    pub areas: render::RunAreas,
 }
 
 fn main() {
@@ -54,7 +53,7 @@ fn main() {
         .insert_resource(Client {
             session,
             save_path,
-            map_area: Rect::new(0, 0, 0, 0),
+            areas: render::RunAreas::default(),
         })
         .add_systems(Update, (input_system, draw_system).chain())
         .run();
@@ -116,29 +115,45 @@ fn input_system(
         changed = true;
     }
     for mouse in mice.read() {
-        let area = client.map_area;
-        let to_map = |column: u16, row: u16| -> Option<Point> {
-            if column >= area.x
-                && column < area.x + area.width
-                && row >= area.y
-                && row < area.y + area.height
+        let map = client.areas.map;
+        let actions = client.areas.actions;
+        let in_map = |column: u16, row: u16| -> Option<Point> {
+            if column >= map.x
+                && column < map.x + map.width
+                && row >= map.y
+                && row < map.y + map.height
             {
-                Some(Point::new((column - area.x) as i16, (row - area.y) as i16))
+                Some(Point::new((column - map.x) as i16, (row - map.y) as i16))
+            } else {
+                None
+            }
+        };
+        let in_actions = |column: u16, row: u16| -> Option<usize> {
+            if column >= actions.x
+                && column < actions.x + actions.width
+                && row >= actions.y
+                && row < actions.y + actions.height
+            {
+                Some((row - actions.y) as usize)
             } else {
                 None
             }
         };
         match mouse.kind {
             MouseEventKind::Moved => {
-                let intent = match to_map(mouse.column, mouse.row) {
+                // The mouse over the map is a look cursor; elsewhere it clears.
+                let intent = match in_map(mouse.column, mouse.row) {
                     Some(point) => Intent::Hover(point),
                     None => Intent::HoverClear,
                 };
                 client.session.handle(intent);
             }
             MouseEventKind::Down(MouseButton::Left) => {
-                if let Some(point) = to_map(mouse.column, mouse.row) {
+                if let Some(point) = in_map(mouse.column, mouse.row) {
                     client.session.handle(Intent::Click(point));
+                    changed = true;
+                } else if let Some(row) = in_actions(mouse.column, mouse.row) {
+                    client.session.handle(Intent::DoAction(row));
                     changed = true;
                 }
             }
@@ -208,19 +223,20 @@ fn translate_char(_session: &ClientSession, c: char, in_menu: bool) -> Option<In
         'r' => Some(Intent::Relationships),
         'v' => Some(Intent::RegionMap),
         'L' => Some(Intent::EventLog),
+        ';' => Some(Intent::ToggleLook),
         _ => None,
     }
 }
 
 fn draw_system(mut context: ResMut<RatatuiContext>, mut client: ResMut<Client>) {
     let view = client.session.view();
-    let mut map_area = client.map_area;
+    let mut areas = client.areas;
     let result = context.draw(|frame| {
-        map_area = render::draw(frame, &view);
+        areas = render::draw(frame, &view);
     });
     if result.is_err() {
         // Terminal trouble: nothing sensible to do but keep running.
         return;
     }
-    client.map_area = map_area;
+    client.areas = areas;
 }

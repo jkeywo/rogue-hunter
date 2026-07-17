@@ -73,6 +73,69 @@ fn movement_and_menus_flow() {
 }
 
 #[test]
+fn look_mode_detaches_a_cursor_without_moving_the_hunter() {
+    let mut client = session();
+    client.handle(Intent::Down);
+    client.handle(Intent::Confirm);
+    for digit in "11".chars() {
+        client.handle(Intent::Char(digit));
+    }
+    client.handle(Intent::Confirm);
+
+    let hunter_before = client.run.as_ref().map(|run| run.sim.state.hunter.pos);
+
+    // Enter look mode: a cursor detaches at the hunter's tile.
+    client.handle(Intent::ToggleLook);
+    assert!(client.is_looking(), "look mode should be active");
+    let cursor_start = client.look_point();
+    assert_eq!(cursor_start, hunter_before);
+
+    // Moving in look mode moves the cursor, not the hunter.
+    client.handle(Intent::Move(Direction::East));
+    let hunter_after = client.run.as_ref().map(|run| run.sim.state.hunter.pos);
+    assert_eq!(
+        hunter_before, hunter_after,
+        "hunter must not move while looking"
+    );
+    assert_ne!(
+        client.look_point(),
+        cursor_start,
+        "cursor should have moved"
+    );
+
+    // The cursor tile inspects to a non-empty description.
+    assert!(client.inspect(client.look_point().unwrap()).is_some());
+
+    // Esc leaves look mode.
+    client.handle(Intent::Cancel);
+    assert!(!client.is_looking());
+}
+
+#[test]
+fn action_panel_lists_keyed_actions_and_dispatches_clicks() {
+    let mut client = session();
+    client.handle(Intent::Down);
+    client.handle(Intent::Confirm);
+    for digit in "11".chars() {
+        client.handle(Intent::Char(digit));
+    }
+    client.handle(Intent::Confirm);
+
+    let actions = client.available_actions();
+    assert!(!actions.is_empty(), "run should offer actions");
+    // The look toggle is always present and keyed.
+    let look = actions
+        .iter()
+        .position(|a| a.intent == Intent::ToggleLook)
+        .expect("look action present");
+    assert_eq!(actions[look].key, ";");
+
+    // Clicking the look row (by index) toggles look mode.
+    client.handle(Intent::DoAction(look));
+    assert!(client.is_looking());
+}
+
+#[test]
 fn restoring_a_share_code_resumes_the_run() {
     let mut client = session();
     client.handle(Intent::Down);

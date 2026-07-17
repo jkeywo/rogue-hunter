@@ -10,7 +10,7 @@ use rh_core::geometry::{Point, MAP_HEIGHT, MAP_WIDTH};
 use rh_core::state::ActorKind;
 use rh_core::world::OpportunityAnchor;
 
-use crate::{ClientSession, Modal, Screen};
+use crate::{ActionEntry, ClientSession, Modal, Screen};
 
 /// Semantic cell colors; each client maps them to its palette.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -77,15 +77,17 @@ pub struct RunView {
     pub pools_line: String,
     pub stamina_line: String,
     pub inventory: Vec<String>,
-    /// Nearby/visible leads with availability notes.
-    pub leads: Vec<String>,
+    /// The context-sensitive, clickable action panel.
+    pub actions: Vec<ActionEntry>,
     pub log_tail: Vec<(EventKind, String)>,
-    /// Hover inspection line.
+    /// What the look cursor / mouse is pointing at, if anything.
+    pub cursor: Option<Point>,
+    /// Whether keyboard look mode is engaged (marker vs. passive hover).
+    pub looking: bool,
+    /// Inspection text for the cursor tile; `None` when nothing is targeted.
     pub inspect: Option<String>,
     /// Active modal (menu / targeting), rendered as an overlay.
     pub overlay: Option<OverlayView>,
-    /// Contextual key hints.
-    pub hints: String,
 }
 
 #[derive(Debug, Clone)]
@@ -390,35 +392,6 @@ fn build_run_view(session: &ClientSession) -> RunView {
         })
         .collect();
 
-    // Discovered leads on this map, with blocked explanations.
-    let mut leads = Vec::new();
-    for opp in &sim.world.opportunities {
-        if opp.map != map_id
-            || !state.discovered.contains(&opp.id)
-            || state.resolved.contains(&opp.id)
-            || state.lost.contains(&opp.id)
-        {
-            continue;
-        }
-        let where_note = match opp.anchor {
-            OpportunityAnchor::Npc(npc) => format!(" ({})", sim.world.npc(npc).name),
-            OpportunityAnchor::Tile(_) => String::new(),
-        };
-        let blocked = opp.pool.and_then(|pool| {
-            let mut cost = opp.cost;
-            if pool == rh_content::PoolKind::Social && state.settlement_hostile {
-                cost += 1;
-            }
-            (hunter.pool(pool) < cost).then(|| format!(" [needs {cost} {pool:?}]"))
-        });
-        leads.push(format!(
-            "? {}{}{}",
-            opp.name,
-            where_note,
-            blocked.unwrap_or_default()
-        ));
-    }
-
     let log_tail: Vec<(EventKind, String)> = state
         .log
         .iter()
@@ -521,11 +494,14 @@ fn build_run_view(session: &ClientSession) -> RunView {
         ),
         stamina_line: format!("Stamina {}/{}", hunter.stamina, hunter_def.stamina_cap),
         inventory,
-        leads,
+        actions: session.available_actions(),
         log_tail,
-        inspect: session.hover.and_then(|point| session.inspect(point)),
+        cursor: session.look_point(),
+        looking: session.is_looking(),
+        inspect: session
+            .look_point()
+            .and_then(|point| session.inspect(point)),
         overlay,
-        hints: "arrows move - E interact - F fire - A aim - P power - S sprint - X snare - K kill - Q draught - C charm - G grimoire - R faces - V valley - L log".to_owned(),
     }
 }
 
@@ -544,11 +520,12 @@ fn empty_run_view() -> RunView {
         pools_line: String::new(),
         stamina_line: String::new(),
         inventory: Vec::new(),
-        leads: Vec::new(),
+        actions: Vec::new(),
         log_tail: Vec::new(),
+        cursor: None,
+        looking: false,
         inspect: None,
         overlay: None,
-        hints: String::new(),
     }
 }
 

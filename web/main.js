@@ -57,6 +57,12 @@ async function main() {
   // Clicks on menus, splash options, and the copy button (delegated,
   // since panels re-render every frame).
   document.addEventListener("click", (event) => {
+    const action = event.target.closest?.("[data-action]");
+    if (action) {
+      client.do_action(Number(action.dataset.action));
+      render();
+      return;
+    }
     const choice = event.target.closest?.("[data-choice]");
     if (choice) {
       client.choose(Number(choice.dataset.choice));

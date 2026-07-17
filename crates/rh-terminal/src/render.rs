@@ -11,8 +11,17 @@ use rh_client_core::view::{
 use rh_core::events::EventKind;
 use rh_core::geometry::{MAP_HEIGHT, MAP_WIDTH};
 
-/// Draw one frame. Returns the map interior for mouse hit-testing.
-pub fn draw(frame: &mut Frame, view: &ViewModel) -> Rect {
+/// Interactive regions of the run screen, for mouse hit-testing.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct RunAreas {
+    /// Interior of the tactical map (map-tile coordinates hang off its origin).
+    pub map: Rect,
+    /// Interior of the action list; row N of it is action index N.
+    pub actions: Rect,
+}
+
+/// Draw one frame. Returns the interactive regions for mouse hit-testing.
+pub fn draw(frame: &mut Frame, view: &ViewModel) -> RunAreas {
     match &view.screen {
         ScreenView::Splash {
             title,
@@ -22,7 +31,7 @@ pub fn draw(frame: &mut Frame, view: &ViewModel) -> Rect {
             selected,
         } => {
             draw_splash(frame, title, intro, bindings, options, *selected);
-            Rect::new(0, 0, 0, 0)
+            RunAreas::default()
         }
         ScreenView::TextEntry {
             title,
@@ -31,7 +40,7 @@ pub fn draw(frame: &mut Frame, view: &ViewModel) -> Rect {
             error,
         } => {
             draw_text_entry(frame, title, prompt, input, error.as_deref(), &view.status);
-            Rect::new(0, 0, 0, 0)
+            RunAreas::default()
         }
         ScreenView::Run(run) => draw_run(frame, run, &view.status),
         ScreenView::List {
@@ -40,11 +49,11 @@ pub fn draw(frame: &mut Frame, view: &ViewModel) -> Rect {
             selected,
         } => {
             draw_list(frame, title, entries, *selected);
-            Rect::new(0, 0, 0, 0)
+            RunAreas::default()
         }
         ScreenView::CaseReport(report) => {
             draw_case_report(frame, report);
-            Rect::new(0, 0, 0, 0)
+            RunAreas::default()
         }
     }
 }
@@ -88,7 +97,7 @@ fn event_style(kind: EventKind) -> Style {
     Style::default().fg(color)
 }
 
-fn draw_run(frame: &mut Frame, run: &RunView, status: &str) -> Rect {
+fn draw_run(frame: &mut Frame, run: &RunView, status: &str) -> RunAreas {
     let vertical = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -100,27 +109,35 @@ fn draw_run(frame: &mut Frame, run: &RunView, status: &str) -> Rect {
         .direction(Direction::Horizontal)
         .constraints([
             Constraint::Length(MAP_WIDTH as u16 + 2),
-            Constraint::Min(24),
+            Constraint::Min(26),
+            Constraint::Length(28),
         ])
         .split(vertical[0]);
 
-    // The tactical map.
+    // The tactical map, with the look cursor highlighted.
     let map_block = Block::default()
         .borders(Borders::ALL)
         .title(run.header.clone());
     let map_inner = map_block.inner(top[0]);
+    let cursor = run.cursor;
     let mut lines: Vec<Line> = Vec::with_capacity(MAP_HEIGHT as usize);
     for y in 0..MAP_HEIGHT as usize {
         let mut spans: Vec<Span> = Vec::with_capacity(MAP_WIDTH as usize);
         for x in 0..MAP_WIDTH as usize {
             let cell: Cell = run.cells[y * MAP_WIDTH as usize + x];
-            spans.push(Span::styled(cell.glyph.to_string(), cell_style(cell.color)));
+            let mut style = cell_style(cell.color);
+            if let Some(c) = cursor {
+                if c.x as usize == x && c.y as usize == y {
+                    style = style.add_modifier(Modifier::REVERSED);
+                }
+            }
+            spans.push(Span::styled(cell.glyph.to_string(), style));
         }
         lines.push(Line::from(spans));
     }
     frame.render_widget(Paragraph::new(Text::from(lines)).block(map_block), top[0]);
 
-    // The side panel: vitals, leads, inventory.
+    // The vitals + look column: who and what the cursor is on.
     let mut side: Vec<Line> = vec![
         Line::styled(
             run.clock_line.clone(),
@@ -135,19 +152,24 @@ fn draw_run(frame: &mut Frame, run: &RunView, status: &str) -> Rect {
         Line::raw(run.pools_line.clone()),
         Line::raw(run.stamina_line.clone()),
         Line::raw(""),
-        Line::styled("Leads", Style::default().add_modifier(Modifier::UNDERLINED)),
+        Line::styled(
+            if run.looking {
+                "Look (cursor)"
+            } else {
+                "Look (hover)"
+            },
+            Style::default().add_modifier(Modifier::UNDERLINED),
+        ),
     ];
-    if run.leads.is_empty() {
-        side.push(Line::styled(
-            "  none discovered here",
+    match &run.inspect {
+        Some(text) => side.push(Line::styled(
+            format!("  {text}"),
+            Style::default().fg(Color::White),
+        )),
+        None => side.push(Line::styled(
+            "  hover a tile, or press ; to look",
             Style::default().fg(Color::DarkGray),
-        ));
-    }
-    for lead in &run.leads {
-        side.push(Line::styled(
-            format!("  {lead}"),
-            Style::default().fg(Color::LightGreen),
-        ));
+        )),
     }
     side.push(Line::raw(""));
     side.push(Line::styled(
@@ -164,20 +186,47 @@ fn draw_run(frame: &mut Frame, run: &RunView, status: &str) -> Rect {
         top[1],
     );
 
-    // The lower band: log, inspection, status, hints.
+    // The clickable action list.
+    let actions_block = Block::default().borders(Borders::ALL).title("Actions");
+    let actions_inner = actions_block.inner(top[2]);
+    let action_lines: Vec<Line> = run
+        .actions
+        .iter()
+        .map(|action| {
+            let key_style = if action.enabled {
+                Style::default().fg(Color::LightCyan)
+            } else {
+                Style::default().fg(Color::DarkGray)
+            };
+            let label_style = if action.enabled {
+                Style::default().fg(Color::White)
+            } else {
+                Style::default().fg(Color::DarkGray)
+            };
+            let mut spans = vec![
+                Span::styled(format!("{:>2} ", action.key), key_style),
+                Span::styled(action.label.clone(), label_style),
+            ];
+            if let Some(note) = &action.note {
+                spans.push(Span::styled(
+                    format!(" ({note})"),
+                    Style::default().fg(Color::DarkGray),
+                ));
+            }
+            Line::from(spans)
+        })
+        .collect();
+    frame.render_widget(
+        Paragraph::new(Text::from(action_lines)).block(actions_block),
+        top[2],
+    );
+
+    // The lower band: event log and status.
     let mut log_lines: Vec<Line> = run
         .log_tail
         .iter()
         .map(|(kind, text)| Line::styled(text.clone(), event_style(*kind)))
         .collect();
-    if let Some(inspect) = &run.inspect {
-        log_lines.push(Line::styled(
-            format!("> {inspect}"),
-            Style::default()
-                .fg(Color::White)
-                .add_modifier(Modifier::ITALIC),
-        ));
-    }
     if !status.is_empty() {
         log_lines.push(Line::styled(
             status.to_owned(),
@@ -186,10 +235,6 @@ fn draw_run(frame: &mut Frame, run: &RunView, status: &str) -> Rect {
                 .add_modifier(Modifier::BOLD),
         ));
     }
-    log_lines.push(Line::styled(
-        run.hints.clone(),
-        Style::default().fg(Color::DarkGray),
-    ));
     frame.render_widget(
         Paragraph::new(Text::from(log_lines))
             .wrap(Wrap { trim: false })
@@ -201,7 +246,10 @@ fn draw_run(frame: &mut Frame, run: &RunView, status: &str) -> Rect {
     if let Some(overlay) = &run.overlay {
         draw_overlay(frame, overlay);
     }
-    map_inner
+    RunAreas {
+        map: map_inner,
+        actions: actions_inner,
+    }
 }
 
 fn draw_overlay(frame: &mut Frame, overlay: &OverlayView) {

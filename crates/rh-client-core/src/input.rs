@@ -39,6 +39,11 @@ pub enum Intent {
     RegionMap,
     /// Open the full event log.
     EventLog,
+    /// Toggle look mode: detach an inspection cursor from the hunter.
+    ToggleLook,
+    /// Fire the action at this index in the current action list (clicks on
+    /// the on-screen action panel).
+    DoAction(usize),
     /// Menu navigation.
     Up,
     Down,
