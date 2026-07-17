@@ -8,6 +8,10 @@ entities:
       references: [seeded-mystery-generator, clue-graph-validator, command-replay, terminal-client, web-client]
 
   - component: headless-simulation-foundation
+    implementation:
+      status: confirmed
+      paths: [crates/rh-core/src]
+      tests: [cargo test -p rh-core]
     core:
       status: accepted
       confidence: confirmed
@@ -19,6 +23,9 @@ entities:
       owns: [authoritative-run-state]
 
   - state: authoritative-run-state
+    implementation:
+      status: confirmed
+      paths: [crates/rh-core/src/state.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -29,6 +36,9 @@ entities:
       owner: headless-simulation-foundation
 
   - component: semantic-command-boundary
+    implementation:
+      status: confirmed
+      paths: [crates/rh-core/src/command.rs, crates/rh-core/src/sim.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -39,6 +49,9 @@ entities:
       kind: command validator
 
   - component: generation-inspector
+    implementation:
+      status: confirmed
+      paths: [crates/rh-gen/src/lib.rs, crates/rh-cli/src/main.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -47,6 +60,10 @@ entities:
       references: [headless-simulation-foundation, clue-graph-validator, command-replay]
 
   - component: seeded-mystery-generator
+    implementation:
+      status: confirmed
+      paths: [crates/rh-gen/src]
+      tests: [cargo test -p rh-gen]
     core:
       status: accepted
       confidence: confirmed
@@ -55,6 +72,10 @@ entities:
       references: [clue-graph-validator, investigation-pools, villain-composition, three-map-world]
 
   - component: authored-content-catalogue
+    implementation:
+      status: confirmed
+      paths: [content, crates/rh-content/src]
+      tests: [cargo test -p rh-content]
     core:
       status: accepted
       confidence: confirmed
@@ -63,6 +84,10 @@ entities:
       references: [seeded-mystery-generator, clue-graph-validator]
 
   - component: clue-graph-validator
+    implementation:
+      status: confirmed
+      paths: [crates/rh-gen/src/planner.rs, crates/rh-core/src/viability.rs]
+      tests: [crates/rh-gen/tests/generator.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -74,6 +99,9 @@ entities:
       classification: authoritative
 
   - component: three-map-world
+    implementation:
+      status: confirmed
+      paths: [content/maps, crates/rh-gen/src/materialise.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -82,6 +110,9 @@ entities:
       references: [travel-clock, encounter-turn-rules]
 
   - component: map-visibility
+    implementation:
+      status: confirmed
+      paths: [crates/rh-core/src/fov.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -90,6 +121,9 @@ entities:
       references: [three-map-world, terminal-client, web-client]
 
   - component: travel-clock
+    implementation:
+      status: confirmed
+      paths: [crates/rh-core/src/sim.rs, content/balance.toml]
     core:
       status: accepted
       confidence: confirmed
@@ -98,6 +132,9 @@ entities:
       references: [final-hunt-rules]
 
   - component: global-clock-action-gate
+    implementation:
+      status: confirmed
+      paths: [crates/rh-core/src/sim.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -106,6 +143,9 @@ entities:
       references: [travel-clock, final-hunt-rules, semantic-command-boundary]
 
   - component: investigation-pools
+    implementation:
+      status: confirmed
+      paths: [crates/rh-core/src/state.rs, content/hunter.toml]
     core:
       status: accepted
       confidence: confirmed
@@ -114,6 +154,9 @@ entities:
       references: [mvp-hunter, seek-mystical-favour]
 
   - component: physical-and-stamina-resources
+    implementation:
+      status: confirmed
+      paths: [crates/rh-core/src/state.rs, content/hunter.toml]
     core:
       status: accepted
       confidence: confirmed
@@ -122,6 +165,9 @@ entities:
       references: [mvp-hunter, encounter-turn-rules]
 
   - component: hunter-combat-abilities
+    implementation:
+      status: confirmed
+      paths: [content/hunter.toml, crates/rh-core/src/sim.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -130,6 +176,9 @@ entities:
       references: [physical-and-stamina-resources, encounter-turn-rules]
 
   - component: villain-composition
+    implementation:
+      status: confirmed
+      paths: [content/villains.toml, crates/rh-gen/src/cast.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -138,6 +187,9 @@ entities:
       references: [final-hunt-rules]
 
   - component: ordinary-enemy-roster
+    implementation:
+      status: confirmed
+      paths: [content/enemies.toml, crates/rh-core/src/ai.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -146,6 +198,9 @@ entities:
       references: [encounter-turn-rules, villain-composition]
 
   - component: deterministic-low-chance-loot
+    implementation:
+      status: confirmed
+      paths: [crates/rh-core/src/sim.rs, content/balance.toml]
     core:
       status: accepted
       confidence: confirmed
@@ -154,6 +209,9 @@ entities:
       references: [ordinary-enemy-roster, clue-graph-validator, command-replay]
 
   - component: final-hunt-rules
+    implementation:
+      status: confirmed
+      paths: [crates/rh-core/src/sim.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -162,6 +220,9 @@ entities:
       references: [encounter-turn-rules, command-replay]
 
   - component: encounter-turn-rules
+    implementation:
+      status: confirmed
+      paths: [crates/rh-core/src/ai.rs, crates/rh-core/src/sim.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -170,6 +231,9 @@ entities:
       references: [weakness-preparation]
 
   - component: weakness-preparation
+    implementation:
+      status: confirmed
+      paths: [content/recipes.toml, content/gathers.toml]
     core:
       status: accepted
       confidence: confirmed
@@ -178,6 +242,9 @@ entities:
       references: [combat-viability-threshold]
 
   - component: wound-draught
+    implementation:
+      status: confirmed
+      paths: [content/items.toml]
     core:
       status: accepted
       confidence: confirmed
@@ -186,6 +253,9 @@ entities:
       references: [weakness-preparation, encounter-turn-rules]
 
   - component: werewolf-pounce-ai
+    implementation:
+      status: confirmed
+      paths: [crates/rh-core/src/ai.rs, content/villains.toml]
     core:
       status: accepted
       confidence: confirmed
@@ -194,6 +264,9 @@ entities:
       references: [encounter-turn-rules, weakness-preparation]
 
   - component: church-consecration-rite
+    implementation:
+      status: confirmed
+      paths: [crates/rh-core/src/sim.rs, content/villains.toml]
     core:
       status: accepted
       confidence: confirmed
@@ -202,6 +275,9 @@ entities:
       references: [travel-clock, final-hunt-rules]
 
   - component: revenant-cadence-ai
+    implementation:
+      status: confirmed
+      paths: [crates/rh-core/src/ai.rs, content/villains.toml]
     core:
       status: accepted
       confidence: confirmed
@@ -210,6 +286,9 @@ entities:
       references: [encounter-turn-rules, church-consecration-rite]
 
   - component: revenant-binding-charm
+    implementation:
+      status: confirmed
+      paths: [crates/rh-core/src/sim.rs, content/recipes.toml]
     core:
       status: accepted
       confidence: confirmed
@@ -218,6 +297,10 @@ entities:
       references: [weakness-preparation, revenant-cadence-ai, clue-graph-validator]
 
   - component: command-replay
+    implementation:
+      status: confirmed
+      paths: [crates/rh-replay/src]
+      tests: [crates/rh-replay/tests/golden.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -225,6 +308,9 @@ entities:
       summary: A displayed base seed and semantic command log reproduce generation, combat rolls, ambushes, saves, browser sessions, terminal sessions, and time-travel diagnostics exactly. The pair is encoded as a compact share code for copy/paste, bug reports, and shared runs.
 
   - component: replay-save-persistence
+    implementation:
+      status: confirmed
+      paths: [crates/rh-terminal/src/main.rs, crates/rh-web/src/lib.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -233,22 +319,31 @@ entities:
       references: [command-replay, terminal-client, web-client]
 
   - component: terminal-client
+    implementation:
+      status: confirmed
+      paths: [crates/rh-terminal/src]
     core:
-      status: proposed
+      status: accepted
       confidence: confirmed
       title: Terminal ASCII client
       summary: Native PC Bevy plus Ratatui presentation client that renders simulation state and maps keyboard and mouse clicks to semantic commands. Hover inspects visible state without changing the simulation.
       references: [command-replay]
 
   - component: web-client
+    implementation:
+      status: confirmed
+      paths: [crates/rh-web/src, web]
     core:
-      status: proposed
+      status: accepted
       confidence: confirmed
       title: GitHub Pages ASCII WebAssembly client
       summary: Purpose-built Canvas and HTML browser client using the same WebAssembly simulation state and semantic command contract as the native client. Hover inspects visible state; clicks map to semantic commands.
       references: [command-replay]
 
   - component: ci-and-pages-release
+    implementation:
+      status: confirmed
+      paths: [.github/workflows/ci.yml]
     core:
       status: accepted
       confidence: confirmed
@@ -257,6 +352,9 @@ entities:
       references: [clue-graph-validator, command-replay, terminal-client, web-client]
 
   - component: hunter-grimoire
+    implementation:
+      status: confirmed
+      paths: [content/grimoire.toml, crates/rh-client-core/src/lib.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -265,6 +363,9 @@ entities:
       references: [villain-composition, terminal-client, web-client]
 
   - component: event-log
+    implementation:
+      status: confirmed
+      paths: [crates/rh-core/src/events.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -273,6 +374,9 @@ entities:
       references: [command-replay, terminal-client, web-client, encounter-turn-rules]
 
   - component: opening-splash-screen
+    implementation:
+      status: confirmed
+      paths: [content/ui.toml, crates/rh-client-core/src/view.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -281,6 +385,9 @@ entities:
       references: [terminal-client, web-client]
 
   - component: mouse-inspection-and-actions
+    implementation:
+      status: confirmed
+      paths: [crates/rh-client-core/src/lib.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -289,6 +396,9 @@ entities:
       references: [terminal-client, web-client, command-replay]
 
   - component: case-report
+    implementation:
+      status: confirmed
+      paths: [crates/rh-client-core/src/view.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -316,6 +426,9 @@ entities:
       produces_facts: [discovered clue or acquired ingredient]
 
   - component: visible-opportunity-affordances
+    implementation:
+      status: confirmed
+      paths: [crates/rh-client-core/src/lib.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -346,6 +459,9 @@ entities:
       reveal_conditions: [discovered clue or acquired ingredient]
 
   - component: npc-relationship-map
+    implementation:
+      status: confirmed
+      paths: [crates/rh-gen/src/materialise.rs, crates/rh-client-core/src/view.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -354,6 +470,9 @@ entities:
       references: [investigation-pools, terminal-client, web-client]
 
   - component: npc-routines
+    implementation:
+      status: confirmed
+      paths: [crates/rh-core/src/ai.rs]
     core:
       status: accepted
       confidence: confirmed
@@ -362,6 +481,9 @@ entities:
       references: [npc-relationship-map, encounter-turn-rules]
 
   - component: social-action-costs
+    implementation:
+      status: confirmed
+      paths: [crates/rh-gen/src/materialise.rs, crates/rh-core/src/sim.rs]
     core:
       status: accepted
       confidence: confirmed
