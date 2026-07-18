@@ -25,6 +25,9 @@ pub const SOURCES: &[(&str, &str)] = &[
     content!("grimoire.toml"),
     content!("ui.toml"),
     content!("maps/settlement.toml"),
+    content!("maps/settlement-mill.toml"),
     content!("maps/wilderness.toml"),
+    content!("maps/wilderness-gorge.toml"),
     content!("maps/outlying.toml"),
+    content!("maps/outlying-abbey.toml"),
 ];

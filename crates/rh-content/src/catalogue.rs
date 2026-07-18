@@ -143,6 +143,17 @@ impl Catalogue {
     pub fn hunter_roster(&self) -> impl Iterator<Item = (&String, &HunterDef)> {
         self.hunters.iter()
     }
+
+    /// Template ids that can fill `role`, in a stable order. Generation picks
+    /// one of these per role, so the order must not depend on iteration
+    /// accidents: `BTreeMap` keeps it alphabetical and therefore reproducible.
+    pub fn templates_for(&self, role: MapRole) -> Vec<&String> {
+        self.maps
+            .iter()
+            .filter(|(_, template)| template.role == role)
+            .map(|(id, _)| id)
+            .collect()
+    }
 }
 
 fn parse<T: serde::de::DeserializeOwned>(file: &str, source: &str) -> Result<T, ContentError> {

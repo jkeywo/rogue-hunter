@@ -1,0 +1,139 @@
+# Settlement tactical map, 32x20. A mill town split by its race: the church
+# and graveyard stand on the far bank, the forge and market on the near one,
+# and only two crossings join them. Where the first settlement is an open
+# square you can see across, this one forces commitment — every trip between
+# the church side and the market side is a bottleneck someone can watch, and
+# a fight on a bridge has nowhere to give ground.
+
+name = "Millrace"
+role = "settlement"
+description = "A town built either side of its own mill race. Two bridges, and a long walk if you pick the wrong one."
+
+rows = [
+  "################################",
+  "#....W....#,,,,,,,,#..........,#",
+  "#.........+,,,,,,,,+....A.....,#",
+  "#.........#,,,,,,,,#..........,#",
+  "####+######,,,,,,,,####+######,#",
+  "#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#",
+  "#,,,,,,,,,~~~~~~~~~~,,,,,,,,,,,#",
+  ":::::::::::::::::::::::::::::::#",
+  "#,,,,,,,,,~~~~~~~~~~,,,,,,,,,,,#",
+  "#,,,,,,,,,~~~~~~~~~~,,,,,,,,,,,#",
+  "#,,,,,,,,,~~~~~~~~~~,,,,,,,,,,,#",
+  "#,,,,,,,,,~~~~~~~~~~,,,,,,,,,,,#",
+  "#,,TT,,,,,~~~~~~~~~~,,,,,nnn,TT#",
+  "#,,TT,,,,,~~~~~~~~~~,,,,,,,,,TT#",
+  "::::::::::::::::::::::,,,nnn,,,#",
+  "#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#",
+  "#,,####+###,,,,,,,,,####+####,,#",
+  "#,,#......#,,,,,,,,,#.......#,,#",
+  "#,,#......#,,,,,,,,,#.......#,,#",
+  "##########################:#####",
+]
+
+[legend]
+"#" = "wall"
+"." = "floor"
+"," = "grass"
+":" = "road"
+"~" = "water"
+"n" = "grave"
+"+" = "door"
+"A" = "altar"
+"W" = "workstation"
+"T" = "tree"
+
+# The church and its records sit east of the race; the forge west of it. Any
+# route that needs both pays for a crossing.
+
+[[slots]]
+id = "church-altar"
+kind = "church"
+at = [24, 2]
+
+[[slots]]
+id = "church-candles"
+kind = "church"
+at = [27, 2]
+
+[[slots]]
+id = "church-records"
+kind = "church"
+at = [22, 3]
+
+[[slots]]
+id = "forge"
+kind = "workstation"
+at = [5, 1]
+
+[[slots]]
+id = "grave-1"
+kind = "grave"
+at = [25, 12]
+
+[[slots]]
+id = "grave-2"
+kind = "grave"
+at = [26, 12]
+
+[[slots]]
+id = "grave-3"
+kind = "grave"
+at = [27, 12]
+
+[[slots]]
+id = "grave-4"
+kind = "grave"
+at = [25, 14]
+
+[[slots]]
+id = "grave-5"
+kind = "grave"
+at = [26, 14]
+
+[[slots]]
+id = "grave-6"
+kind = "grave"
+at = [27, 14]
+
+[[slots]]
+id = "graveyard-gate"
+kind = "npc"
+at = [24, 13]
+
+# The body was found at the water's edge, where the race runs fastest.
+[[slots]]
+id = "kill-site"
+kind = "kill-site"
+at = [9, 9]
+
+[[slots]]
+id = "market-stall"
+kind = "npc"
+at = [5, 8]
+
+[[slots]]
+id = "square"
+kind = "npc"
+at = [6, 11]
+
+[[slots]]
+id = "inn-hearth"
+kind = "npc"
+at = [23, 18]
+
+[[exits]]
+to = "wilderness"
+at = [0, 7]
+
+[[exits]]
+to = "outlying"
+at = [26, 19]
+
+# Cover on both banks, so neither side of the race is a killing floor.
+[[cover_pockets]]
+tiles = [[3, 12], [4, 12], [3, 13], [4, 13]]
+
+[[cover_pockets]]
+tiles = [[29, 12], [30, 12], [29, 13], [30, 13]]

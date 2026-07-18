@@ -293,3 +293,29 @@ entities:
       title: Own-Mystic pools are what make certification expensive
       summary: The Occultist's refusals were isolated by experiment, not inference. They are insensitive to her health, her denial credit, her Physical cap, and to a fourfold node budget, and they vanish entirely when her Mystic cap drops to zero - at any Mystic above zero the refusal rate is the same twelve percent. The cause is that investigation pools refresh every turn, so a hunter with her own Mystic can afford a Mystic action every turn rather than the single one the favour grants, which multiplies the branching factor in exactly the search that has to prove no second independent route exists. Seed rejection makes this harmless in play, but the planner is doing exponential work to prove a negative and that is real debt - the fix is a stronger admissible prune, not a larger budget, which was measured not to help.
       references: [seed-rejection-for-uncertifiable-worlds, clue-graph-validator, investigation-pools, occultist-hunter]
+
+  # Milestone 2, stage 3: paired regional templates.
+
+  - decision: content-anchors-name-roles-not-templates
+    core:
+      status: accepted
+      confidence: confirmed
+      title: A clue is anchored to a kind of place, not to one map
+      summary: Gathers, clues, and scheme pre-emptions say `map = "settlement"`, which used to name the single settlement template and now names the role. Generation draws one template per role from the seed stream and resolves anchors through the role, so every template filling a role must offer the same slot vocabulary - the church, the forge, the graveyard - while arranging them differently. A world records the template it actually drew, which is what makes the choice inspectable and testable rather than invisible.
+      references: [paired-regional-template-selection, paired-regional-scenario-library, seeded-mystery-generator]
+
+  - decision: exits-are-paired-by-role
+    core:
+      status: accepted
+      confidence: confirmed
+      title: The travel triangle is a triangle of roles
+      summary: Exit pairing used to be checked template against template, which silently required exactly one template per role. It now requires every template to carry an exit to each of the other two roles, so the triangle holds whichever templates a run draws. A template with a missing or self-referential exit fails content validation rather than producing a world a player can get stranded in.
+      references: [content-anchors-name-roles-not-templates, three-map-world]
+
+  - decision: every-template-must-be-reachable-by-some-seed
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Authored maps that no seed can draw are treated as a bug
+      summary: A generator test sweeps seeds and asserts every authored template is chosen by at least one of them. This caught a real defect immediately - the materialiser was recording the role label where the template id belonged, so both new templates were being built and then reported as the originals, and no test that only checked determinism or certification would have noticed. Dead content that no player will ever see is a bug, not a spare.
+      references: [paired-regional-template-selection, milestone-two-variety-validation]

@@ -774,30 +774,39 @@ fn check_maps(cat: &Catalogue, issues: &mut Vec<String>) {
         }
     }
 
-    // The three maps must form a triangle of paired exits.
-    let mut pairs: Vec<(&str, &str)> = Vec::new();
+    // Exits name a role, not a template, because which template fills a role
+    // is chosen per run. Every template must therefore reach both other roles,
+    // and every role must have something to reach.
     for (id, map) in &cat.maps {
+        let mut reached: Vec<MapRole> = Vec::new();
         for exit in &map.exits {
-            pairs.push((id.as_str(), exit.to.as_str()));
+            match MapRole::from_content(&exit.to) {
+                None => issues.push(format!(
+                    "maps: '{id}' has an exit to '{}', which is not a map role",
+                    exit.to
+                )),
+                Some(role) if role == map.role => issues.push(format!(
+                    "maps: '{id}' has an exit to its own role '{}'",
+                    exit.to
+                )),
+                Some(role) => reached.push(role),
+            }
+        }
+        for role in MapRole::ORDER {
+            if role != map.role && !reached.contains(&role) {
+                issues.push(format!(
+                    "maps: '{id}' has no exit to the '{}' role, so the travel triangle \
+                     breaks whenever this template is chosen",
+                    role.label()
+                ));
+            }
         }
     }
-    for (from, to) in &pairs {
-        let reciprocal = pairs.iter().filter(|(f, t)| f == to && t == from).count();
-        let forward = pairs.iter().filter(|(f, t)| f == from && t == to).count();
-        if reciprocal != forward {
+    for role in MapRole::ORDER {
+        if cat.templates_for(role).is_empty() {
             issues.push(format!(
-                "maps: exits between '{from}' and '{to}' are not paired"
-            ));
-        }
-    }
-    for (a, b) in [
-        ("settlement", "wilderness"),
-        ("wilderness", "outlying"),
-        ("settlement", "outlying"),
-    ] {
-        if !pairs.iter().any(|(f, t)| *f == a && *t == b) {
-            issues.push(format!(
-                "maps: the triangle is missing a route from '{a}' to '{b}'"
+                "maps: no template fills the '{}' role",
+                role.label()
             ));
         }
     }

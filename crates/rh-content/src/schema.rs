@@ -700,6 +700,35 @@ pub enum MapRole {
     OutlyingSite,
 }
 
+impl MapRole {
+    /// Every role, in the fixed order maps are laid out in a world.
+    /// Settlement is always first, and so always `MapId(0)`.
+    pub const ORDER: [MapRole; 3] = [
+        MapRole::Settlement,
+        MapRole::Wilderness,
+        MapRole::OutlyingSite,
+    ];
+
+    /// Resolve the role a content anchor names. Content says "outlying"
+    /// because that is what the place is called; the role is spelled out.
+    pub fn from_content(name: &str) -> Option<MapRole> {
+        match name {
+            "settlement" => Some(MapRole::Settlement),
+            "wilderness" => Some(MapRole::Wilderness),
+            "outlying" | "outlying-site" => Some(MapRole::OutlyingSite),
+            _ => None,
+        }
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            MapRole::Settlement => "settlement",
+            MapRole::Wilderness => "wilderness",
+            MapRole::OutlyingSite => "outlying",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum Terrain {

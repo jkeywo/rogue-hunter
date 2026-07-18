@@ -72,8 +72,18 @@ fn embedded_catalogue_loads_and_validates() {
         other => panic!("wound-draught has wrong kind: {other:?}"),
     }
 
-    // Three maps forming the travel triangle.
-    assert_eq!(catalogue.maps.len(), 3);
+    // Three roles form the travel triangle, and each must offer a choice of
+    // templates: a run picks one per role, so a role with a single template
+    // would always look the same.
+    for role in rh_content::MapRole::ORDER {
+        let templates = catalogue.templates_for(role);
+        assert!(
+            templates.len() >= 2,
+            "role '{}' has only {:?}",
+            role.label(),
+            templates
+        );
+    }
 }
 
 #[test]

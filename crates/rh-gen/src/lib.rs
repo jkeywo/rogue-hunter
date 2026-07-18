@@ -32,6 +32,8 @@ pub struct GenReport {
     pub seed: u64,
     /// The hunter these routes were certified for.
     pub hunter: String,
+    /// Template chosen for each role this run, in role order.
+    pub templates: Vec<String>,
     pub villain: String,
     pub origin: String,
     pub scheme: String,
@@ -116,12 +118,14 @@ pub fn generate(seed: u64, catalogue: &Catalogue) -> Result<Generated, GenError>
                     outcome: "accepted".to_owned(),
                 });
                 let nodes = planner::node_report(catalogue, &world);
+                let templates = world.maps.iter().map(|m| m.template.clone()).collect();
                 return Ok(Generated {
                     world,
                     rng,
                     report: GenReport {
                         seed,
                         hunter: catalogue.hunter_id.clone(),
+                        templates,
                         villain: combo.villain.clone(),
                         origin: combo.origin.clone(),
                         scheme: combo.scheme.clone(),

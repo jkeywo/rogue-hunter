@@ -16,8 +16,9 @@ use rh_core::world::{
 
 use crate::cast::{Cast, Combo};
 
-/// Stable map order: settlement is always MapId(0).
-const MAP_ORDER: [&str; 3] = ["settlement", "wilderness", "outlying"];
+/// Stable map order: settlement is always MapId(0). Which *template* fills
+/// each role is chosen per run; the roles themselves never move.
+use rh_content::MapRole;
 
 pub fn build_world(
     seed: u64,
@@ -34,6 +35,7 @@ pub fn build_world(
         rng,
         maps: Vec::new(),
         slot_index: BTreeMap::new(),
+        chosen_templates: Vec::new(),
         npcs: Vec::new(),
         opportunities: Vec::new(),
         next_feature: 0,
@@ -66,8 +68,12 @@ struct Builder<'a> {
     cast: &'a Cast,
     rng: &'a mut SimRng,
     maps: Vec<WorldMap>,
-    /// (map template id, slot id) -> (MapId, position, site kind).
+    /// (role label, slot id) -> (MapId, position, site kind). Keyed by role
+    /// rather than template, since content anchors name the kind of place and
+    /// the template filling it varies per run.
     slot_index: BTreeMap<(String, String), (MapId, Point, SiteKind)>,
+    /// Template chosen for each role this run, in `MapRole::ORDER`.
+    chosen_templates: Vec<String>,
     npcs: Vec<NpcSpec>,
     opportunities: Vec<OpportunitySpec>,
     next_feature: u16,
@@ -76,11 +82,13 @@ struct Builder<'a> {
 }
 
 impl<'a> Builder<'a> {
-    fn map_id(&self, template: &str) -> MapId {
+    /// Resolve the map a content anchor names ("settlement", "outlying", ...).
+    fn map_id(&self, role_name: &str) -> MapId {
+        let role = MapRole::from_content(role_name).unwrap_or(MapRole::Settlement);
         MapId(
-            MAP_ORDER
+            MapRole::ORDER
                 .iter()
-                .position(|name| *name == template)
+                .position(|candidate| *candidate == role)
                 .unwrap_or(0) as u8,
         )
     }
@@ -90,13 +98,22 @@ impl<'a> Builder<'a> {
     }
 
     fn build_maps(&mut self) -> Result<(), String> {
-        for template_id in MAP_ORDER {
+        for role in MapRole::ORDER {
+            // One template per role, drawn from the seed stream: the same seed
+            // always dresses the valley the same way.
+            let candidates = self.catalogue.templates_for(role);
+            if candidates.is_empty() {
+                return Err(format!("no map template for role '{}'", role.label()));
+            }
+            let pick = self.rng.below(candidates.len() as u32) as usize;
+            let template_id = candidates[pick].clone();
             let template = self
                 .catalogue
                 .maps
-                .get(template_id)
+                .get(&template_id)
                 .ok_or_else(|| format!("missing map template '{template_id}'"))?;
-            let map = self.build_map(template_id, template)?;
+            let map = self.build_map(role.label(), &template_id, template)?;
+            self.chosen_templates.push(template_id);
             self.maps.push(map);
         }
         // Wire paired exits now every map exists.
@@ -121,7 +138,12 @@ impl<'a> Builder<'a> {
         Ok(())
     }
 
-    fn build_map(&mut self, template_id: &str, template: &MapTemplate) -> Result<WorldMap, String> {
+    fn build_map(
+        &mut self,
+        role_label: &str,
+        template_id: &str,
+        template: &MapTemplate,
+    ) -> Result<WorldMap, String> {
         let mut tiles = Vec::with_capacity((MAP_WIDTH * MAP_HEIGHT) as usize);
         for row in &template.rows {
             for glyph in row.chars() {
@@ -134,12 +156,12 @@ impl<'a> Builder<'a> {
             }
         }
 
-        let map_id = self.map_id(template_id);
+        let map_id = self.map_id(role_label);
         let mut features = Vec::new();
         for slot in &template.slots {
             let at = Point::new(i16::from(slot.at[0]), i16::from(slot.at[1]));
             self.slot_index.insert(
-                (template_id.to_owned(), slot.id.clone()),
+                (role_label.to_owned(), slot.id.clone()),
                 (map_id, at, slot.kind),
             );
             let feature_id = FeatureId(self.next_feature);
@@ -195,13 +217,13 @@ impl<'a> Builder<'a> {
                 to_map: self.map_id(&exit.to),
                 // Fixed up in build_maps once all maps exist.
                 to_point: Point::new(0, 0),
-                ambush_route: is_ambush_leg(template_id, &exit.to),
+                ambush_route: is_ambush_leg(role_label, &exit.to),
             })
             .collect();
 
         // Consecration ward: the church interior, flood-filled from the altar
         // across floor tiles, stopping at walls and doors.
-        let consecration_area = if template_id == "settlement" {
+        let consecration_area = if role_label == "settlement" {
             let altar = features
                 .iter()
                 .find(|feature| feature.kind == FeatureKind::Altar)
@@ -220,7 +242,7 @@ impl<'a> Builder<'a> {
         for spawn in &template.initial_enemies {
             let (_, near, _) = self
                 .slot_index
-                .get(&(template_id.to_owned(), spawn.near_slot.clone()))
+                .get(&(role_label.to_owned(), spawn.near_slot.clone()))
                 .copied()
                 .ok_or_else(|| format!("spawn slot '{}' missing", spawn.near_slot))?;
             let mut placed = 0;

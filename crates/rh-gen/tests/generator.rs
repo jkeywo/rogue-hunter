@@ -167,3 +167,44 @@ fn sweep_generation_failures_per_hunter() {
         );
     }
 }
+
+#[test]
+fn every_role_template_gets_used_and_selection_is_deterministic() {
+    let catalogue = catalogue();
+    let mut seen: BTreeSet<String> = BTreeSet::new();
+    for seed in 0..64u64 {
+        let Ok(result) = rh_gen::generate(seed, &catalogue) else {
+            continue;
+        };
+        // Exactly one template per role, in role order, and the world agrees
+        // with what the report claims.
+        assert_eq!(result.report.templates.len(), 3);
+        let roles: Vec<_> = result.world.maps.iter().map(|map| map.role).collect();
+        assert_eq!(
+            roles,
+            rh_content::MapRole::ORDER.to_vec(),
+            "seed {seed}: maps must stay in role order"
+        );
+        for template in &result.report.templates {
+            seen.insert(template.clone());
+        }
+
+        // Same seed, same dressing.
+        let again = rh_gen::generate(seed, &catalogue).expect("regenerates");
+        assert_eq!(
+            again.report.templates, result.report.templates,
+            "seed {seed}: template choice must be deterministic"
+        );
+    }
+
+    // Every authored template must be reachable by some seed, or it is dead
+    // content that no player will ever see.
+    for role in rh_content::MapRole::ORDER {
+        for template in catalogue.templates_for(role) {
+            assert!(
+                seen.contains(template),
+                "no seed in 0..64 ever chose template '{template}'"
+            );
+        }
+    }
+}

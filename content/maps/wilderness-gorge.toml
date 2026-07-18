@@ -1,0 +1,96 @@
+# Wilderness tactical map, 32x20. A gorge instead of open wood: the beck runs
+# the length of it and the only dry ground is the ledge path along the north
+# wall and a ford in the middle. Where the deep wood lets you slip sideways
+# into the trees, the gorge does not — you are on the path or you are in the
+# water, and a thing that wants you on the path knows exactly where to wait.
+
+name = "The Gorge"
+role = "wilderness"
+description = "A cleft in the moor with a beck at the bottom. One ledge path, one ford, and a great deal of rock."
+
+rows = [
+  "################################",
+  "#..............................#",
+  "#:::::::::::::::::::::::::::::::",
+  "#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#",
+  "#,,TT,,,%%,,,,,,,,,,,,,,TT,,,,,#",
+  "#,,,,,,,#.#,,,,,,,,,,,,,,,,,,,,#",
+  "#~~~~~~~~~~~~~~~~,~~~~~~~~~~~~~#",
+  "#~~~~~~~~~~~~~~~~,~~~~~~~~~~~~~#",
+  "#~~~~~~~~~~~~~~~~,~~~~~~~~~~~~~#",
+  "#~~~~~~~~~~~~~~~~,~~~~~~~~~~~~~#",
+  "#~~~~~~~~~~~~~~~~,~~~~~~~~~~~~~#",
+  "#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#",
+  "#,,,,,,TTT,,,,,,,,,,,,,,,,,,,,,#",
+  "#,,,,,,,,,,,,,,,,,,,,,TT,,,,,,,#",
+  "#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#",
+  "#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#",
+  "#,,TTT,,,,,,,,,,,,,,,,,,,,,,,,,#",
+  "#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#",
+  "#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#",
+  "#################:##############",
+]
+
+[legend]
+"#" = "wall"
+"." = "floor"
+"," = "grass"
+":" = "road"
+"~" = "water"
+"%" = "rubble"
+"T" = "tree"
+
+# The mine is a rubble-blocked adit off the ledge, so reaching it still costs
+# a Physical point exactly as it does in the deep wood.
+[[slots]]
+id = "mine"
+kind = "wilds"
+at = [9, 5]
+
+[[slots]]
+id = "herb-clearing-north"
+kind = "wilds"
+at = [5, 4]
+
+[[slots]]
+id = "herb-clearing-south"
+kind = "wilds"
+at = [10, 12]
+
+[[slots]]
+id = "standing-stones"
+kind = "wilds"
+at = [24, 13]
+
+[[slots]]
+id = "wolf-den"
+kind = "wilds"
+at = [6, 16]
+
+# The ford: the one place the beck can be crossed, and the obvious ambush.
+[[slots]]
+id = "ambush-site"
+kind = "wilds"
+at = [17, 8]
+
+[[initial_enemies]]
+enemy = "wolf"
+near_slot = "wolf-den"
+count = 2
+
+[[exits]]
+to = "settlement"
+at = [31, 2]
+
+[[exits]]
+to = "outlying"
+at = [17, 19]
+
+[[cover_pockets]]
+tiles = [[3, 4], [4, 4]]
+
+[[cover_pockets]]
+tiles = [[7, 12], [8, 12], [9, 12]]
+
+[[cover_pockets]]
+tiles = [[3, 16], [4, 16], [5, 16]]
