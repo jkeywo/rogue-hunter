@@ -1,0 +1,29 @@
+entities:
+  - vision: replayable-folk-horror-cases
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Replayable folk-horror cases
+      summary: Each seed should feel like a distinct, readable case rather than a solved graph laid over a familiar board. Authored variation must change where pressure, evidence, tactical cover, and optional rewards appear while preserving deterministic solvability.
+      goals:
+        - Keep every case legible enough for a player to form and revise a theory.
+        - Make an extra visit to a familiar region capable of producing a new decision, not merely a new enemy roll.
+        - Prefer small interacting situations with visible causes and consequences over isolated random rewards.
+      rationale:
+        - The MVP proves a solvable mystery loop but uses one layout for each regional role and one hunter profile.
+        - "Brogue-style machines are a useful reference: an authored local configuration presents a constraint, a way to alter it, and a consequential payoff without requiring a scripted sequence."
+      references: [seeded-mystery-generator, clue-graph-validator, three-map-world, command-replay]
+
+  - principle: machine-driven-novelty
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Local novelty must be a machine
+      summary: A mission novelty is an authored, spatially legible situation comprising a visible state, at least one player-accessible lever or counter, a consequence, and an optional reward, shortcut, clue, threat, or changed tactical space. It may be ignored unless its role is selected for a certified route.
+      goals:
+        - Give random mission incidents a comprehensible internal logic.
+        - Let player choice, not a hidden dice result, determine the important consequence.
+      rationale:
+        - A locked path and a way to open it, or a danger and a way to redirect it, creates a compact story and supports tactical play.
+        - Purely random penalties would undermine the generator's certified routes and make losses feel arbitrary.
+      references: [replayable-folk-horror-cases, visible-opportunity-affordances, clue-graph-validator, event-log]
