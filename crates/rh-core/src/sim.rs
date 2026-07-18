@@ -11,7 +11,7 @@ use crate::events::{EventKind, LogEvent};
 use crate::fov::{self, has_line_of_sight, is_walkable};
 use crate::geometry::{Direction, Point};
 use crate::rng::SimRng;
-use crate::state::{Actor, ActorId, ActorKind, Outcome, RunState, Snare};
+use crate::state::{Actor, ActorId, ActorKind, GroundWard, Outcome, RunState, Snare};
 use crate::world::{
     DiscoveryRule, FeatureId, FeatureKind, GraveContents, MapId, NpcId, OpportunityAnchor,
     OpportunityGrant, OpportunityId, OpportunitySpec, World,
@@ -413,6 +413,61 @@ impl Sim {
                     "You measure the killing blow.".to_owned(),
                 );
                 self.hunter_strike(actor_id, damage, dormant, false);
+            }
+            SignatureEffect::ReadTheSign => {
+                // Reinterpret a soft sign already held. This is the Occultist's
+                // way through the evidence: she cannot out-fight the case, but
+                // she can make an ambiguous proof say something definite.
+                let Some(&opportunity) = self
+                    .state
+                    .identity_clues
+                    .iter()
+                    .find(|id| !self.state.discriminating_identity.contains(id))
+                else {
+                    return Err(Rejection::NothingLeftToRead);
+                };
+                self.state.hunter.physical -= def.physical_cost;
+                self.state.discriminating_identity.insert(opportunity);
+                let name = self
+                    .world
+                    .opportunities
+                    .iter()
+                    .find(|opp| opp.id == opportunity)
+                    .map(|opp| opp.name.clone())
+                    .unwrap_or_else(|| "the sign".to_owned());
+                self.log(
+                    EventKind::Clue,
+                    format!(
+                        "You sit with it until it gives: {name} stops agreeing with your \
+                         suspicion and starts ruling out everything else."
+                    ),
+                );
+            }
+            SignatureEffect::WardTheGround { turns, radius } => {
+                let map = self.state.current_map;
+                let centre = self.state.hunter.pos;
+                if self
+                    .state
+                    .wards
+                    .iter()
+                    .any(|ward| ward.map == map && ward.centre == centre)
+                {
+                    return Err(Rejection::Blocked {
+                        what: "ground you have already marked".to_owned(),
+                    });
+                }
+                self.state.hunter.physical -= def.physical_cost;
+                self.state.wards.push(GroundWard {
+                    map,
+                    centre,
+                    radius,
+                    turns_left: turns,
+                });
+                self.log(
+                    EventKind::Combat,
+                    "You draw the old marks into the earth. The air over them goes tight."
+                        .to_owned(),
+                );
             }
         }
         self.end_action();

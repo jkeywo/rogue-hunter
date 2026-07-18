@@ -11,7 +11,14 @@ use crate::validate;
 #[derive(Debug, Clone)]
 pub struct Catalogue {
     pub balance: Balance,
+    /// The hunter this run is being generated and played for. Everything
+    /// downstream — planner, viability model, views — reads this rather than
+    /// asking which hunter was chosen, so a catalogue instance is per-run.
     pub hunter: HunterDef,
+    /// Id of the selected hunter, carried into the share code.
+    pub hunter_id: String,
+    /// Every selectable hunter, keyed by id.
+    pub hunters: BTreeMap<String, HunterDef>,
     pub enemies: BTreeMap<String, EnemyDef>,
     pub villains: BTreeMap<String, VillainDef>,
     pub origins: BTreeMap<String, OriginDef>,
@@ -32,6 +39,8 @@ pub enum ContentError {
     Parse { file: String, message: String },
     #[error("missing content file '{0}'")]
     MissingFile(String),
+    #[error("no hunter with id '{0}'")]
+    UnknownHunter(String),
     #[error("content validation failed:\n{}", issues.join("\n"))]
     Invalid { issues: Vec<String> },
 }
@@ -65,10 +74,30 @@ impl Catalogue {
             }
         }
 
+        let mut hunters = BTreeMap::new();
+        for (name, source) in sources {
+            if let Some(stem) = name
+                .strip_prefix("hunters/")
+                .and_then(|n| n.strip_suffix(".toml"))
+            {
+                let hunter: HunterDef = parse(name, source)?;
+                hunters.insert(stem.to_owned(), hunter);
+            }
+        }
+        // A run always has a selected hunter; the default is the first by id,
+        // and callers override it before generating.
+        let (default_id, default_hunter) = hunters
+            .iter()
+            .next()
+            .map(|(id, hunter)| (id.clone(), hunter.clone()))
+            .ok_or_else(|| ContentError::MissingFile("hunters/*.toml".to_owned()))?;
+
         let grimoire_file: GrimoireFile = parse("grimoire.toml", text("grimoire.toml")?)?;
         let catalogue = Self {
             balance: parse("balance.toml", text("balance.toml")?)?,
-            hunter: parse("hunter.toml", text("hunter.toml")?)?,
+            hunter: default_hunter,
+            hunter_id: default_id,
+            hunters,
             enemies: parse("enemies.toml", text("enemies.toml")?)?,
             villains: parse("villains.toml", text("villains.toml")?)?,
             origins: parse("origins.toml", text("origins.toml")?)?,
@@ -89,6 +118,30 @@ impl Catalogue {
         } else {
             Err(ContentError::Invalid { issues })
         }
+    }
+
+    /// Choose the hunter this run is for. Must be called before generating:
+    /// route certification is per-hunter, so the choice is an input to
+    /// generation rather than a costume applied afterwards.
+    pub fn select_hunter(&mut self, id: &str) -> Result<(), ContentError> {
+        let hunter = self
+            .hunters
+            .get(id)
+            .ok_or_else(|| ContentError::UnknownHunter(id.to_owned()))?;
+        self.hunter = hunter.clone();
+        self.hunter_id = id.to_owned();
+        Ok(())
+    }
+
+    /// The same catalogue with a different hunter selected.
+    pub fn with_hunter(mut self, id: &str) -> Result<Self, ContentError> {
+        self.select_hunter(id)?;
+        Ok(self)
+    }
+
+    /// Selectable hunters in a stable order, as `(id, definition)`.
+    pub fn hunter_roster(&self) -> impl Iterator<Item = (&String, &HunterDef)> {
+        self.hunters.iter()
     }
 }
 

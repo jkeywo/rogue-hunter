@@ -38,6 +38,8 @@ pub struct CombatBalance {
     pub pounce_attack_bonus_percent: u8,
     /// Encounter turns an enemy stays held in a snare.
     pub snare_hold_turns: u8,
+    /// Damage the Occultist's marked ground deals to unnatural crossers.
+    pub ground_ward_damage: u16,
     /// Stamina restored at the start of each hunter local turn.
     pub stamina_regen_per_turn: u8,
     /// Health fraction (percent) at or below which Killing Blow is enabled.
@@ -99,6 +101,8 @@ pub struct VisionBalance {
 #[serde(deny_unknown_fields)]
 pub struct HunterDef {
     pub name: String,
+    /// One line placing this hunter in the valley, shown at selection.
+    pub title: String,
     pub glyph: char,
     pub health: u16,
     pub lore_cap: u8,
@@ -152,6 +156,12 @@ pub enum SignatureEffect {
     SetSnare,
     /// Double-damage melee attack against an immobile or wounded enemy.
     KillingBlow,
+    /// Reinterpret one ambiguous identity sign already held, turning it into
+    /// a discriminating proof. The Occultist's route through the evidence.
+    ReadTheSign,
+    /// Mark the ground around the hunter: unnatural things crossing it are
+    /// torn at for the crossing.
+    WardTheGround { turns: u8, radius: u8 },
 }
 
 // ---------------------------------------------------------------------------
@@ -168,6 +178,10 @@ pub struct EnemyDef {
     /// Attack hit chance in whole percent.
     pub hit_percent: u8,
     pub behaviour: EnemyBehaviour,
+    /// Whether this thing is unnatural: warded ground bites it, where a wolf
+    /// or a hired knife walks across untroubled.
+    #[serde(default)]
+    pub unnatural: bool,
     /// Optional ranged attack (bandits).
     pub ranged: Option<EnemyRanged>,
     pub description: String,

@@ -20,6 +20,7 @@ ranged = { damage = 2, hit_percent = 55, range = 5 }
 description = "A road-thief with a short pistol and no scruples. Keeps distance while it can."
 
 [restless-dead]
+unnatural = true
 name = "Restless Dead"
 glyph = "z"
 health = 6
@@ -29,6 +30,7 @@ behaviour = "shambler"
 description = "A corpse that did not stay put. Slow, patient, and terribly strong when it closes."
 
 [thrall]
+unnatural = true
 name = "Thrall"
 glyph = "t"
 health = 5

@@ -10,7 +10,7 @@
 //! cost), and a Killing Blow burst. Its purpose is comparative gating of
 //! generated worlds, not exact win probability.
 
-use rh_content::{Catalogue, ItemKind, ManoeuvreEffect};
+use rh_content::{Catalogue, ItemKind, ManoeuvreEffect, SignatureEffect};
 
 /// What the hunter brings to the hunt, as tracked by the planner.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -66,7 +66,35 @@ pub fn hunt_viability(
     // Plain swings every turn: priming Power Attack costs an action, which
     // makes the primed cycle a damage LOSS at MVP blade values. The
     // multiplier only pays off against a sleeping target (the coup opener).
-    let melee_dpt = u32::from(blade) * 1000 * u32::from(combat.melee_hit_percent) / 100;
+    let mut melee_dpt = u32::from(blade) * 1000 * u32::from(combat.melee_hit_percent) / 100;
+
+    // What this hunter can actually do with a Physical point. The model used to
+    // read "physical > 0" as "snare plus Killing Blow", which was the Huntress's
+    // kit stated as though it were everyone's: it credited the Occultist with a
+    // finisher she does not have and ignored the warded ground she does.
+    let signature = |matcher: fn(&SignatureEffect) -> bool| {
+        catalogue
+            .hunter
+            .signatures
+            .iter()
+            .find(|def| matcher(&def.effect))
+            .map(|def| def.physical_cost)
+    };
+    let snare_cost = signature(|effect| matches!(effect, SignatureEffect::SetSnare));
+    let killing_blow_cost = signature(|effect| matches!(effect, SignatureEffect::KillingBlow));
+    let ward_cost = signature(|effect| matches!(effect, SignatureEffect::WardTheGround { .. }));
+    let affords = |cost: Option<u8>| cost.is_some_and(|cost| loadout.physical >= cost);
+    let has_snare = affords(snare_cost);
+    let has_killing_blow = affords(killing_blow_cost);
+    let has_ward = affords(ward_cost);
+
+    // Warded ground tears at the thing every time it comes across. Credited at
+    // half rate: it bites on the approach and on repositioning, not every turn
+    // of a toe-to-toe exchange.
+    if has_ward {
+        melee_dpt += u32::from(combat.ground_ward_damage) * 1000 / 2;
+    }
+    let melee_dpt = melee_dpt;
 
     // --- Villain durability and offence. -----------------------------------
     let villain_hp =
@@ -82,9 +110,12 @@ pub fn hunt_viability(
         .sum();
     let mut incoming =
         u32::from(villain.melee_damage + tier_damage) * 10 * u32::from(villain.hit_percent);
-    // Snares and trapped-attack penalties blunt the villain's offence.
-    if loadout.physical > 0 {
+    // Snares and trapped-attack penalties blunt the villain's offence; so, less
+    // reliably, does ground it does not want to stand on.
+    if has_snare {
         incoming = incoming * 9 / 10;
+    } else if has_ward {
+        incoming = incoming * 19 / 20;
     }
     let incoming = incoming.max(100);
 
@@ -141,7 +172,7 @@ pub fn hunt_viability(
                 }
                 let net = melee_dpt.saturating_sub(regen_millis).max(100);
                 let mut turns = (effective_hp / net) as i32 + setup_turns;
-                if loadout.physical > 0 {
+                if has_killing_blow {
                     turns -= 2; // Killing Blow burst once it is wounded
                 }
                 turns.max(1)
@@ -152,10 +183,13 @@ pub fn hunt_viability(
                 let vulnerable_dpt = melee_dpt * 2;
                 let mut remaining = villain_hp;
                 let mut turns: i32 = 0;
-                if loadout.dormant_opening && loadout.physical > 0 {
-                    // Coup de grace on the dormant thing in its grave.
+                if loadout.dormant_opening {
+                    // Coup de grace on the dormant thing in its grave. The coup
+                    // triple is for striking something asleep and is open to
+                    // anyone; only the Killing Blow double needs the signature.
+                    let finisher = if has_killing_blow { 2 } else { 1 };
                     let opener =
-                    u32::from(blade) * power_numerator * 1000 / 2 * 2 /* killing blow */ * 3 /* coup */;
+                    u32::from(blade) * power_numerator * 1000 / 2 * finisher * 3 /* coup */;
                     remaining = remaining.saturating_sub(opener);
                     turns += 1;
                 }
@@ -191,7 +225,25 @@ pub fn hunt_viability(
     };
     let effective_hp = u32::from(loadout.hunter_hp + draught_heal * loadout.draughts) * 1000;
     let mut survive = (effective_hp / incoming) as i32;
-    survive += i32::from(loadout.physical.min(2)) * 3; // snare denial
+    // Denial: turns the villain spends held, or crossing ground that hurts it,
+    // rather than hitting the hunter. Both are real; neither is free to a
+    // hunter who cannot perform them.
+    if has_snare {
+        survive += i32::from(loadout.physical.min(2)) * 3;
+    } else if has_ward {
+        // A snare is one tile, sprung once. Warded ground is an area that keeps
+        // hurting whatever crosses it for as long as it lasts, so a single
+        // Physical point spent on it buys more denial than one spent on a
+        // snare — though still less than the Huntress's two points buy her.
+        //
+        // Five puts her preparation burden alongside the Huntress's rather than
+        // strictly above it: at four she needed a wound draught for fights the
+        // Huntress takes without one. It is worth being clear that this value
+        // does not drive the rate at which her worlds fail to certify — that was
+        // measured to be identical at four and five, and is a planner cost
+        // documented under planner-cost-scales-with-mystic-pool.
+        survive += 5;
+    }
     survive -= i32::from(loadout.draughts); // drinking costs actions
     if loadout.on_consecrated_ground {
         survive += 1; // the ward burns the revenant even as it approaches
@@ -304,5 +356,55 @@ mod tests {
         let tier0 = hunt_viability(&cat, "werewolf", 0, &loadout);
         let tier2 = hunt_viability(&cat, "werewolf", 2, &loadout);
         assert!(tier0 >= tier2, "tier 0 {tier0} vs tier 2 {tier2}");
+    }
+}
+
+#[cfg(test)]
+mod hunter_comparison {
+    use super::*;
+
+    #[test]
+    #[ignore = "diagnostic: prints viability per hunter; run with --ignored"]
+    fn print_viability_per_hunter() {
+        let base = rh_content::load_embedded().expect("content");
+        for hunter in base.hunters.keys() {
+            let cat = base.clone().with_hunter(hunter).expect("hunter");
+            println!(
+                "{hunter}: hp={} physical_cap={} signatures={:?}",
+                cat.hunter.health,
+                cat.hunter.physical_cap,
+                cat.hunter
+                    .signatures
+                    .iter()
+                    .map(|s| s.id.clone())
+                    .collect::<Vec<_>>()
+            );
+            for villain in cat.villains.keys() {
+                for (label, draughts, dormant, consecrated) in [
+                    ("d0      ", 0u16, false, false),
+                    ("d1      ", 1, false, false),
+                    ("d1+grave", 1, true, false),
+                    ("d1+chrch", 1, false, true),
+                    ("d2      ", 2, false, false),
+                ] {
+                    let loadout = HuntLoadout {
+                        hunter_hp: cat.hunter.health,
+                        draughts,
+                        silver_bullets: 1,
+                        binding_charms: 1,
+                        counter_blades: 1,
+                        physical: cat.hunter.physical_cap,
+                        on_consecrated_ground: consecrated,
+                        dormant_opening: dormant,
+                    };
+                    let v = hunt_viability(&cat, villain, 1, &loadout);
+                    println!("{hunter:10} vs {villain:10} {label} -> {v}");
+                }
+            }
+        }
+        println!(
+            "threshold = {}",
+            base.balance.generator.viability_threshold_permille
+        );
     }
 }

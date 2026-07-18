@@ -11,7 +11,8 @@ macro_rules! content {
 
 pub const SOURCES: &[(&str, &str)] = &[
     content!("balance.toml"),
-    content!("hunter.toml"),
+    content!("hunters/huntress.toml"),
+    content!("hunters/occultist.toml"),
     content!("enemies.toml"),
     content!("villains.toml"),
     content!("origins.toml"),

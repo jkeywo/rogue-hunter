@@ -1,0 +1,50 @@
+# The Occultist: reads what the valley would rather not have read. Stronger
+# Lore and a usable Mystic pool buy foresight and ground that fights on her
+# side; she pays for it in health, in force, and in having no clean finish.
+
+name = "The Occultist"
+title = "A scholar of the old compacts, tolerated because she is useful"
+glyph = "@"
+health = 9
+lore_cap = 3
+social_cap = 2
+mystic_cap = 2
+physical_cap = 1
+stamina_cap = 6
+starting_items = ["hunting-blade", "flintlock", "flintlock-shot", "flintlock-shot"]
+
+# She carries the same body and the same flintlock as anyone, so the generic
+# manoeuvres carry over — except Power Attack. Putting her weight behind a
+# blow is not a thing she does.
+
+[[manoeuvres]]
+id = "aim"
+name = "Aim"
+stamina_cost = 3
+effect = { kind = "sure-ranged-shot" }
+description = "Steady the flintlock. Your next ranged shot this encounter cannot miss."
+
+[[manoeuvres]]
+id = "sprint"
+name = "Sprint"
+stamina_cost = 2
+effect = { kind = "dash", tiles = 2 }
+description = "Move two tiles in a single direction, in one action."
+
+# Her signatures are the two things she can do that nobody else can: make an
+# ambiguous sign speak plainly, and make a patch of ground refuse the thing
+# that is coming across it.
+
+[[signatures]]
+id = "read-the-sign"
+name = "Read the Sign"
+physical_cost = 1
+effect = { kind = "read-the-sign" }
+description = "Sit with a sign you have already found and read it properly. One ambiguous proof you are carrying becomes decisive: it stops agreeing with your suspicion and starts ruling out the alternatives."
+
+[[signatures]]
+id = "ward-the-ground"
+name = "Ward the Ground"
+physical_cost = 1
+effect = { kind = "ward-the-ground", turns = 6, radius = 1 }
+description = "Draw the old marks into the earth around you. For a while, nothing unnatural crosses that ground without being torn at for the crossing."

@@ -64,6 +64,7 @@ pub struct RunState {
     pub settlement_hostile: bool,
     pub opened_graves: BTreeSet<FeatureId>,
     pub snares: Vec<Snare>,
+    pub wards: Vec<GroundWard>,
     pub log: Vec<LogEvent>,
     pub outcome: Option<Outcome>,
 }
@@ -214,6 +215,22 @@ pub struct Snare {
     pub at: Point,
 }
 
+/// Ground the Occultist has marked. Unnatural things are torn at for
+/// crossing it, which turns a corridor or doorway into a lane she owns.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GroundWard {
+    pub map: MapId,
+    pub centre: Point,
+    pub radius: u8,
+    pub turns_left: u8,
+}
+
+impl GroundWard {
+    pub fn covers(&self, map: MapId, at: Point) -> bool {
+        self.map == map && self.centre.distance(at) <= i16::from(self.radius)
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Outcome {
     /// The villain is destroyed.
@@ -311,6 +328,7 @@ impl RunState {
             settlement_hostile: false,
             opened_graves: BTreeSet::new(),
             snares: Vec::new(),
+            wards: Vec::new(),
             log: Vec::new(),
             outcome: None,
         };

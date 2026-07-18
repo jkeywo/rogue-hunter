@@ -101,6 +101,7 @@ pub enum Rejection {
     NothingToForce,
     NeedMoreIdentityClues { have: u8, need: u8 },
     EvidenceNotDecisive,
+    NothingLeftToRead,
     MissingOriginReagent { reagent: String },
     AlreadyUncovered,
     UnknownAbility { id: String },
@@ -148,6 +149,11 @@ impl std::fmt::Display for Rejection {
                 f,
                 "Your proofs agree with each other, but they would agree with more than one \
                  answer. Find something that rules an alternative out."
+            ),
+            Rejection::NothingLeftToRead => write!(
+                f,
+                "You have no ambiguous sign left to read. Reinterpretation needs something \
+                 half-said to work on; find another sign first."
             ),
             Rejection::MissingOriginReagent { reagent } => write!(
                 f,

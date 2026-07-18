@@ -1,7 +1,9 @@
-# The fixed MVP hunter. Character choice is an explicit deferral; the
-# generator and solver track exactly this profile.
+# The Huntress: physical control and a decisive finish. The generator
+# certifies routes against whichever hunter the run selected, so her caps
+# and abilities are read per-run rather than assumed.
 
 name = "The Huntress"
+title = "A hunter of beasts, who has learned that some beasts wear faces"
 glyph = "@"
 health = 12
 lore_cap = 2

@@ -145,7 +145,7 @@ entities:
   - component: investigation-pools
     implementation:
       status: confirmed
-      paths: [crates/rh-core/src/state.rs, content/hunter.toml]
+      paths: [crates/rh-core/src/state.rs, content/hunters]
     core:
       status: accepted
       confidence: confirmed
@@ -156,7 +156,7 @@ entities:
   - component: physical-and-stamina-resources
     implementation:
       status: confirmed
-      paths: [crates/rh-core/src/state.rs, content/hunter.toml]
+      paths: [crates/rh-core/src/state.rs, content/hunters]
     core:
       status: accepted
       confidence: confirmed
@@ -167,7 +167,7 @@ entities:
   - component: hunter-combat-abilities
     implementation:
       status: confirmed
-      paths: [content/hunter.toml, crates/rh-core/src/sim.rs]
+      paths: [content/hunters, crates/rh-core/src/sim.rs]
     core:
       status: accepted
       confidence: confirmed

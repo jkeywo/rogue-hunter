@@ -211,3 +211,85 @@ entities:
       title: The planner searches only over what the goal requires
       summary: Origin signs, scheme signs, location clues, and scheme pre-emption are excluded from the planner's operator set, and item slots belonging to other villains or origins are pruned from the tracked state. Twenty-seven compositions multiplied the branching factor past the search budget; restricting the search to the goal predicate - identity evidence, the counter recipe, and its ingredients - brought certification back under a second. Generation validates the excluded evidence separately, after certification.
       references: [three-by-three-case-composition, hunter-selection-and-certification]
+
+  # Milestone 2, stage 2: the Occultist and per-hunter certification.
+
+  - decision: catalogue-carries-the-selected-hunter
+    core:
+      status: accepted
+      confidence: confirmed
+      title: A catalogue instance is per-run and knows its hunter
+      summary: Hunters are authored one file per hunter under content/hunters, loaded into a roster, and one of them is selected onto the catalogue as `hunter` before generation. Everything downstream - planner, viability model, views, autoplayer - keeps reading `catalogue.hunter` and needs no knowledge that a choice was ever made. The alternative, threading a hunter id through every call site, would have touched three dozen places to say the same thing the catalogue can say once.
+      references: [hunter-selection-and-certification, occultist-hunter]
+
+  - decision: hunter-is-an-input-to-generation
+    core:
+      status: accepted
+      confidence: confirmed
+      title: The hunter is chosen before the world is built, not after
+      summary: Route certification is per hunter, so the same seed yields different worlds for different hunters and a seed alone no longer identifies a run. Share codes therefore carry the hunter id and REPLAY_VERSION moves to 2, which invalidates version 1 codes rather than silently replaying them against a world that was never certified for them.
+      references: [hunter-selection-and-certification, command-replay, share-code-format]
+
+  - decision: no-route-may-need-an-exclusive-ability
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Signatures are never load-bearing on a certified route
+      summary: The planner models pools, items, travel, and opportunities, and deliberately models no signature ability. A certified route can therefore never require Killing Blow or Read the Sign, which is what makes the spec's rule - that neither profile may lean on the other's exclusive ability - hold structurally rather than by review. Signatures stay tools that change how a fight or a case goes, not keys that unlock it.
+      references: [hunter-selection-and-certification, occultist-hunter]
+
+  - decision: mystic-is-a-real-pool-not-only-a-favour
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Mystic became a pool a hunter can own
+      summary: The planner tracked Mystic as `mystic_bonus`, a single over-cap point granted by the favour, because no hunter had Mystic of her own. The Occultist has two, so the planner now starts the pool at the selected hunter's cap and the favour adds to it. The field was renamed from bonus to pool, because leaving the old name would have described the Huntress's situation as though it were the rule.
+      references: [occultist-hunter, favour-single-point, investigation-pools]
+
+  - decision: read-the-sign-reinterprets-held-evidence
+    core:
+      status: accepted
+      confidence: confirmed
+      title: The Occultist's edge is reinterpretation, not extra clues
+      summary: Read the Sign upgrades one ambiguous identity sign the hunter already holds into a discriminating proof, rather than revealing a new clue. This makes her strength legible against the stage 1 evidence model - she gets more out of the same soft signs the Huntress would have to supplement with legwork - without adding evidence the planner would then have to reason about.
+      references: [occultist-hunter, evidence-supports-rules-out, naming-requires-a-discriminator]
+
+  - decision: warded-ground-is-data-driven-unnaturalness
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Warded ground bites the unnatural, and content decides what that means
+      summary: Ward the Ground marks an area that damages unnatural things crossing it, holding a lane for a hunter with nine health and no finisher. Which enemies count as unnatural is an authored flag on the enemy rather than a hardcoded list, so the restless dead and thralls are bitten while wolves and hired knives walk across untroubled, and a future enemy declares its own answer.
+      references: [occultist-hunter, ordinary-enemy-roster]
+
+  - decision: viability-reads-the-hunters-actual-kit
+    core:
+      status: accepted
+      confidence: confirmed
+      title: The viability model asks what this hunter can do, not what a hunter can do
+      summary: The heuristic treated "has a Physical point" as "has a snare and a Killing Blow", which was the Huntress's kit written down as though it were everyone's. It credited the Occultist with a finisher she does not have, and ignored the warded ground she does. It now looks up the selected hunter's signatures and credits snare denial, the Killing Blow burst, and ward damage and denial only to a hunter who actually has them. Adding a hunter with new signatures now requires teaching this model what they are worth, which is the right place for that decision to be forced.
+      references: [combat-viability-threshold, occultist-hunter, hunter-selection-and-certification]
+
+  - decision: the-coup-is-a-choice-not-a-property
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Opening the grave is a choice the planner weighs, not a fact it charges for
+      summary: A dormant villain made the planner deduct a Physical point in every state, because prising the grave open costs one - but whether to do that is a decision, and the grave is not a required node. For the Huntress the deduction was harmless. For the Occultist, whose single Physical point is the ward she fights with, it silently zeroed her only combat ability in every candidate state, so no revenant case could ever certify and the search burned its whole budget proving it. Certification now scores both options - take the coup and lose the point, or keep the point and fight it awake - and certifies on whichever the hunter would actually choose. The coup's triple damage for striking something asleep is also open to anyone, since that is what the simulation does; only the Killing Blow double needs the signature.
+      references: [viability-reads-the-hunters-actual-kit, combat-viability-threshold, occultist-hunter]
+
+  - decision: seed-rejection-for-uncertifiable-worlds
+    core:
+      status: accepted
+      confidence: confirmed
+      title: A hunter is moved to the next seed rather than handed an uncertified case
+      summary: Certification refuses roughly one seed in eight for the Occultist, where the Huntress is refused none. A refusal is correct - it means that world cannot be solved two independent ways by that hunter - so a run starts at the first seed at or after the requested one that certifies, and records the seed it actually used. This is the same rejection the generator already performs when it retries candidate worlds, applied one level up, and it keeps the guarantee that every world a player receives is certified.
+      references: [hunter-selection-and-certification, clue-graph-validator, certified-route-deadlines]
+
+  - decision: planner-cost-scales-with-mystic-pool
+    core:
+      status: provisional
+      confidence: confirmed
+      title: Own-Mystic pools are what make certification expensive
+      summary: The Occultist's refusals were isolated by experiment, not inference. They are insensitive to her health, her denial credit, her Physical cap, and to a fourfold node budget, and they vanish entirely when her Mystic cap drops to zero - at any Mystic above zero the refusal rate is the same twelve percent. The cause is that investigation pools refresh every turn, so a hunter with her own Mystic can afford a Mystic action every turn rather than the single one the favour grants, which multiplies the branching factor in exactly the search that has to prove no second independent route exists. Seed rejection makes this harmless in play, but the planner is doing exponential work to prove a negative and that is real debt - the fix is a stronger admissible prune, not a larger budget, which was measured not to help.
+      references: [seed-rejection-for-uncertifiable-worlds, clue-graph-validator, investigation-pools, occultist-hunter]

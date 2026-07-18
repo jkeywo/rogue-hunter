@@ -30,6 +30,8 @@ pub struct Generated {
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct GenReport {
     pub seed: u64,
+    /// The hunter these routes were certified for.
+    pub hunter: String,
     pub villain: String,
     pub origin: String,
     pub scheme: String,
@@ -119,6 +121,7 @@ pub fn generate(seed: u64, catalogue: &Catalogue) -> Result<Generated, GenError>
                     rng,
                     report: GenReport {
                         seed,
+                        hunter: catalogue.hunter_id.clone(),
                         villain: combo.villain.clone(),
                         origin: combo.origin.clone(),
                         scheme: combo.scheme.clone(),
@@ -281,7 +284,11 @@ mod debug_tests {
             .ok()
             .and_then(|value| value.parse().ok())
             .unwrap_or(42);
-        let catalogue = rh_content::load_embedded().expect("content");
+        let mut catalogue = rh_content::load_embedded().expect("content");
+        if let Ok(hunter) = std::env::var("RH_DEBUG_HUNTER") {
+            catalogue.select_hunter(&hunter).expect("known hunter");
+        }
+        println!("hunter={}", catalogue.hunter_id);
         let mut rng = SimRng::new(seed);
         let combo = cast::pick_combo(&mut rng, &catalogue);
         let generator = &catalogue.balance.generator;

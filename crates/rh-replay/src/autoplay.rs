@@ -575,7 +575,37 @@ impl Bot {
             return;
         }
 
-        // Not adjacent: lay a snare on the approach, then close in.
+        // Not adjacent: mark the ground and let it come to us. The Occultist
+        // has no finisher and little health, so the ground has to do the work
+        // the Huntress does with a snare and a killing blow. Hunters without
+        // the signature fall through to the snare below.
+        if physical >= 1 && villain_pos.distance(hunter) <= 4 && !dormant {
+            let already = session
+                .sim
+                .state
+                .wards
+                .iter()
+                .any(|ward| ward.covers(session.sim.state.current_map, hunter));
+            if !already
+                && session
+                    .apply(Command::Signature {
+                        id: "ward-the-ground".to_owned(),
+                        dir: None,
+                        target: None,
+                    })
+                    .is_ok()
+            {
+                return;
+            }
+            // Standing on our own marks is the whole point: walking off them to
+            // meet the villain hands back the advantage we just paid for.
+            if already {
+                let _ = session.apply(Command::Wait);
+                return;
+            }
+        }
+
+        // Lay a snare on the approach, then close in.
         if physical >= 1 && villain_pos.distance(hunter) <= 4 && !dormant {
             if let Some(dir) = Direction::toward(hunter, villain_pos) {
                 let snare_at = hunter.step(dir);

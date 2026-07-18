@@ -93,7 +93,7 @@ struct PState {
     min_op: u8,
     lore: u8,
     social: u8,
-    mystic_bonus: u8,
+    mystic: u8,
     physical: u8,
     resolved: u64,
     items: [u8; TRACKED.len()],
@@ -112,7 +112,7 @@ struct MemoKey {
     min_op: u8,
     lore: u8,
     social: u8,
-    mystic_bonus: u8,
+    mystic: u8,
     physical: u8,
     resolved: u64,
     items: [u8; TRACKED.len()],
@@ -128,7 +128,7 @@ impl PState {
             min_op: self.min_op,
             lore: self.lore,
             social: self.social,
-            mystic_bonus: self.mystic_bonus,
+            mystic: self.mystic,
             physical: self.physical,
             resolved: self.resolved,
             items: self.items,
@@ -690,7 +690,10 @@ fn search(ctx: &Ctx, cfg: &PlannerConfig) -> Result<CertifiedRoute, String> {
         min_op: 0,
         lore: hunter.lore_cap,
         social: hunter.social_cap,
-        mystic_bonus: 0,
+        // A hunter with no Mystic of her own starts empty and can only reach
+        // Mystic work through the favour's single over-cap point; one who reads
+        // the occult starts with her own pool on top of that.
+        mystic: hunter.mystic_cap,
         physical: hunter.physical_cap,
         resolved: 0,
         items,
@@ -815,29 +818,38 @@ fn goal(ctx: &Ctx, state: &PState) -> Option<u16> {
             .map(|index| u16::from(state.items[index]))
             .unwrap_or(0)
     };
-    // Opening the villain's grave itself costs a Physical point; without it
-    // the fight starts with no snare or Killing Blow in reserve.
-    let physical_at_fight = if ctx.dormant_opening {
-        state.physical.saturating_sub(1)
-    } else {
-        state.physical
-    };
-    let loadout = HuntLoadout {
+    // Prising the grave open for a coup costs a Physical point, so it is a
+    // choice, not a fact about the world: a hunter with points to spare takes
+    // the free opening blow, while one with a single point may do better
+    // keeping it for the ability she brings to the fight. Certify on whichever
+    // she would actually choose.
+    let base = HuntLoadout {
         hunter_hp: ctx.catalogue.hunter.health,
         draughts: item("wound-draught"),
         silver_bullets: item("silver-bullet"),
         binding_charms: item("binding-charm"),
         counter_blades: item("cold-iron-pin"),
-        physical: physical_at_fight,
+        physical: state.physical,
         on_consecrated_ground: state.consecrated && ctx.villain_map == SETTLEMENT,
-        dormant_opening: ctx.dormant_opening,
+        dormant_opening: false,
     };
-    let viability = hunt_viability(
-        ctx.catalogue,
-        &ctx.world.villain.archetype,
-        tier_at(ctx, state.turn),
-        &loadout,
-    );
+    let score = |loadout: &HuntLoadout| {
+        hunt_viability(
+            ctx.catalogue,
+            &ctx.world.villain.archetype,
+            tier_at(ctx, state.turn),
+            loadout,
+        )
+    };
+    let mut viability = score(&base);
+    if ctx.dormant_opening && state.physical >= 1 {
+        let coup = HuntLoadout {
+            physical: state.physical - 1,
+            dormant_opening: true,
+            ..base
+        };
+        viability = viability.max(score(&coup));
+    }
     let threshold = ctx.catalogue.balance.generator.viability_threshold_permille;
     (viability >= threshold).then_some(viability)
 }
@@ -931,7 +943,7 @@ fn candidate_actions(ctx: &Ctx, cfg: &PlannerConfig, state: &PState) -> Vec<Acti
             None => true,
             Some(PoolKind::Lore) => state.lore >= op.cost,
             Some(PoolKind::Social) => state.social >= op.cost,
-            Some(PoolKind::Mystic) => state.mystic_bonus >= op.cost,
+            Some(PoolKind::Mystic) => state.mystic >= op.cost,
             Some(PoolKind::Physical) => state.physical >= op.cost,
         };
         if affordable {
@@ -1020,7 +1032,7 @@ fn apply_action(
                 None => {}
                 Some(PoolKind::Lore) => next.lore -= op.cost,
                 Some(PoolKind::Social) => next.social -= op.cost,
-                Some(PoolKind::Mystic) => next.mystic_bonus -= op.cost,
+                Some(PoolKind::Mystic) => next.mystic -= op.cost,
                 Some(PoolKind::Physical) => next.physical -= op.cost,
             }
             match &op.grants {
@@ -1030,7 +1042,7 @@ fn apply_action(
                     }
                 }
                 OpGrant::Favour => {
-                    next.mystic_bonus += 1;
+                    next.mystic += 1;
                 }
                 _ => {}
             }

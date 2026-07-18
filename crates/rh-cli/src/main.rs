@@ -26,6 +26,9 @@ enum Command {
     Generate {
         #[arg(long)]
         seed: u64,
+        /// Which hunter to certify the world for.
+        #[arg(long, default_value = "huntress")]
+        hunter: String,
         /// Emit machine-readable JSON.
         #[arg(long)]
         json: bool,
@@ -42,6 +45,9 @@ enum Command {
     Autoplay {
         #[arg(long)]
         seed: u64,
+        /// Which hunter plays the run.
+        #[arg(long, default_value = "huntress")]
+        hunter: String,
         /// Print the resulting share code.
         #[arg(long)]
         emit_code: bool,
@@ -70,7 +76,8 @@ fn main() -> anyhow::Result<()> {
                 catalogue.maps.len()
             );
         }
-        Command::Generate { seed, json } => {
+        Command::Generate { seed, hunter, json } => {
+            let catalogue = catalogue.with_hunter(&hunter)?;
             let generated = rh_gen::generate(seed, &catalogue)?;
             if json {
                 println!("{}", serde_json::to_string_pretty(&generated.report)?);
@@ -112,8 +119,17 @@ fn main() -> anyhow::Result<()> {
                 );
             }
         }
-        Command::Autoplay { seed, emit_code } => {
-            let mut session = RunSession::new(seed, catalogue)?;
+        Command::Autoplay {
+            seed,
+            hunter,
+            emit_code,
+        } => {
+            // Rejecting forward: a world this hunter cannot be given fairly is
+            // skipped, and the seed actually used is reported.
+            let (mut session, used) = RunSession::new_from_viable_seed(seed, catalogue, &hunter)?;
+            if used != seed {
+                println!("requested seed {seed} could not be certified for {hunter}; used {used}");
+            }
             let villain = format!(
                 "{} / {} / {}",
                 session.sim.world.villain.archetype,
@@ -121,7 +137,8 @@ fn main() -> anyhow::Result<()> {
                 session.sim.world.villain.scheme
             );
             let outcome = autoplay::autoplay(&mut session);
-            println!("seed: {seed}");
+            println!("seed: {used}");
+            println!("hunter: {hunter}");
             println!("villain: {villain}");
             println!("outcome: {outcome:?}");
             println!("commands: {}", session.commands.len());

@@ -34,6 +34,23 @@ pub fn world_tick(sim: &mut Sim) {
         act(sim, id);
     }
     npc_routines(sim);
+    expire_wards(sim);
+}
+
+/// Marked ground lapses on its own clock, whether or not anything crossed it.
+fn expire_wards(sim: &mut Sim) {
+    let mut lapsed = false;
+    for ward in &mut sim.state.wards {
+        ward.turns_left = ward.turns_left.saturating_sub(1);
+        lapsed |= ward.turns_left == 0;
+    }
+    sim.state.wards.retain(|ward| ward.turns_left > 0);
+    if lapsed {
+        sim.log(
+            EventKind::Combat,
+            "The marks go quiet. The ground is only ground again.".to_owned(),
+        );
+    }
 }
 
 fn act(sim: &mut Sim, id: ActorId) {
@@ -634,6 +651,33 @@ fn move_actor(sim: &mut Sim, id: ActorId, to: Point) {
                 EventKind::Combat,
                 format!("The snare snaps tight! The {name} is held fast."),
             );
+        }
+    }
+    // Warded ground tears at unnatural things for crossing it. The ward is
+    // not consumed: it holds the lane until it lapses.
+    if sim.state.wards.iter().any(|ward| ward.covers(map, to)) {
+        let kind = sim.state.actor(id).map(|actor| actor.kind.clone());
+        let unnatural = match &kind {
+            Some(ActorKind::Villain) => true,
+            Some(ActorKind::Enemy(enemy)) => sim
+                .catalogue
+                .enemies
+                .get(enemy)
+                .is_some_and(|def| def.unnatural),
+            None => false,
+        };
+        if unnatural {
+            let damage = sim.catalogue.balance.combat.ground_ward_damage;
+            if let Some(kind) = kind {
+                let name = sim.actor_name(&kind);
+                sim.log(
+                    EventKind::Combat,
+                    format!("The marks flare as the {name} crosses them, and it comes away torn."),
+                );
+            }
+            // The ward is drawn against the unnatural, not against a weakness,
+            // so a hex-ward still gets its say.
+            sim.deal_damage_to_actor(id, damage, false);
         }
     }
 }

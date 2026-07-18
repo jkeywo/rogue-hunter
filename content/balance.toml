@@ -7,6 +7,7 @@ ranged_hit_percent = 65
 trapped_attack_penalty_percent = 25
 pounce_attack_bonus_percent = 10
 snare_hold_turns = 3
+ground_ward_damage = 2
 stamina_regen_per_turn = 1
 killing_blow_health_percent = 50
 

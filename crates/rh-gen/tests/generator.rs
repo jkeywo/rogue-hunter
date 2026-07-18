@@ -143,3 +143,27 @@ fn certified_routes_meet_the_generator_contract() {
         );
     }
 }
+
+#[test]
+#[ignore = "diagnostic sweep: per-hunter generation failure rate; run with --ignored"]
+fn sweep_generation_failures_per_hunter() {
+    let base = catalogue();
+    for hunter in base.hunters.keys() {
+        let cat = base.clone().with_hunter(hunter).expect("hunter");
+        let mut failures = Vec::new();
+        for seed in 0..120u64 {
+            if let Err(error) = rh_gen::generate(seed, &cat) {
+                failures.push(format!("{seed}: {error}"));
+            }
+        }
+        println!(
+            "{hunter}: {} failures in 120 seeds{}",
+            failures.len(),
+            if failures.is_empty() {
+                String::new()
+            } else {
+                format!("\n  {}", failures.join("\n  "))
+            }
+        );
+    }
+}

@@ -17,7 +17,14 @@ use serde::{Deserialize, Serialize};
 
 /// Replay format version. Share codes embed it; mismatches are rejected
 /// rather than misinterpreted, since any rules change invalidates old logs.
-pub const REPLAY_VERSION: u8 = 1;
+/// Version 2 adds the selected hunter: routes are certified per hunter, so a
+/// seed alone no longer identifies a run.
+pub const REPLAY_VERSION: u8 = 2;
+
+/// How far `new_from_viable_seed` will walk forward before giving up. Well
+/// above the observed rejection rate, so exhausting it means something is
+/// wrong with the content, not with this seed.
+const MAX_SEED_REJECTIONS: u64 = 32;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ReplayError {
@@ -40,6 +47,8 @@ pub struct ReplayRecord {
     pub version: u8,
     pub content: u16,
     pub seed: u64,
+    /// Which hunter the run was generated and certified for.
+    pub hunter: String,
     pub commands: Vec<Command>,
 }
 
@@ -47,22 +56,64 @@ pub struct ReplayRecord {
 pub struct RunSession {
     pub sim: Sim,
     pub seed: u64,
+    /// Id of the hunter this run was generated for.
+    pub hunter: String,
     pub commands: Vec<Command>,
     /// Generation inspector data for the developer toolchain and case report.
     pub report: GenReport,
 }
 
 impl RunSession {
-    /// Start a fresh run from a base seed.
+    /// Start a fresh run from a base seed, for whichever hunter the catalogue
+    /// has selected.
     pub fn new(seed: u64, catalogue: Catalogue) -> Result<Self, ReplayError> {
+        let hunter = catalogue.hunter_id.clone();
         let generated = rh_gen::generate(seed, &catalogue)?;
         let sim = Sim::new(catalogue, generated.world, generated.rng);
         Ok(Self {
             sim,
             seed,
+            hunter,
             commands: Vec::new(),
             report: generated.report,
         })
+    }
+
+    /// Start a fresh run for a named hunter.
+    pub fn new_with_hunter(
+        seed: u64,
+        catalogue: Catalogue,
+        hunter: &str,
+    ) -> Result<Self, ReplayError> {
+        let catalogue = catalogue
+            .with_hunter(hunter)
+            .map_err(|error| ReplayError::Malformed(error.to_string()))?;
+        Self::new(seed, catalogue)
+    }
+
+    /// Start a run at or after `seed`, skipping seeds this hunter cannot be
+    /// given a fair case for.
+    ///
+    /// Certification can legitimately refuse a world: a case that cannot be
+    /// solved two independent ways by *this* hunter is one she should never be
+    /// handed. Rejecting forward is the same principle generation already
+    /// applies when it retries candidate worlds, one level up. The seed that
+    /// actually produced the run is the one recorded, so share codes stay
+    /// exact.
+    pub fn new_from_viable_seed(
+        seed: u64,
+        catalogue: Catalogue,
+        hunter: &str,
+    ) -> Result<(Self, u64), ReplayError> {
+        let mut last = None;
+        for offset in 0..MAX_SEED_REJECTIONS {
+            let candidate = seed.wrapping_add(offset);
+            match Self::new_with_hunter(candidate, catalogue.clone(), hunter) {
+                Ok(session) => return Ok((session, candidate)),
+                Err(error) => last = Some(error),
+            }
+        }
+        Err(last.unwrap_or_else(|| ReplayError::Malformed("no seed was tried".to_owned())))
     }
 
     /// Apply a command; successful commands are recorded in the log.
@@ -78,6 +129,7 @@ impl RunSession {
             version: REPLAY_VERSION,
             content: rh_content::content_fingerprint(),
             seed: self.seed,
+            hunter: self.hunter.clone(),
             commands: self.commands.clone(),
         })
     }
@@ -99,7 +151,9 @@ impl RunSession {
         if record.content != rh_content::content_fingerprint() {
             return Err(ReplayError::ContentMismatch);
         }
-        let mut session = Self::new(record.seed, catalogue)?;
+        // The hunter is an input to generation, so it must be restored before
+        // the world is built, not after.
+        let mut session = Self::new_with_hunter(record.seed, catalogue, &record.hunter)?;
         for (index, command) in record.commands.into_iter().enumerate() {
             session
                 .apply(command)

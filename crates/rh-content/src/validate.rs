@@ -136,42 +136,60 @@ fn check_balance(cat: &Catalogue, issues: &mut Vec<String>) {
 }
 
 fn check_hunter(cat: &Catalogue, issues: &mut Vec<String>) {
-    for item in &cat.hunter.starting_items {
-        if !cat.items.contains_key(item) {
+    if cat.hunters.is_empty() {
+        issues.push("hunters: no hunter profiles were loaded".into());
+        return;
+    }
+    if !cat.hunters.contains_key(&cat.hunter_id) {
+        issues.push(format!(
+            "hunters: selected hunter '{}' is not in the roster",
+            cat.hunter_id
+        ));
+    }
+    for (id, hunter) in &cat.hunters {
+        for item in &hunter.starting_items {
+            if !cat.items.contains_key(item) {
+                issues.push(format!(
+                    "hunters: '{id}' starting item '{item}' is not in items.toml"
+                ));
+            }
+        }
+        // The Mystic pool is the favour's over-cap point for a hunter with no
+        // Mystic of her own; a hunter who reads the occult may have her own.
+        let mut ability_ids: Vec<&str> = hunter
+            .manoeuvres
+            .iter()
+            .map(|m| m.id.as_str())
+            .chain(hunter.signatures.iter().map(|s| s.id.as_str()))
+            .collect();
+        ability_ids.sort_unstable();
+        ability_ids.dedup();
+        if ability_ids.len() != hunter.manoeuvres.len() + hunter.signatures.len() {
             issues.push(format!(
-                "hunter: starting item '{item}' is not in items.toml"
+                "hunters: '{id}' manoeuvre/signature ids must be unique"
             ));
         }
-    }
-    if cat.hunter.mystic_cap != 0 {
-        // The MVP hunter is fixed; the over-cap Mystic point comes from the favour.
-        issues.push("hunter: the MVP Huntress must have mystic_cap 0 per the spec".into());
-    }
-    let mut ability_ids: Vec<&str> = cat
-        .hunter
-        .manoeuvres
-        .iter()
-        .map(|m| m.id.as_str())
-        .chain(cat.hunter.signatures.iter().map(|s| s.id.as_str()))
-        .collect();
-    ability_ids.sort_unstable();
-    ability_ids.dedup();
-    if ability_ids.len() != cat.hunter.manoeuvres.len() + cat.hunter.signatures.len() {
-        issues.push("hunter: manoeuvre/signature ids must be unique".into());
-    }
-    for manoeuvre in &cat.hunter.manoeuvres {
-        if manoeuvre.stamina_cost > cat.hunter.stamina_cap {
-            issues.push(format!(
-                "hunter: manoeuvre '{}' costs more stamina than the cap",
-                manoeuvre.id
-            ));
+        for manoeuvre in &hunter.manoeuvres {
+            if manoeuvre.stamina_cost > hunter.stamina_cap {
+                issues.push(format!(
+                    "hunters: '{id}' manoeuvre '{}' costs more stamina than the cap",
+                    manoeuvre.id
+                ));
+            }
         }
-    }
-    for signature in &cat.hunter.signatures {
-        if signature.physical_cost > cat.hunter.physical_cap {
+        for signature in &hunter.signatures {
+            if signature.physical_cost > hunter.physical_cap {
+                issues.push(format!(
+                    "hunters: '{id}' signature '{}' costs more Physical than the cap",
+                    signature.id
+                ));
+            }
+        }
+        // A hunter with no way to spend a pool point on evidence cannot be
+        // certified through the clue graph at all.
+        if hunter.lore_cap == 0 && hunter.social_cap == 0 && hunter.mystic_cap == 0 {
             issues.push(format!(
-                "hunter: signature '{}' costs more Physical than the cap",
-                signature.id
+                "hunters: '{id}' has no investigation pool, so no route can be certified for her"
             ));
         }
     }
