@@ -27,3 +27,12 @@ melee_damage = 2
 hit_percent = 60
 behaviour = "shambler"
 description = "A corpse that did not stay put. Slow, patient, and terribly strong when it closes."
+
+[thrall]
+name = "Thrall"
+glyph = "t"
+health = 5
+melee_damage = 2
+hit_percent = 55
+behaviour = "pack-hunter"
+description = "A villager who answered the call and kept walking. Their eyes track you without recognition, and they will not be reasoned with — but they are still, underneath, only a frightened neighbour."

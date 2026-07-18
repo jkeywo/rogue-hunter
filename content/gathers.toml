@@ -1,5 +1,101 @@
 # Gathering and looting opportunities anchored to map slots. Lore/Mystic
 # gathering supplies crafting ingredients; free finds supply coin and shot.
+#
+# The three origin reagents each have their own source. A hunter who has not
+# read the origin can still gather all three, but pays pool and travel for
+# the ignorance.
+
+[draw-hallowed-water]
+name = "Draw water from the font"
+map = "settlement"
+slot = "church-altar"
+pool = "lore"
+cost = 1
+items = ["hallowed-water"]
+discovery = { kind = "sight" }
+prompt = "The font has stood blessed since before the register begins. What was hallowed that long ago answers what was cursed that long ago."
+reveal = "You fill a stoppered flask from the font. The priest watches and says nothing, which is its own kind of permission."
+
+[take-wronged-earth]
+name = "Take earth from the wronged plot"
+map = "settlement"
+slot = "graveyard-gate"
+pool = "social"
+cost = 1
+items = ["wronged-earth"]
+discovery = { kind = "sight" }
+prompt = "If a wrong was done here, the one it was done to is in this ground, and the ground remembers the debt."
+reveal = "The gravedigger walks you to the plot without being told which, and turns his back while you fill a fold of cloth."
+
+[recover-covenant-seal]
+name = "Recover the broken seal"
+map = "outlying"
+slot = "manor-study"
+pool = "lore"
+cost = 1
+items = ["covenant-seal"]
+discovery = { kind = "sight" }
+prompt = "The compacts were kept in this room, and one of them was broken rather than ended. Broken things leave halves."
+reveal = "Under the ledgers: half a wax seal, snapped clean, the other half long gone. The promise and the withholding, in one piece of wax."
+
+# Each reagent has a second source on another map. Two independent certified
+# routes cannot share a node, so a reagent with one source would strand the
+# second route with no way to finish its counter.
+
+[draw-chapel-stoup]
+name = "Fill a flask at the chapel stoup"
+map = "outlying"
+slot = "manor-hall"
+pool = "lore"
+items = ["hallowed-water"]
+cost = 1
+discovery = { kind = "sight" }
+prompt = "The family kept a private chapel at the end of the hall, and the stoup by its door has not been emptied."
+reveal = "The water is stale and the stone is filthy, and the blessing on it is as old as the house. It will serve."
+
+[lift-family-plot-earth]
+name = "Lift earth from the family plot"
+map = "outlying"
+slot = "family-plot-1"
+pool = "lore"
+cost = 1
+items = ["wronged-earth"]
+discovery = { kind = "sight" }
+prompt = "The family buried their own out here, including the one nobody in the settlement will name."
+reveal = "You cut a square of turf from the plot and fold the earth away. Whatever was taken from them, the ground kept the account."
+
+[find-parish-counterpart]
+name = "Find the parish's half of the seal"
+map = "settlement"
+slot = "church-records"
+pool = "lore"
+cost = 1
+items = ["covenant-seal"]
+discovery = { kind = "sight" }
+prompt = "A compact is sealed twice and kept in two places. The parish kept the other copy."
+reveal = "Bound into the back of the register: the parish's half of the seal, snapped along the same break. Two halves of one broken promise."
+
+[dig-bog-iron]
+name = "Dig bog iron from the seep"
+map = "wilderness"
+slot = "ambush-site"
+pool = "lore"
+cost = 1
+items = ["cold-iron"]
+discovery = { kind = "sight-or-clue", clue = "cold-iron-lore" }
+prompt = "The seep runs rust-red where the ground bleeds iron. Bog iron, never smelted — the kind the old women mean."
+reveal = "You dig out a double handful of bog iron, heavy and cold and never once near a fire."
+
+[dig-cellar-seep]
+name = "Dig the weeping cellar floor"
+map = "outlying"
+slot = "manor-cellar"
+pool = "lore"
+cost = 1
+items = ["cold-iron"]
+discovery = { kind = "sight-or-clue", clue = "cold-iron-lore" }
+prompt = "The cellar floor weeps rust where the ground water comes through. The same bog, only with a house sat on top of it."
+reveal = "You break up the wet floor and pick the iron out of it, cold and unsmelted, exactly as the old women said it must be."
 
 [gather-herbs-north]
 name = "Gather herbs in the clearing"

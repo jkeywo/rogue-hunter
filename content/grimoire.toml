@@ -13,6 +13,36 @@ title = "Of the Revenant"
 body = """A corpse that rose with unfinished business and no intention of leaving it so. It sleeps in its own grave between errands. No blade nor ball bites it while its shroud of grave-shadow holds; the shroud thins for a moment at its own slow rhythm — you will see it, and it knows you can. It flows across ground unnaturally fast when it wishes, and it wishes it mostly when retreating from your steel or closing on your throat. Consecrated ground holds the shroud open and scalds it; a binding charm pressed close does the same for a handful of breaths. Learn the rhythm, or bring the counter."""
 
 [[entries]]
+id = "witch"
+title = "Of the Witch"
+body = """Not a hag on a heath — a neighbour, with a trade and a doorstep and an opinion about the weather. She keeps the old compacts and asks the old prices, and the working she wears turns honest steel aside as if the air had gone thick. You will know her by her hand: hex-work is *drawn*, cut deliberate into lintels and thresholds, and a beast cannot draw and the dead do not need to. Do not go at her with good steel and confidence. The hex has to get hold of a thing to turn it, and it can get no hold at all on cold iron — bog iron, unsmelted, never near the forge fire. Wear the hex down or cut straight through it; either way, be carrying the pin."""
+
+[[entries]]
+id = "cold-iron-pin"
+title = "Of Cold Iron"
+body = """Iron dug from the bog and beaten cold, never once shown the fire. Every working needs purchase, some edge or surface to take hold of, and unsmelted iron offers none — a hex slides off it the way water slides off wax. Against a warded thing it is not a better blade, it is the only blade. Draw the pin at the forge like any other work, but keep it cold, and quench it in what the evil's beginning demands."""
+
+[[entries]]
+id = "broken-covenant"
+title = "Of Broken Covenants"
+body = """The hardest kind to read, because it wears the other two like borrowed coats. An obligation kept faithfully for generations — a payment, a rite, a door left unlocked one night a year — and then, within living memory, somebody decided it was superstition and stopped. It looks like an ancient curse, because the compact is genuinely old. It looks like a bitter betrayal, because a person alive today did the breaking. What tells you the truth is the *terms*: a curse rages, a grudge accuses, but a broken covenant simply presents the account and waits. Find the ledger, find the year the line was ruled through, and you have it. What answers it is the compact's own seal."""
+
+[[entries]]
+id = "the-calling"
+title = "Of the Calling"
+body = """It does not hunt. It invites. One by one the valley folk get up in the night, unlatch their own doors, and walk out unhurried along a road they have never chosen — and something at the far end keeps the tally. You will find no struggle and no blood, only even-strided footprints leading away, and stones set along the trail scored with the same mark and placed each within sight of the next. That is a road built to be followed by someone not deciding to follow it. Throw the route-stones down and grind the marks off, and the ones who walk out that night will come to themselves cold and bewildered at the trail's edge, and the tally will fall short."""
+
+[[entries]]
+id = "thrall"
+title = "Of Thralls"
+body = """Those who answered the call and kept walking. They come at you steadily and without malice, and their eyes pass over your face without finding anything in it. They can be put down like anything else, and it is worth remembering while you do it that a week ago one of them sold you bread."""
+
+[[entries]]
+id = "origin-reagents"
+title = "Of Quenching the Work"
+body = """A counter is only half made when it leaves the forge. Every decisive work must be quenched in something that answers *how the evil began*, and the three beginnings demand three different things. What was cursed in the deep past yields to what the parish blessed in the deep past: hallowed water from the font. What was born of a wrong done between the living yields to earth from the wronged one's own plot, because a debt answers to the one it was owed. What was a compact broken yields to the compact's own seal, the promise and the withholding together in one piece of wax. Read the beginning before you light the forge. You can carry all three and be certain — but you will pay for the certainty in daylight, and daylight is the one thing you cannot craft."""
+
+[[entries]]
 id = "wolf"
 title = "Of Wolves"
 body = """Honest beasts, if hungry ones. They come straight on and die like anything else. When wolves grow bold near a settlement, ask what emboldened them."""

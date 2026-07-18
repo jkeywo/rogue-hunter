@@ -200,6 +200,29 @@ fn villain_act(sim: &mut Sim, id: ActorId) {
         }
     }
 
+    // A broken hex-ward is rewoven after a few turns of muttering, so the
+    // window the hunter tore open does not stay open forever.
+    if let Some(ward) = def.ward.clone() {
+        let rewoven = {
+            let Some(actor) = sim.state.actor_mut(id) else {
+                return;
+            };
+            if actor.ward_charges == 0 && actor.ward_reweave > 0 {
+                actor.ward_reweave -= 1;
+                actor.ward_reweave == 0
+            } else {
+                false
+            }
+        };
+        if rewoven {
+            let charges = sim.villain_ward_charges();
+            if let Some(actor) = sim.state.actor_mut(id) {
+                actor.ward_charges = charges;
+            }
+            sim.log(EventKind::Telegraph, ward.reweave_telegraph.clone());
+        }
+    }
+
     if let Some(cadence) = def.cadence.clone() {
         revenant_act(sim, id, &cadence, tier, &def);
         return;

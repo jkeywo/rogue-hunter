@@ -66,3 +66,35 @@ id = "grave-chill"
 name = "Grave Chill"
 effect = { kind = "bonus-melee-damage", amount = 1 }
 telegraph = "A killing cold gathers about the revenant's hands."
+
+[witch]
+name = "Witch"
+glyph = "H"
+health = 16
+melee_damage = 3
+hit_percent = 65
+tier_bonus_health = 3
+concealment = "npc-host"
+weakness_item = "cold-iron-pin"
+affected_by_consecration = false
+description = "A neighbour who kept the old compacts and asks the old prices. She walks about her day unremarked, and the hex she wears turns honest steel aside."
+
+[witch.ward]
+charges = 3
+leak_damage = 1
+reweave_turns = 4
+absorb_telegraph = "Your blow slides away from her as if the air had thickened."
+break_telegraph = "The hex tears with a sound like wet rope parting. She is only flesh now."
+reweave_telegraph = "She mutters, and the air about her knits itself close again."
+
+[[witch.tier_behaviours]]
+id = "deepening-hex"
+name = "Deepening Hex"
+effect = { kind = "ward-charges", amount = 2 }
+telegraph = "Her working has grown. The air about her hangs heavier still."
+
+[[witch.tier_behaviours]]
+id = "bitter-word"
+name = "Bitter Word"
+effect = { kind = "bonus-melee-damage", amount = 1 }
+telegraph = "She has stopped pretending kindness. Every word she speaks now cuts."

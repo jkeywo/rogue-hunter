@@ -18,7 +18,11 @@ use rh_core::world::{
 };
 
 /// Items the planner tracks through gathers and crafting.
-const TRACKED: [&str; 8] = [
+///
+/// `origin-reagent` is a synthetic slot: only the reagent this case's origin
+/// actually demands maps to it, so the other two origins' reagents are
+/// correctly worthless to the planner and never bloat the search.
+const TRACKED: [&str; 11] = [
     "silver",
     "flintlock-shot",
     "moon-herb",
@@ -27,11 +31,15 @@ const TRACKED: [&str; 8] = [
     "wound-draught",
     "silver-bullet",
     "binding-charm",
+    "cold-iron",
+    "cold-iron-pin",
+    "origin-reagent",
 ];
+const ORIGIN_REAGENT_SLOT: usize = 10;
 
 /// Per-item planning caps: beyond these counts the viability model gains
 /// nothing, so capping collapses equivalent states and keeps the search fast.
-const ITEM_CAP: [u8; 8] = [1, 2, 2, 2, 2, 2, 1, 2];
+const ITEM_CAP: [u8; 11] = [1, 2, 2, 2, 2, 2, 1, 2, 1, 1, 1];
 
 const SETTLEMENT: u8 = 0;
 /// Safety valve for pathological graphs; recorded as a rejection reason.
@@ -57,8 +65,11 @@ pub struct PlanOp {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum OpGrant {
-    Identity,
-    Location,
+    /// A corroborating identity proof. Only a discriminating one can close
+    /// the case, so the goal test counts them separately.
+    Identity {
+        discriminating: bool,
+    },
     Favour,
     Lead,
     Items(Vec<usize>),
@@ -370,8 +381,13 @@ pub fn node_report(catalogue: &Catalogue, world: &World) -> Vec<crate::NodeRepor
                 cost: op.cost,
                 obscurity: op.obscurity,
                 grants: match &op.grants {
-                    OpGrant::Identity => "identity clue".to_owned(),
-                    OpGrant::Location => "location clue".to_owned(),
+                    OpGrant::Identity { discriminating } => {
+                        if *discriminating {
+                            "identity clue (discriminating)".to_owned()
+                        } else {
+                            "identity clue (ambiguous)".to_owned()
+                        }
+                    }
                     OpGrant::Favour => "mystic favour".to_owned(),
                     OpGrant::Lead => "lead".to_owned(),
                     OpGrant::Items(items) => format!(
@@ -391,18 +407,68 @@ pub fn node_report(catalogue: &Catalogue, world: &World) -> Vec<crate::NodeRepor
     }
 }
 
+/// Tracked item slots this case can actually make use of: the villain's own
+/// counter and everything that goes into it, the origin's reagent, healing,
+/// and ammunition. Other villains' counters and other origins' reagents are
+/// deliberately excluded — they exist in the world for the player to waste
+/// time on, but no certified route would ever take them.
+fn relevant_item_slots(catalogue: &Catalogue, world: &World) -> Vec<usize> {
+    let slot = |item: &str| TRACKED.iter().position(|tracked| *tracked == item);
+    let mut wanted: Vec<String> = Vec::new();
+
+    // The decisive counter, and whatever the recipe that makes it consumes.
+    if let Some(villain) = catalogue.villains.get(&world.villain.archetype) {
+        wanted.push(villain.weakness_item.clone());
+    }
+    // Healing is universally useful.
+    wanted.push("wound-draught".to_owned());
+    for target in wanted.clone() {
+        if let Some(recipe) = catalogue.recipes.values().find(|r| r.output == target) {
+            wanted.extend(recipe.inputs.iter().cloned());
+        }
+    }
+    wanted.push("flintlock-shot".to_owned());
+
+    let mut slots: Vec<usize> = wanted.iter().filter_map(|item| slot(item)).collect();
+    // The one reagent this case's origin demands, via its synthetic slot.
+    if catalogue.origins.contains_key(&world.villain.origin) {
+        slots.push(ORIGIN_REAGENT_SLOT);
+    }
+    slots.sort_unstable();
+    slots.dedup();
+    slots
+}
+
 fn build_ctx<'a>(catalogue: &'a Catalogue, world: &'a World) -> Result<Ctx<'a>, String> {
+    let origin_reagent = catalogue
+        .origins
+        .get(&world.villain.origin)
+        .map(|origin| origin.counter_reagent.clone())
+        .ok_or_else(|| format!("unknown origin '{}'", world.villain.origin))?;
     let mut ops = Vec::new();
     for spec in &world.opportunities {
         let grants = match &spec.grants {
-            OpportunityGrant::IdentityClue => OpGrant::Identity,
-            OpportunityGrant::LocationClue => OpGrant::Location,
+            OpportunityGrant::IdentityClue { discriminating } => OpGrant::Identity {
+                discriminating: *discriminating,
+            },
+            // Not goal-relevant: the planner knows the composition, so it
+            // never needs to resolve these. Reachability is validated
+            // separately in final_validation.
+            OpportunityGrant::LocationClue
+            | OpportunityGrant::OriginSign { .. }
+            | OpportunityGrant::SchemeSign { .. }
+            | OpportunityGrant::SchemePreempt => continue,
             OpportunityGrant::MysticFavour => OpGrant::Favour,
             OpportunityGrant::Lead => OpGrant::Lead,
             OpportunityGrant::Items { items } => {
                 let tracked: Vec<usize> = items
                     .iter()
-                    .filter_map(|item| TRACKED.iter().position(|tracked| tracked == item))
+                    .filter_map(|item| {
+                        if *item == origin_reagent {
+                            return Some(ORIGIN_REAGENT_SLOT);
+                        }
+                        TRACKED.iter().position(|tracked| tracked == item)
+                    })
                     .collect();
                 if tracked.is_empty() {
                     // Grants nothing the planner values (coin caches).
@@ -431,6 +497,17 @@ fn build_ctx<'a>(catalogue: &'a Catalogue, world: &'a World) -> Result<Ctx<'a>, 
             structural: spec.clears_terrain,
         });
     }
+    // Prune the planner's view to what this case can actually use.
+    //
+    // Two-thirds of the counter ingredients belong to other villains and other
+    // origins: a werewolf case has no use for grave-dust or cold iron, and only
+    // one of the three origin reagents is the one demanded. Leaving them in
+    // multiplies the search space for options no route would ever take.
+    let relevant = relevant_item_slots(catalogue, world);
+    ops.retain(|op| match &op.grants {
+        OpGrant::Items(items) => items.iter().any(|slot| relevant.contains(slot)),
+        _ => true,
+    });
     if ops.len() > 64 {
         return Err(format!(
             "clue graph has {} nodes; planner caps at 64",
@@ -505,10 +582,9 @@ fn build_ctx<'a>(catalogue: &'a Catalogue, world: &'a World) -> Result<Ctx<'a>, 
     let mut op_order: Vec<usize> = (0..ops.len()).collect();
     op_order.sort_by_key(|index| {
         let bucket = match ops[*index].grants {
-            OpGrant::Identity => 0,
+            OpGrant::Identity { .. } => 0,
             OpGrant::Items(_) => 1,
             OpGrant::Favour | OpGrant::Lead => 2,
-            OpGrant::Location => 3,
         };
         (bucket, *index)
     });
@@ -579,12 +655,30 @@ fn search(ctx: &Ctx, cfg: &PlannerConfig) -> Result<CertifiedRoute, String> {
         .ops
         .iter()
         .enumerate()
-        .filter(|(index, op)| op.grants == OpGrant::Identity && cfg.forbidden & (1 << index) == 0)
+        .filter(|(index, op)| {
+            matches!(op.grants, OpGrant::Identity { .. }) && cfg.forbidden & (1 << index) == 0
+        })
         .count();
     if identity_available < 2 {
         return Err(format!(
             "only {identity_available} identity clues remain outside the penalised set"
         ));
+    }
+    let discriminators_available = ctx
+        .ops
+        .iter()
+        .enumerate()
+        .filter(|(index, op)| {
+            matches!(
+                op.grants,
+                OpGrant::Identity {
+                    discriminating: true
+                }
+            ) && cfg.forbidden & (1 << index) == 0
+        })
+        .count();
+    if discriminators_available < 1 {
+        return Err("no discriminating identity clue remains outside the penalised set".to_owned());
     }
 
     for (index, count) in items.iter_mut().enumerate() {
@@ -685,13 +779,25 @@ fn tier_at(ctx: &Ctx, turn: u8) -> u8 {
 }
 
 fn goal(ctx: &Ctx, state: &PState) -> Option<u16> {
-    let identity = ctx
-        .ops
-        .iter()
-        .enumerate()
-        .filter(|(index, op)| op.grants == OpGrant::Identity && state.resolved & (1 << index) != 0)
-        .count();
-    if identity < 2 {
+    let resolved_identity = || {
+        ctx.ops.iter().enumerate().filter(|(index, op)| {
+            matches!(op.grants, OpGrant::Identity { .. }) && state.resolved & (1 << index) != 0
+        })
+    };
+    if resolved_identity().count() < 2 {
+        return None;
+    }
+    // Corroboration between ambiguous signs is not proof: naming the quarry
+    // needs at least one clue that rules an alternative out.
+    let has_discriminator = resolved_identity().any(|(_, op)| {
+        matches!(
+            op.grants,
+            OpGrant::Identity {
+                discriminating: true
+            }
+        )
+    });
+    if !has_discriminator {
         return None;
     }
     if state.map != ctx.villain_map {
@@ -721,6 +827,7 @@ fn goal(ctx: &Ctx, state: &PState) -> Option<u16> {
         draughts: item("wound-draught"),
         silver_bullets: item("silver-bullet"),
         binding_charms: item("binding-charm"),
+        counter_blades: item("cold-iron-pin"),
         physical: physical_at_fight,
         on_consecrated_ground: state.consecrated && ctx.villain_map == SETTLEMENT,
         dormant_opening: ctx.dormant_opening,
@@ -846,6 +953,11 @@ fn candidate_actions(ctx: &Ctx, cfg: &PlannerConfig, state: &PState) -> Vec<Acti
                     }
                 }
             }
+            // A decisive counter also has to be quenched in this case's origin
+            // reagent, so the route must have gone and read the origin.
+            if recipe.requires_origin_reagent {
+                needed[ORIGIN_REAGENT_SLOT] += 1;
+            }
             // Only track outputs the planner cares about.
             let output_tracked = TRACKED.iter().any(|tracked| *tracked == recipe.output);
             if !craftable || !output_tracked {
@@ -930,6 +1042,9 @@ fn apply_action(
                 if let Some(index) = TRACKED.iter().position(|tracked| tracked == input) {
                     next.items[index] -= 1;
                 }
+            }
+            if recipe.requires_origin_reagent {
+                next.items[ORIGIN_REAGENT_SLOT] -= 1;
             }
             if let Some(index) = TRACKED.iter().position(|tracked| *tracked == recipe.output) {
                 next.items[index] = (next.items[index] + 1).min(ITEM_CAP[index]);

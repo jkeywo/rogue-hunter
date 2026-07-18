@@ -36,11 +36,41 @@ glyph = "&"
 kind = { kind = "binding-charm" }
 description = "Grave-dust and moon-herb sewn in a caul. Pressed close to the risen dead, it strips their shroud of shadow for five long breaths."
 
+[cold-iron-pin]
+name = "Cold Iron Pin"
+glyph = "|"
+kind = { kind = "weakness-blade", damage = 7 }
+description = "A long pin of unworked cold iron, never near a forge fire. A hex slides off honest steel; it cannot get a grip on this at all."
+
 [silver]
 name = "Raw Silver"
 glyph = "$"
 kind = { kind = "ingredient" }
 description = "A fist of pale metal, cold to the touch."
+
+[cold-iron]
+name = "Cold Iron"
+glyph = "$"
+kind = { kind = "ingredient" }
+description = "Bog iron, never smelted, never blessed. The old women say the older things cannot abide it, and for once the old women are right."
+
+[hallowed-water]
+name = "Hallowed Water"
+glyph = "\""
+kind = { kind = "ingredient" }
+description = "Water from the parish font, blessed at a season nobody now remembers. It answers what was cursed a long time ago."
+
+[wronged-earth]
+name = "Wronged Earth"
+glyph = "\""
+kind = { kind = "ingredient" }
+description = "A handful of soil from the plot of the one who was wronged. It carries the debt, and a debt can be made to answer."
+
+[covenant-seal]
+name = "Covenant Seal"
+glyph = "&"
+kind = { kind = "ingredient" }
+description = "Half a broken wax seal off an old compact — the promise made, and the promise withheld. What ruined the bargain can be turned against what the bargain became."
 
 [moon-herb]
 name = "Moon-herb"

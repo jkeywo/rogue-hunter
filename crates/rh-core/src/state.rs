@@ -39,6 +39,17 @@ pub struct RunState {
     /// Opportunities lost to fallout (their NPC was attacked or killed).
     pub lost: BTreeSet<OpportunityId>,
     pub identity_clues: BTreeSet<OpportunityId>,
+    /// Identity clues that positively eliminate an alternative villain. Naming
+    /// the quarry needs at least one of these, so corroboration cannot be
+    /// assembled purely from ambiguous signs.
+    pub discriminating_identity: BTreeSet<OpportunityId>,
+    /// The origin has been pinned by a discriminating sign, so the hunter
+    /// knows which reagent their counter must be quenched with.
+    pub origin_identified: bool,
+    /// The scheme has been pinned by a discriminating sign.
+    pub scheme_identified: bool,
+    /// The scheme's escalation was blunted before its major event fired.
+    pub scheme_preempted: bool,
     pub villain_uncovered: bool,
     pub villain_location_known: bool,
     pub met_npcs: BTreeSet<NpcId>,
@@ -148,6 +159,10 @@ pub struct Actor {
     pub bound: u8,
     /// Werewolf regeneration permanently stopped by silver.
     pub regen_stopped: bool,
+    /// Hex-ward charges still standing (the Witch); 0 means the ward is down.
+    pub ward_charges: u8,
+    /// Encounter turns until a broken ward is rewoven.
+    pub ward_reweave: u8,
     /// Shamblers move only when this is true; toggles every tick.
     pub slow_phase: bool,
     /// Dormant countdown: >0 means immobile in the grave; wakes when it
@@ -268,6 +283,10 @@ impl RunState {
             resolved: BTreeSet::new(),
             lost: BTreeSet::new(),
             identity_clues: BTreeSet::new(),
+            discriminating_identity: BTreeSet::new(),
+            origin_identified: false,
+            scheme_identified: false,
+            scheme_preempted: false,
             villain_uncovered: false,
             villain_location_known: false,
             met_npcs: BTreeSet::new(),
@@ -333,6 +352,8 @@ impl RunState {
             cadence: 0,
             bound: 0,
             regen_stopped: false,
+            ward_charges: 0,
+            ward_reweave: 0,
             slow_phase: false,
             dormant: 0,
         });

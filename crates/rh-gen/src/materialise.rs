@@ -46,6 +46,7 @@ pub fn build_world(
     builder.place_force_ops();
     let clue_ids = builder.place_clues(&villain)?;
     builder.place_gathers(&clue_ids)?;
+    builder.place_scheme_preempt()?;
     builder.place_social_ops()?;
 
     Ok(World {
@@ -475,52 +476,66 @@ impl<'a> Builder<'a> {
             .clues
             .iter()
             .filter(|(_, template)| {
-                (template.archetype == "any" || template.archetype == self.combo.villain)
-                    && (template.origins.is_empty()
-                        || template.origins.contains(&self.combo.origin))
+                template.fits(&self.combo.villain, &self.combo.origin, &self.combo.scheme)
             })
             .map(|(id, template)| (id.clone(), template.clone()))
             .collect();
 
-        // Identity: two obvious ones anchor the fallback pair, and two
-        // route-grade extras (obscurity <= 2) give the early route options.
-        // Whatever niche identity clues remain are placed as bonus content:
-        // players may use them, but no certified route needs to.
-        let mut identity: Vec<&(String, ClueTemplate)> = fitting
+        let mut chosen: Vec<(String, ClueTemplate)> = Vec::new();
+
+        // Identity. Every case opens ambiguous: the soft signs go in first so
+        // the early picture fits more than one answer, then the discriminators
+        // that let the player actually close it. Two discriminators are
+        // guaranteed by content validation; both are placed so losing one
+        // informant never strands the case.
+        let soft_identity: Vec<&(String, ClueTemplate)> = fitting
             .iter()
-            .filter(|(_, template)| template.category == ClueCategory::Identity)
+            .filter(|(_, t)| t.category == ClueCategory::Identity && !t.is_discriminating())
             .collect();
-        identity.sort_by_key(|(id, template)| (template.obscurity, id.clone()));
-        if identity.len() < 4 {
+        let mut hard_identity: Vec<&(String, ClueTemplate)> = fitting
+            .iter()
+            .filter(|(_, t)| t.category == ClueCategory::Identity && t.is_discriminating())
+            .collect();
+        if hard_identity.len() < 2 {
             return Err(format!(
-                "only {} identity clues fit the combo",
-                identity.len()
+                "only {} discriminating identity clues fit the case",
+                hard_identity.len()
             ));
         }
-        let mut chosen: Vec<(String, ClueTemplate)> = Vec::new();
-        chosen.push(identity[0].clone());
-        chosen.push(identity[1].clone());
-        let mut route_grade: Vec<&(String, ClueTemplate)> = identity[2..]
-            .iter()
-            .copied()
-            .filter(|(_, template)| template.obscurity <= 2)
-            .collect();
-        let mut bonus: Vec<&(String, ClueTemplate)> = identity[2..]
-            .iter()
-            .copied()
-            .filter(|(_, template)| template.obscurity > 2)
-            .collect();
-        for _ in 0..2 {
-            if route_grade.is_empty() {
-                break;
-            }
-            let pick = self.rng.index(route_grade.len());
-            chosen.push(route_grade.remove(pick).clone());
+        for entry in &soft_identity {
+            chosen.push((*entry).clone());
         }
-        // Unpicked route-grade clues and the niche remainder still exist in
-        // the world as bonus leads.
-        chosen.extend(route_grade.drain(..).cloned());
-        chosen.extend(bonus.drain(..).cloned());
+        hard_identity.sort_by_key(|(id, t)| (t.obscurity, id.clone()));
+        for entry in &hard_identity {
+            chosen.push((*entry).clone());
+        }
+
+        // Origin and scheme signs. Both axes decide something concrete — the
+        // reagent every counter is quenched with, and what can be pre-empted —
+        // so each needs its discriminators placed and reachable.
+        for (axis, category) in [
+            ("origin", ClueCategory::OriginSign),
+            ("scheme", ClueCategory::SchemeSign),
+        ] {
+            let soft: Vec<&(String, ClueTemplate)> = fitting
+                .iter()
+                .filter(|(_, t)| t.category == category && !t.is_discriminating())
+                .collect();
+            let mut hard: Vec<&(String, ClueTemplate)> = fitting
+                .iter()
+                .filter(|(_, t)| t.category == category && t.is_discriminating())
+                .collect();
+            if hard.len() < 2 {
+                return Err(format!(
+                    "only {} discriminating {axis} signs fit the case",
+                    hard.len()
+                ));
+            }
+            hard.sort_by_key(|(id, t)| (t.obscurity, id.clone()));
+            for entry in soft.iter().chain(hard.iter()) {
+                chosen.push((*entry).clone());
+            }
+        }
 
         // One location clue.
         let locations: Vec<&(String, ClueTemplate)> = fitting
@@ -528,7 +543,7 @@ impl<'a> Builder<'a> {
             .filter(|(_, template)| template.category == ClueCategory::Location)
             .collect();
         if locations.is_empty() {
-            return Err("no location clue fits the combo".to_owned());
+            return Err("no location clue fits the case".to_owned());
         }
         chosen.push(locations[self.rng.index(locations.len())].clone());
 
@@ -577,8 +592,11 @@ impl<'a> Builder<'a> {
         };
 
         let (map, anchor, requires) = self.clue_anchor(template, villain)?;
+        let discriminating = template.is_discriminating();
         let grants = match template.category {
-            ClueCategory::Identity => OpportunityGrant::IdentityClue,
+            ClueCategory::Identity => OpportunityGrant::IdentityClue { discriminating },
+            ClueCategory::OriginSign => OpportunityGrant::OriginSign { discriminating },
+            ClueCategory::SchemeSign => OpportunityGrant::SchemeSign { discriminating },
             ClueCategory::Location => OpportunityGrant::LocationClue,
             ClueCategory::Weakness | ClueCategory::IngredientSource => {
                 if template.grants_items.is_empty() {
@@ -665,16 +683,19 @@ impl<'a> Builder<'a> {
                 Ok((map, OpportunityAnchor::Tile(at), requires))
             }
             SiteKind::Grave => {
-                match template.category {
-                    // Identity/location grave clues sit at the villain's grave.
-                    ClueCategory::Identity | ClueCategory::Location => {
-                        let (map, _, at) = self
-                            .villain_grave
-                            .ok_or_else(|| "grave clue without villain grave".to_owned())?;
+                // Evidence that points at the villain sits on the villain's
+                // own grave when it has one. Everything else — and every case
+                // whose villain walks about on two legs — uses the ordinary
+                // consecrated rows in town.
+                let points_at_villain = matches!(
+                    template.category,
+                    ClueCategory::Identity | ClueCategory::Location
+                );
+                match (points_at_villain, self.villain_grave) {
+                    (true, Some((map, _, at))) => {
                         let requires = self.access_gate(map, at);
                         Ok((map, OpportunityAnchor::Tile(at), requires))
                     }
-                    // Weakness grave clues use the old consecrated rows in town.
                     _ => {
                         let candidates: Vec<Point> = self.maps[0]
                             .features
@@ -796,6 +817,55 @@ impl<'a> Builder<'a> {
                 reveal: gather.reveal.clone(),
             });
         }
+        Ok(())
+    }
+
+    /// Place the one act that blunts this scheme before its major event.
+    /// It is always optional — no certified route depends on it — but reading
+    /// the scheme tells the player it exists and where.
+    fn place_scheme_preempt(&mut self) -> Result<(), String> {
+        let scheme = self.catalogue.schemes[&self.combo.scheme].clone();
+        let preempt = &scheme.preempt;
+        // Find a slot of the required kind on a map of the required role.
+        let target = self
+            .maps
+            .iter()
+            .enumerate()
+            .filter(|(_, map)| map.role == preempt.map_role)
+            .find_map(|(index, map)| {
+                let map_id = MapId(index as u8);
+                self.slot_index
+                    .iter()
+                    .find(|((template, _), (slot_map, _, kind))| {
+                        *template == map.template && *slot_map == map_id && *kind == preempt.site
+                    })
+                    .map(|(_, (_, at, _))| (map_id, *at))
+            });
+        let Some((map, at)) = target else {
+            return Err(format!(
+                "scheme '{}' pre-emption has no {:?} site on a {:?} map",
+                self.combo.scheme, preempt.site, preempt.map_role
+            ));
+        };
+        let requires = self.access_gate(map, at);
+        let id = self.next_opportunity_id();
+        self.opportunities.push(OpportunitySpec {
+            id,
+            source: format!("preempt:{}", self.combo.scheme),
+            name: preempt.name.clone(),
+            map,
+            anchor: OpportunityAnchor::Tile(at),
+            pool: Some(preempt.pool),
+            cost: preempt.cost,
+            obscurity: 1,
+            discovery: DiscoveryRule::Sight,
+            grants: OpportunityGrant::SchemePreempt,
+            requires,
+            clears_terrain: false,
+            covert: false,
+            prompt: preempt.prompt.clone(),
+            reveal: preempt.reveal.clone(),
+        });
         Ok(())
     }
 

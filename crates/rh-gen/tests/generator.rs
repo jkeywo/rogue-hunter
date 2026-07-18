@@ -34,7 +34,9 @@ fn corpus_covers_every_villain_combination() {
     let mut failures = Vec::new();
     let mut generated = 0u32;
 
-    for seed in 0..200u64 {
+    // Twenty-seven compositions need a longer sweep than eight did: coupon
+    // collection over 27 uniform outcomes averages around 105 draws.
+    for seed in 0..400u64 {
         match rh_gen::generate(seed, &catalogue) {
             Ok(result) => {
                 generated += 1;
@@ -46,7 +48,7 @@ fn corpus_covers_every_villain_combination() {
             }
             Err(error) => failures.push(format!("seed {seed}: {error}")),
         }
-        if combos_seen.len() == total_combos && seed >= 63 {
+        if combos_seen.len() == total_combos && seed >= 127 {
             break;
         }
     }

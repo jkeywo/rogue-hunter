@@ -679,7 +679,9 @@ fn build_case_report(session: &ClientSession) -> CaseReportView {
             !state.resolved.contains(&opp.id)
                 && matches!(
                     opp.grants,
-                    rh_core::world::OpportunityGrant::IdentityClue
+                    rh_core::world::OpportunityGrant::IdentityClue { .. }
+                        | rh_core::world::OpportunityGrant::OriginSign { .. }
+                        | rh_core::world::OpportunityGrant::SchemeSign { .. }
                         | rh_core::world::OpportunityGrant::LocationClue
                 )
         })

@@ -1,108 +1,378 @@
-# Clue templates. The generator instantiates these into placed opportunities.
-# Placeholders: {npc} the implicated NPC, {grave} the villain's grave,
-# {villain} the villain's name. Obscurity: 0 obvious .. 3 niche; certified
-# fallback routes must stay within the fallback obscurity budget.
+# Evidence templates. Each clue speaks to exactly one axis of the case:
+# identity (which villain), origin-sign (how it began), scheme-sign (what it
+# is working toward). Location, weakness, and ingredient-source clues make no
+# claim and are scoped with the villains/origins/schemes filters instead.
+#
+#   supports   = the values the sign is consistent with, and the cases it may
+#                be placed in. Empty means "fits any value on the axis".
+#   rules_out  = the values this clue positively eliminates. A non-empty list
+#                makes the clue DISCRIMINATING; every case must seed at least
+#                two reachable discriminators per axis, and a certified route
+#                needs at least one discriminating identity clue.
+#
+# Placeholders: {npc} the implicated villager, {grave} the villain's grave.
 
-# --- Werewolf identity ------------------------------------------------------
+# ===========================================================================
+# IDENTITY - soft signs (consistent with several villains, prove nothing)
+# ===========================================================================
 
-[torn-cloth]
-name = "Torn Cloth"
-archetype = "werewolf"
+[second-face]
+name = "A Second Face"
 category = "identity"
+supports = ["werewolf", "witch"]
+action = "gossip"
+pool = "social"
+site = "npc"
+obscurity = 0
+prompt = "The villagers are eager to talk about the nights, if you let them circle to it."
+reveal = "The same shape to every account: somebody here keeps a second face for after dark. Which of the old horrors that means, nobody will say."
+
+[the-dead-are-in-it]
+name = "The Dead Are In It"
+category = "identity"
+supports = ["revenant", "witch"]
 action = "examine"
 pool = "lore"
-site = "kill-site"
-obscurity = 0
-prompt = "The kill is savage, but something pale is snagged where the body was dragged."
-reveal = "A scrap of good cloth, torn by teeth — and you have seen {npc} wearing its match."
+site = "grave"
+obscurity = 1
+prompt = "The churchyard has been walked over more than the sexton's work accounts for."
+reveal = "Grave-earth trodden and re-trodden, and a plot disturbed at the edges. Something in this valley has business with the dead — whether it is one of them, or only using them, the ground does not say."
+
+[wrongness-in-the-air]
+name = "A Wrongness in the Air"
+category = "identity"
+supports = ["werewolf", "revenant", "witch"]
+action = "commune"
+pool = "mystic"
+site = "wilds"
+obscurity = 1
+prompt = "The old stones sit in a silence that presses on the ears."
+reveal = "The vision is only weight and appetite and something walking. Whatever is loose here is old and it is hungry, and that is all the stones will commit to."
+
+# ===========================================================================
+# IDENTITY - discriminators
+# ===========================================================================
 
 [tracks-to-town]
 name = "Tracks to Town"
-archetype = "werewolf"
 category = "identity"
+supports = ["werewolf"]
+rules_out = ["revenant", "witch"]
 action = "track"
 pool = "lore"
 site = "wilds"
 obscurity = 1
 prompt = "Pad-marks the size of plates cross the trail here, heading for the settlement."
-reveal = "You follow the pad-marks until, at the field's edge, they become boot-prints — walking calmly toward {npc}'s door."
+reveal = "You follow the pad-marks until, at the field's edge, they become boot-prints — walking calmly toward {npc}'s door. Nothing dead and nothing merely hexed leaves that trail."
 
-[absent-neighbour]
-name = "The Absent Neighbour"
-archetype = "werewolf"
+[wounds-that-closed]
+name = "The Wounds That Closed"
 category = "identity"
-action = "gossip"
-pool = "social"
-site = "npc"
-obscurity = 0
-prompt = "The villagers are eager to talk about the night of the killing."
-reveal = "Everyone has an account of that night — everyone except {npc}, whom nobody saw from dusk until grey dawn."
-
-[moonlit-sighting]
-name = "Moonlit Sighting"
-archetype = "werewolf"
-category = "identity"
-action = "spy"
-pool = "social"
-site = "npc"
-obscurity = 1
-prompt = "Someone in the settlement keeps strange hours. It would be worth watching quietly."
-reveal = "From the shadows you watch {npc} slip out under the moon, walking stiffly, as if the skin fit wrong."
-
-[beast-dream]
-name = "The Beast Dream"
-archetype = "werewolf"
-origins = ["ancient-curse"]
-category = "identity"
-action = "commune"
-pool = "mystic"
-site = "wilds"
-obscurity = 2
-prompt = "The old stones hum with something that wants to be seen."
-reveal = "The vision comes: the beast at its kill, raising a head that is all wolf — save for the eyes, which are {npc}'s."
-
-[old-bloodline]
-name = "The Old Bloodline"
-archetype = "werewolf"
-origins = ["ancient-curse"]
-category = "identity"
-action = "examine"
-pool = "lore"
-site = "church"
-obscurity = 2
-prompt = "The parish registers go back three hundred years, and someone has been careless with the old pages."
-reveal = "The curse runs in a bloodline the registers trace generation by generation — down to {npc}."
-
-[grudge-witness]
-name = "The Sworn Grudge"
-archetype = "werewolf"
-origins = ["bitter-betrayal"]
-category = "identity"
+supports = ["werewolf"]
+rules_out = ["revenant", "witch"]
 action = "persuade"
 pool = "social"
 site = "npc"
 obscurity = 1
-prompt = "There is old bad blood here. Someone knows who swore revenge, and could be persuaded to say."
-reveal = "At last it spills out: it was {npc} who was wronged, {npc} who swore before witnesses to make the valley pay."
+prompt = "Someone got a blow in on the thing, and lived. They will not enjoy remembering it."
+reveal = "'I opened it to the bone,' he says, 'and watched the bone close over.' Flesh that knits itself is the beast's trick, and only the beast's."
 
-[untouched-garden]
-name = "The Untouched Garden"
-archetype = "werewolf"
-origins = ["bitter-betrayal"]
+[the-earth-breathes]
+name = "The Earth Breathes"
 category = "identity"
+supports = ["revenant"]
+rules_out = ["werewolf", "witch"]
+action = "persuade"
+pool = "social"
+site = "npc"
+obscurity = 1
+prompt = "The gravedigger drinks like a man trying to forget his own trade."
+reveal = "He grips your wrist: 'I saw the earth breathe over {grave}. Rise and fall, like a sleeper.' Nothing living lies in a grave and breathes it."
+
+[grave-shadow]
+name = "The Shroud of Grave-Shadow"
+category = "identity"
+supports = ["revenant"]
+rules_out = ["werewolf", "witch"]
+action = "examine"
+pool = "lore"
+site = "kill-site"
+obscurity = 1
+prompt = "The killing blows here fell strangely — some bit deep, most seem not to have landed at all."
+reveal = "Blows that pass through without wounding, then one that tears. That is grave-shadow thinning and closing: the risen dead's rhythm, not a beast's and not a hex."
+
+[hex-marks]
+name = "Hex-marks on the Lintel"
+category = "identity"
+supports = ["witch"]
+rules_out = ["werewolf", "revenant"]
 action = "examine"
 pool = "lore"
 site = "npc"
-obscurity = 2
-prompt = "Every cottage garden grows the same herbs — almost every one."
-reveal = "In {npc}'s garden every herb thrives except wolfsbane, which lies torn out and burned by the wall."
+obscurity = 1
+prompt = "The door-frames in this row all carry the same small scoring, cut fresh over older cuts."
+reveal = "Deliberate hex-work, cut by a steady hand that knew the figure — and cut outward, from {npc}'s house toward the rest. Beasts do not draw, and the dead do not need to."
 
-# --- Werewolf location ------------------------------------------------------
+[steel-turned-aside]
+name = "Honest Steel Turned Aside"
+category = "identity"
+supports = ["witch"]
+rules_out = ["werewolf", "revenant"]
+action = "gossip"
+pool = "social"
+site = "npc"
+obscurity = 2
+prompt = "One of the drovers swung on something in the dark and wants to tell you he is not a coward."
+reveal = "'The blade went wide,' he insists, 'and I had it dead straight.' Steel that slides off a working, over and over — that is a ward worn on the body, not a hide and not a shroud."
+
+[no-hex-work]
+name = "No Hand Behind It"
+category = "identity"
+supports = ["werewolf", "revenant"]
+rules_out = ["witch"]
+action = "examine"
+pool = "lore"
+site = "church"
+obscurity = 1
+prompt = "If a working were being kept up in this parish, it would leave the same marks in the same places every time."
+reveal = "You check the lintels, the font, the threshold stones: no figures, no scoring, no working kept up anywhere. Whatever this is, no living hand is drawing it."
+
+[undisturbed-ground]
+name = "The Undisturbed Ground"
+category = "identity"
+supports = ["werewolf", "witch"]
+rules_out = ["revenant"]
+action = "examine"
+pool = "lore"
+site = "grave"
+obscurity = 1
+prompt = "The sexton's rows can be read like a ledger, if you know that settled earth lies flat."
+reveal = "Every plot settled, every sod flat, not one pushed up from beneath. Nothing has risen out of this ground — whatever walks here walked in on its own two feet."
+
+# ===========================================================================
+# ORIGIN - soft signs
+# ===========================================================================
+
+[something-old]
+name = "Something Old Behind It"
+category = "origin-sign"
+supports = ["ancient-curse", "broken-covenant"]
+action = "examine"
+pool = "lore"
+site = "church"
+obscurity = 0
+prompt = "The parish keeps its papers badly, but it keeps them."
+reveal = "The trouble has a long tail: the same field-names, the same families, the same complaint recurring across generations. Something here was set in motion a long time ago — set, or promised."
+
+[a-wrong-between-people]
+name = "A Wrong Between People"
+category = "origin-sign"
+supports = ["bitter-betrayal", "broken-covenant"]
+action = "gossip"
+pool = "social"
+site = "npc"
+obscurity = 0
+prompt = "The settlement talks around something the way a tongue works at a broken tooth."
+reveal = "It started with people, not omens: an arrangement, and someone on the wrong end of it. Whether that was a grudge taken up or a bargain put down, the gossip cannot agree."
+
+# ===========================================================================
+# ORIGIN - discriminators
+# ===========================================================================
+
+[the-long-register]
+name = "The Long Register"
+category = "origin-sign"
+supports = ["ancient-curse"]
+rules_out = ["bitter-betrayal", "broken-covenant"]
+action = "examine"
+pool = "lore"
+site = "church"
+obscurity = 1
+prompt = "The registers go back three hundred years, and someone has been careless with the old pages."
+reveal = "The same affliction, entered in the same words, in three centuries of different hands. This did not begin with anyone now living, and nobody promised it — it was simply laid on, and never lifted."
+
+[stones-before-the-parish]
+name = "Stones Before the Parish"
+category = "origin-sign"
+supports = ["ancient-curse"]
+rules_out = ["bitter-betrayal", "broken-covenant"]
+action = "commune"
+pool = "mystic"
+site = "wilds"
+obscurity = 2
+prompt = "The standing stones were old when the church was new, and they are still warm to the hand."
+reveal = "What answers is older than any compact and older than any grudge: a thing laid down before there were parties to agree or betray. It has simply been waiting to be fed again."
+
+[living-memory]
+name = "Inside Living Memory"
+category = "origin-sign"
+supports = ["bitter-betrayal", "broken-covenant"]
+rules_out = ["ancient-curse"]
+action = "persuade"
+pool = "social"
+site = "npc"
+obscurity = 0
+prompt = "Whatever started this, someone here was alive when it did."
+reveal = "They can date it. A season, a name, an argument in the road — this began inside living memory, and inherited curses do not have a date."
+
+[the-sworn-vengeance]
+name = "The Sworn Vengeance"
+category = "origin-sign"
+supports = ["bitter-betrayal"]
+rules_out = ["ancient-curse", "broken-covenant"]
+action = "persuade"
+pool = "social"
+site = "npc"
+obscurity = 1
+prompt = "There is old bad blood here, and someone knows who swore what, and before whom."
+reveal = "It spills out at last: a wrong done, and a vow sworn before witnesses to make the valley pay for it. No bargain, no obligation — only a debt of spite, taken up freely."
+
+[the-stopped-payment]
+name = "The Stopped Payment"
+category = "origin-sign"
+supports = ["broken-covenant"]
+rules_out = ["ancient-curse", "bitter-betrayal"]
+action = "examine"
+pool = "lore"
+site = "outlying-site"
+obscurity = 1
+prompt = "The manor kept its accounts to the penny, and then, one year, stopped keeping one of them."
+reveal = "A payment rendered every year without fail for four generations — then a line ruled through it, and nothing after. Not a grudge and not a curse: a compact honoured for centuries, and broken by someone who thought it was only money."
+
+[the-unpaid-obligation]
+name = "The Unpaid Obligation"
+category = "origin-sign"
+supports = ["broken-covenant"]
+rules_out = ["ancient-curse", "bitter-betrayal"]
+action = "commune"
+pool = "mystic"
+site = "grave"
+obscurity = 2
+prompt = "Something here is owed, and knows the exact figure."
+reveal = "What answers is not spite and not an old malediction. It recites terms: what was promised, what was given, and the year the giving stopped. It is not angry. It is collecting."
+
+# ===========================================================================
+# SCHEME - soft signs
+# ===========================================================================
+
+[bodies-turning-up]
+name = "Bodies Turning Up"
+category = "scheme-sign"
+supports = ["reign-of-fear", "hidden-design"]
+action = "examine"
+pool = "lore"
+site = "kill-site"
+obscurity = 0
+prompt = "There is a body's worth of blood here and the ground has been worked over."
+reveal = "Somebody died badly on this spot. Whether they were killed to be seen, or killed for what could be taken from them, the ground will not say."
+
+[working-toward-something]
+name = "Working Toward Something"
+category = "scheme-sign"
+supports = ["hidden-design", "the-calling"]
+action = "commune"
+pool = "mystic"
+site = "outlying-site"
+obscurity = 1
+prompt = "The air out here has the held-breath quality of a room set for a occasion."
+reveal = "There is an intention running under all of this — stages, a sequence, an end being worked toward. What the end is, the working does not volunteer."
+
+# ===========================================================================
+# SCHEME - discriminators
+# ===========================================================================
+
+[killed-to-be-found]
+name = "Killed to Be Found"
+category = "scheme-sign"
+supports = ["reign-of-fear"]
+rules_out = ["hidden-design", "the-calling"]
+action = "examine"
+pool = "lore"
+site = "kill-site"
+obscurity = 0
+prompt = "The body was left on the green, in the open, in the middle of the path."
+reveal = "Nothing was taken and nothing was hidden. It was dragged from where it fell to where it would be found first. This killing is a notice nailed to a door."
+
+[the-audience]
+name = "It Wants an Audience"
+category = "scheme-sign"
+supports = ["reign-of-fear"]
+rules_out = ["hidden-design", "the-calling"]
+action = "gossip"
+pool = "social"
+site = "npc"
+obscurity = 1
+prompt = "Ask them when they hear it, rather than what they hear."
+reveal = "Always at the hour the taproom empties, always near enough the houses to carry. It is timed for the largest number of listeners. Something that wanted quiet work would not perform."
+
+[materials-not-people]
+name = "Materials, Not People"
+category = "scheme-sign"
+supports = ["hidden-design"]
+rules_out = ["reign-of-fear", "the-calling"]
+action = "examine"
+pool = "lore"
+site = "church"
+obscurity = 1
+prompt = "Take an inventory rather than a statement: what has actually gone missing this month?"
+reveal = "Candle-wax, lead from the flashing, chalk, a censer, grave-earth by the sackful. Things, not people, and every one of them a component. Something is being built here."
+
+[preparation-not-appetite]
+name = "Preparation, Not Appetite"
+category = "scheme-sign"
+supports = ["hidden-design"]
+rules_out = ["reign-of-fear", "the-calling"]
+action = "track"
+pool = "lore"
+site = "outlying-site"
+obscurity = 1
+prompt = "The traffic to this place is regular, and regular traffic has a purpose."
+reveal = "The same trips, the same loads, the same hours — carrying in, never carrying out. This is not hunger and it is not display. It is a schedule of works."
+
+[walked-out-unhurried]
+name = "They Walked Out Unhurried"
+category = "scheme-sign"
+supports = ["the-calling"]
+rules_out = ["reign-of-fear", "hidden-design"]
+action = "examine"
+pool = "lore"
+site = "npc"
+obscurity = 0
+prompt = "The empty cottage was left open to the weather, and the bed not slept in."
+reveal = "No struggle, no blood, no forced door. One set of prints, unhurried, even-strided, leading away and not coming back. Nobody took them. They were called, and they went."
+
+[route-stones]
+name = "The Marked Route-Stones"
+category = "scheme-sign"
+supports = ["the-calling"]
+rules_out = ["reign-of-fear", "hidden-design"]
+action = "track"
+pool = "lore"
+site = "wilds"
+obscurity = 1
+prompt = "There are stones set along this trail at intervals too even to be chance."
+reveal = "Each stone scored with the same mark, each set exactly within sight of the next — a road laid out to be followed by someone who is not deciding to follow it. This is a route, and it leads somewhere that is counting arrivals."
+
+[nothing-for-show]
+name = "Nothing Done for Show"
+category = "scheme-sign"
+supports = ["hidden-design", "the-calling"]
+rules_out = ["reign-of-fear"]
+action = "gossip"
+pool = "social"
+site = "npc"
+obscurity = 1
+prompt = "For all the fear in this valley, ask what anyone has actually witnessed."
+reveal = "Nobody has seen a thing. No display, no bodies left where the road runs, no message. Whatever this is, it is working quietly and would rather not be watched at all."
+
+# ===========================================================================
+# LOCATION - where to bring the hunt
+# ===========================================================================
 
 [den-tracks]
 name = "The Den"
-archetype = "werewolf"
 category = "location"
+villains = ["werewolf"]
 action = "track"
 pool = "lore"
 site = "wilds"
@@ -112,8 +382,8 @@ reveal = "You find the den: a hollow of cracked bones. The beast returns here wh
 
 [shepherds-account]
 name = "The Shepherd's Account"
-archetype = "werewolf"
 category = "location"
+villains = ["werewolf"]
 action = "persuade"
 pool = "social"
 site = "npc"
@@ -121,106 +391,10 @@ obscurity = 0
 prompt = "The shepherds drive their flocks wide of the high pasture and will not say why."
 reveal = "The oldest shepherd finally speaks: the beast walks the tree-line at dusk, and dens in the deep wood."
 
-# --- Revenant identity ------------------------------------------------------
-
-[burial-ledger]
-name = "The Burial Ledger"
-archetype = "revenant"
-category = "identity"
-action = "examine"
-pool = "lore"
-site = "church"
-obscurity = 0
-prompt = "The sexton's ledger sits chained to the vestry desk."
-reveal = "One plot is entered twice — dug, filled, and dug again a week later. No name, only a mark: {grave}."
-
-[disturbed-earth]
-name = "Disturbed Earth"
-archetype = "revenant"
-category = "identity"
-action = "examine"
-pool = "lore"
-site = "grave"
-obscurity = 0
-prompt = "The graves here are old and settled — most of them."
-reveal = "This earth has been moved from below. The sod lies wrong, pushed up like a trapdoor gently closed."
-
-[sextons-fear]
-name = "The Sexton's Fear"
-archetype = "revenant"
-category = "identity"
-action = "persuade"
-pool = "social"
-site = "npc"
-obscurity = 1
-prompt = "The gravedigger drinks like a man trying to forget his own trade."
-reveal = "He grips your wrist: 'I saw the earth breathe over {grave}. Rise and fall, like a sleeper. I'll dig no more there.'"
-
-[cold-candles]
-name = "The Cold Candles"
-archetype = "revenant"
-origins = ["ancient-curse"]
-category = "identity"
-action = "examine"
-pool = "lore"
-site = "church"
-obscurity = 2
-prompt = "During the litany for the dead, the altar candles behave strangely."
-reveal = "At one name in the litany every flame gutters blue and cold. The name belongs to the one buried at {grave}."
-
-[widows-grief]
-name = "The Widow's Grief"
-archetype = "revenant"
-origins = ["bitter-betrayal"]
-category = "identity"
-action = "gossip"
-pool = "social"
-site = "npc"
-obscurity = 1
-prompt = "There is a grief in this settlement that has curdled into something else."
-reveal = "The whispers agree: a great wrong was done to the one buried at {grave}, and the wrong was never paid for."
-
-[grave-chill-omen]
-name = "The Grave Chill"
-archetype = "revenant"
-origins = ["ancient-curse"]
-category = "identity"
-action = "commune"
-pool = "mystic"
-site = "grave"
-obscurity = 2
-prompt = "Among the graves, one patch of air is cold enough to ache."
-reveal = "You open yourself to the cold and it shows you: hands folded on a breastless chest, eyes open in the dark of {grave}, waiting."
-
-[crypt-scratches]
-name = "Scratches in the Crypt"
-archetype = "revenant"
-category = "identity"
-action = "force"
-pool = "physical"
-site = "outlying-site"
-obscurity = 3
-prompt = "The crypt door has been barred from the outside — recently, and in haste."
-reveal = "Inside, the dust is scored with drag-marks that lead out through the wall's old breach, toward the graves at {grave}."
-
-[restless-lament]
-name = "The Restless Lament"
-archetype = "revenant"
-origins = ["bitter-betrayal"]
-category = "identity"
-action = "commune"
-pool = "mystic"
-site = "outlying-site"
-obscurity = 2
-prompt = "The old manor's silence has a note in it, if you dare to listen."
-reveal = "The lament names its own grave: wronged, unavenged, and lying in {grave} — but not for much longer."
-
-# --- Revenant location ------------------------------------------------------
-
 [plot-map]
 name = "The Plot Map"
-archetype = "revenant"
 category = "location"
+villains = ["revenant"]
 action = "examine"
 pool = "lore"
 site = "church"
@@ -230,8 +404,8 @@ reveal = "The map marks every plot and names its occupant. Now you know exactly 
 
 [gravediggers-map]
 name = "The Gravedigger's Knowledge"
-archetype = "revenant"
 category = "location"
+villains = ["revenant"]
 action = "persuade"
 pool = "social"
 site = "npc"
@@ -239,12 +413,36 @@ obscurity = 0
 prompt = "Nobody knows the ground here better than the one who digs it."
 reveal = "He walks you the rows and points without looking: '{grave}. That one. Do what you came to do.'"
 
-# --- Weakness and ingredient sources ---------------------------------------
+[the-working-room]
+name = "The Working Room"
+category = "location"
+villains = ["witch"]
+action = "spy"
+pool = "social"
+site = "npc"
+obscurity = 1
+prompt = "Whatever is being kept up in this valley is being kept up somewhere, at regular hours."
+reveal = "You watch {npc}'s house until the shutter opens: a back room laid out for work, and the same hour kept every night. That is where she will be when it matters."
+
+[the-widows-warning]
+name = "The Widow's Warning"
+category = "location"
+villains = ["witch"]
+action = "persuade"
+pool = "social"
+site = "npc"
+obscurity = 0
+prompt = "One neighbour has stopped taking the short way past a particular door."
+reveal = "'I'll not walk that side of the row after dark,' she says, and names the house. She is not guessing, and she is not wrong."
+
+# ===========================================================================
+# WEAKNESS - what actually kills it
+# ===========================================================================
 
 [silver-candlesticks]
 name = "The Silver Candlesticks"
-archetype = "werewolf"
 category = "weakness"
+villains = ["werewolf"]
 action = "examine"
 pool = "lore"
 site = "church"
@@ -254,8 +452,8 @@ reveal = "They are true silver — enough, melted down, to cast a bullet the cur
 
 [mine-lode]
 name = "The Abandoned Lode"
-archetype = "werewolf"
 category = "weakness"
+villains = ["werewolf"]
 action = "track"
 pool = "lore"
 site = "wilds"
@@ -263,21 +461,10 @@ obscurity = 1
 prompt = "The old mine was abandoned when the vein pinched out — or so the story goes."
 reveal = "The story lied. Past the fallen rubble a thread of true silver still glints in the rock."
 
-[herbwifes-tip]
-name = "The Herbwife's Tip"
-archetype = "any"
-category = "ingredient-source"
-action = "gossip"
-pool = "social"
-site = "npc"
-obscurity = 0
-prompt = "The old women trade remedies at the market stall."
-reveal = "They tell you where moon-herb and bitter-root grow thick: the clearings off the forest trail."
-
 [wardens-dust]
 name = "The Warden's Dust"
-archetype = "revenant"
 category = "weakness"
+villains = ["revenant"]
 action = "commune"
 pool = "mystic"
 site = "grave"
@@ -288,8 +475,8 @@ reveal = "The oldest grave gives up its handful of dust freely, as if glad to be
 
 [sextons-spade]
 name = "The Sexton's Spade"
-archetype = "revenant"
 category = "weakness"
+villains = ["revenant"]
 action = "persuade"
 pool = "social"
 site = "npc"
@@ -297,3 +484,39 @@ obscurity = 1
 grants_items = ["grave-dust"]
 prompt = "Grave-dust for a binding charm must be freely given, not stolen."
 reveal = "The gravedigger fills a pouch from the old consecrated rows and presses it on you. 'Sew it tight. Use it close.'"
+
+[cold-iron-lore]
+name = "The Iron Rule"
+category = "weakness"
+villains = ["witch"]
+action = "gossip"
+pool = "social"
+site = "npc"
+obscurity = 0
+prompt = "The old women have a rule about workings, and they will recite it for the asking."
+reveal = "'Nothing that ever saw the forge fire,' says Mother Wren. 'Cold iron, straight out the bog, never smelted. A hex has to get hold of a thing, and it can get no hold on that.'"
+
+[the-pinned-hare]
+name = "The Pinned Hare"
+category = "weakness"
+villains = ["witch"]
+action = "examine"
+pool = "lore"
+site = "wilds"
+obscurity = 1
+prompt = "Something has been left on the trail as a warning, and warnings are instructions read backwards."
+reveal = "A hare pinned to a stump with a rough black pin — and the pin is unsmelted bog iron. Somebody in this valley already knows what holds a working still, and wanted the fact known."
+
+# ===========================================================================
+# INGREDIENT SOURCES
+# ===========================================================================
+
+[herbwifes-tip]
+name = "The Herbwife's Tip"
+category = "ingredient-source"
+action = "gossip"
+pool = "social"
+site = "npc"
+obscurity = 0
+prompt = "The old women trade remedies at the market stall."
+reveal = "They tell you where moon-herb and bitter-root grow thick: the clearings off the forest trail."

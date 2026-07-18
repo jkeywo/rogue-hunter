@@ -1,7 +1,9 @@
-//! Golden replay checks: the autoplayer must win complete runs for both
-//! villain archetypes, and every recorded command log must reproduce the
+//! Golden replay checks: the autoplayer must win complete runs for every
+//! villain archetype, and every recorded command log must reproduce the
 //! exact same run when replayed from its share code. These are the CI
 //! "replay checks" from the PASM ci-and-pages-release contract.
+
+use std::collections::BTreeMap;
 
 use rh_content::Catalogue;
 use rh_core::state::Outcome;
@@ -12,26 +14,31 @@ fn catalogue() -> Catalogue {
 }
 
 #[test]
-fn autoplayer_wins_runs_for_both_archetypes() {
-    let mut werewolf_wins = 0u32;
-    let mut revenant_wins = 0u32;
+fn autoplayer_wins_runs_for_every_archetype() {
+    // Driven off the catalogue rather than a hardcoded pair: adding a villain
+    // must extend the proof obligation, not silently escape it.
+    let mut wins: BTreeMap<String, u32> = catalogue()
+        .villains
+        .keys()
+        .map(|id| (id.clone(), 0))
+        .collect();
     let mut outcomes = Vec::new();
 
-    for seed in 0..32u64 {
+    // Three villains times three origins times three schemes needs a wider
+    // sweep than two archetypes did to see each villain a few times.
+    for seed in 0..96u64 {
         let mut session = RunSession::new(seed, catalogue()).expect("run generates");
         let archetype = session.sim.world.villain.archetype.clone();
         let outcome = autoplay::autoplay(&mut session);
         outcomes.push(format!(
-            "seed {seed}: {archetype} -> {outcome:?} after {} commands (clock {})",
+            "seed {seed}: {archetype} ({}/{}) -> {outcome:?} after {} commands (clock {})",
+            session.sim.world.villain.origin,
+            session.sim.world.villain.scheme,
             session.commands.len(),
             session.sim.state.clock,
         ));
         if outcome == Some(Outcome::Victory) {
-            match archetype.as_str() {
-                "werewolf" => werewolf_wins += 1,
-                "revenant" => revenant_wins += 1,
-                _ => {}
-            }
+            *wins.entry(archetype).or_insert(0) += 1;
 
             // Replay determinism through the full stack: the share code must
             // rebuild the identical end state.
@@ -47,9 +54,15 @@ fn autoplayer_wins_runs_for_both_archetypes() {
         }
     }
 
+    let unbeaten: Vec<_> = wins
+        .iter()
+        .filter(|(_, won)| **won == 0)
+        .map(|(id, _)| id.clone())
+        .collect();
     assert!(
-        werewolf_wins >= 1 && revenant_wins >= 1,
-        "the autoplayer must win at least one run per archetype:\n{}",
+        unbeaten.is_empty(),
+        "the autoplayer never won as {}:\n{}",
+        unbeaten.join(", "),
         outcomes.join("\n")
     );
 }

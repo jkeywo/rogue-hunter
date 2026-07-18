@@ -1,6 +1,7 @@
-# Schemes control the timed events and which minion family serves the
-# villain. The minor event fires on the minor_event_turn, the major on the
-# major_event_turn; each raises the villain's threat tier.
+# Schemes control the timed events, the minion family, and the one act that
+# blunts the escalation. The minor event fires on the minor_event_turn, the
+# major on the major_event_turn; each raises the villain's threat tier unless
+# the scheme has been pre-empted first.
 
 [reign-of-fear]
 name = "Reign of Fear"
@@ -19,6 +20,16 @@ text = "Screams in the dark. Come morning a villager lies dead behind a barred d
 site_map = "settlement"
 spawn_minions = 2
 
+[reign-of-fear.preempt]
+name = "Stand the watch"
+site = "npc"
+map_role = "settlement"
+pool = "social"
+cost = 1
+prompt = "The settlement is frightened into its houses. Frightened people alone are prey; frightened people together are a watch."
+reveal = "You walk them through it: lanterns at the doors, men in pairs, nobody alone after dark. They will not be easy meat tonight."
+blunted_text = "There were screams in the night — but the watch held, lanterns burned, and by morning every door still had someone behind it. The terror does not feed."
+
 [hidden-design]
 name = "A Hidden Design"
 minion_enemy = "bandit"
@@ -35,3 +46,40 @@ name = "Witch-light at the Manor"
 text = "Witch-light burned in the old manor through the night, and something was carried out before dawn. The design nears completion."
 site_map = "outlying"
 spawn_minions = 2
+
+[hidden-design.preempt]
+name = "Break the array"
+site = "outlying-site"
+map_role = "outlying-site"
+pool = "lore"
+cost = 1
+prompt = "Chalk, iron filings, and candle stubs laid out in a figure across the floor. Half-finished — and a half-finished figure can be spoiled."
+reveal = "You scuff the chalk through, pocket the filings, and kick the stubs into the dark. Whatever was to be finished here must be begun again."
+blunted_text = "Witch-light guttered at the manor and went out. The figure you spoiled cannot be redrawn in a night; the design stalls."
+
+[the-calling]
+name = "The Calling"
+minion_enemy = "thrall"
+description = "It does not kill so much as gather. One by one the valley folk walk out of their own doors at night and do not come back, and something at the end of the road is counting them."
+
+[the-calling.minor_event]
+name = "The Empty Bed"
+text = "A cottage door stands open to the weather and the bed inside has not been slept in. No struggle, no blood — only footprints leading away, unhurried, in a straight line."
+site_map = "settlement"
+spawn_minions = 1
+
+[the-calling.major_event]
+name = "The Third Walker"
+text = "Two more gone in the night, and a shepherd swears he saw them on the high road walking abreast, in step, none of them speaking. The tally the thing is keeping is nearly made."
+site_map = "wilderness"
+spawn_minions = 2
+
+[the-calling.preempt]
+name = "Throw down the route-stones"
+site = "wilds"
+map_role = "wilderness"
+pool = "mystic"
+cost = 1
+prompt = "Stones set at intervals along the trail, each scored with the same mark, each placed so the next is just in sight. A road laid for people who are not choosing to walk it."
+reveal = "You lever the marked stones over and grind the scoring off against the trail. Whatever was reading this road as an invitation will find it goes nowhere now."
+blunted_text = "Two walked out in the night — and came to themselves at the trail's edge, cold and bewildered, the road that called them gone quiet. The tally falls short."

@@ -19,6 +19,8 @@ pub struct HuntLoadout {
     pub draughts: u16,
     pub silver_bullets: u16,
     pub binding_charms: u16,
+    /// Cold-iron blades: the counter that cuts through a hex-ward.
+    pub counter_blades: u16,
     /// Physical points available for snares / Killing Blow.
     pub physical: u8,
     /// The fight happens on consecrated ground (revenant church route).
@@ -87,72 +89,98 @@ pub fn hunt_viability(
     let incoming = incoming.max(100);
 
     // --- Turns to kill. ------------------------------------------------------
-    let turns_to_kill = match &villain.cadence {
-        None => {
-            // Werewolf-style: always woundable, defended by regeneration.
-            let mut effective_hp = villain_hp;
-            let mut setup_turns: i32 = 0;
-            let mut regen_millis = villain
-                .regeneration
-                .as_ref()
-                .map(|regen| u32::from(regen.per_turn) * 1000)
-                .unwrap_or(0);
-            if loadout.silver_bullets > 0 {
-                if let Some(ItemKind::WeaknessAmmunition {
-                    damage,
-                    stops_regeneration,
-                }) = catalogue
-                    .items
-                    .get(&villain.weakness_item)
-                    .map(|def| &def.kind)
-                {
-                    effective_hp = effective_hp.saturating_sub(u32::from(*damage) * 1000);
-                    if *stops_regeneration {
-                        regen_millis = 0;
-                    }
-                    setup_turns += 2; // aim + certain shot
-                }
+    let counter_blade_damage = match catalogue.items.get(&villain.weakness_item).map(|d| &d.kind) {
+        Some(ItemKind::WeaknessBlade { damage }) => Some(u32::from(*damage)),
+        _ => None,
+    };
+    let turns_to_kill = if let Some(ward) = &villain.ward {
+        // Witch-style: a hex-ward soaks honest blows and is rewoven after it
+        // breaks, so steel grinds through a cycle at a time. Cold iron ignores
+        // the ward completely, which is the whole point of carrying it.
+        match (loadout.counter_blades > 0, counter_blade_damage) {
+            (true, Some(blade)) => {
+                let dpt = (blade * 1000 * u32::from(combat.melee_hit_percent) / 100).max(100);
+                ((villain_hp / dpt) as i32).max(1)
             }
-            let net = melee_dpt.saturating_sub(regen_millis).max(100);
-            let mut turns = (effective_hp / net) as i32 + setup_turns;
-            if loadout.physical > 0 {
-                turns -= 2; // Killing Blow burst once it is wounded
+            _ => {
+                // One full cycle: `charges` blows soak down to a leak, then the
+                // ward is down for `reweave_turns` of honest damage.
+                let cycle_turns = u32::from(ward.charges) + u32::from(ward.reweave_turns);
+                let cycle_damage = u32::from(ward.charges) * u32::from(ward.leak_damage) * 1000
+                    + u32::from(ward.reweave_turns) * melee_dpt;
+                let average = (cycle_damage / cycle_turns.max(1)).max(100);
+                ((villain_hp / average) as i32).max(1)
             }
-            turns.max(1)
         }
-        Some(cadence) => {
-            // Revenant-style: damage lands only in vulnerability windows,
-            // where it bites twice as deep.
-            let vulnerable_dpt = melee_dpt * 2;
-            let mut remaining = villain_hp;
-            let mut turns: i32 = 0;
-            if loadout.dormant_opening && loadout.physical > 0 {
-                // Coup de grace on the dormant thing in its grave.
-                let opener =
-                    u32::from(blade) * power_numerator * 1000 / 2 * 2 /* killing blow */ * 3 /* coup */;
-                remaining = remaining.saturating_sub(opener);
-                turns += 1;
-            }
-            if loadout.on_consecrated_ground {
-                let dpt = vulnerable_dpt + u32::from(cadence.consecrated_damage_per_turn) * 1000;
-                turns += (remaining / dpt.max(100)) as i32 + 1;
-            } else {
-                let charm_turns =
-                    u32::from(loadout.binding_charms) * u32::from(cadence.bound_vulnerable_turns);
-                let charm_damage = charm_turns * vulnerable_dpt;
-                if charm_damage >= remaining {
-                    turns += (remaining / vulnerable_dpt.max(100)) as i32
-                        + i32::from(loadout.binding_charms > 0); // the turn spent placing it
-                } else {
-                    remaining -= charm_damage;
-                    turns += charm_turns as i32 + i32::from(loadout.binding_charms > 0);
-                    // The rest must land in natural windows: one turn in
-                    // `period` at double damage.
-                    let guarded_dpt = (vulnerable_dpt / u32::from(cadence.period)).max(100);
-                    turns += (remaining / guarded_dpt) as i32;
+    } else {
+        match &villain.cadence {
+            None => {
+                // Werewolf-style: always woundable, defended by regeneration.
+                let mut effective_hp = villain_hp;
+                let mut setup_turns: i32 = 0;
+                let mut regen_millis = villain
+                    .regeneration
+                    .as_ref()
+                    .map(|regen| u32::from(regen.per_turn) * 1000)
+                    .unwrap_or(0);
+                if loadout.silver_bullets > 0 {
+                    if let Some(ItemKind::WeaknessAmmunition {
+                        damage,
+                        stops_regeneration,
+                    }) = catalogue
+                        .items
+                        .get(&villain.weakness_item)
+                        .map(|def| &def.kind)
+                    {
+                        effective_hp = effective_hp.saturating_sub(u32::from(*damage) * 1000);
+                        if *stops_regeneration {
+                            regen_millis = 0;
+                        }
+                        setup_turns += 2; // aim + certain shot
+                    }
                 }
+                let net = melee_dpt.saturating_sub(regen_millis).max(100);
+                let mut turns = (effective_hp / net) as i32 + setup_turns;
+                if loadout.physical > 0 {
+                    turns -= 2; // Killing Blow burst once it is wounded
+                }
+                turns.max(1)
             }
-            turns.max(1)
+            Some(cadence) => {
+                // Revenant-style: damage lands only in vulnerability windows,
+                // where it bites twice as deep.
+                let vulnerable_dpt = melee_dpt * 2;
+                let mut remaining = villain_hp;
+                let mut turns: i32 = 0;
+                if loadout.dormant_opening && loadout.physical > 0 {
+                    // Coup de grace on the dormant thing in its grave.
+                    let opener =
+                    u32::from(blade) * power_numerator * 1000 / 2 * 2 /* killing blow */ * 3 /* coup */;
+                    remaining = remaining.saturating_sub(opener);
+                    turns += 1;
+                }
+                if loadout.on_consecrated_ground {
+                    let dpt =
+                        vulnerable_dpt + u32::from(cadence.consecrated_damage_per_turn) * 1000;
+                    turns += (remaining / dpt.max(100)) as i32 + 1;
+                } else {
+                    let charm_turns = u32::from(loadout.binding_charms)
+                        * u32::from(cadence.bound_vulnerable_turns);
+                    let charm_damage = charm_turns * vulnerable_dpt;
+                    if charm_damage >= remaining {
+                        turns += (remaining / vulnerable_dpt.max(100)) as i32
+                            + i32::from(loadout.binding_charms > 0); // the turn spent placing it
+                    } else {
+                        remaining -= charm_damage;
+                        turns += charm_turns as i32 + i32::from(loadout.binding_charms > 0);
+                        // The rest must land in natural windows: one turn in
+                        // `period` at double damage.
+                        let guarded_dpt = (vulnerable_dpt / u32::from(cadence.period)).max(100);
+                        turns += (remaining / guarded_dpt) as i32;
+                    }
+                }
+                turns.max(1)
+            }
         }
     };
 
@@ -188,6 +216,7 @@ mod tests {
             draughts: 0,
             silver_bullets: 0,
             binding_charms: 0,
+            counter_blades: 0,
             physical: 0,
             on_consecrated_ground: false,
             dormant_opening: false,
@@ -204,6 +233,7 @@ mod tests {
             draughts: 1,
             silver_bullets: 1,
             binding_charms: 0,
+            counter_blades: 0,
             physical: 2,
             on_consecrated_ground: false,
             dormant_opening: false,
@@ -224,6 +254,7 @@ mod tests {
             draughts: 2,
             silver_bullets: 0,
             binding_charms: 0,
+            counter_blades: 0,
             physical: 2,
             on_consecrated_ground: true,
             dormant_opening: false,
@@ -244,6 +275,7 @@ mod tests {
             draughts: 1,
             silver_bullets: 0,
             binding_charms: 1,
+            counter_blades: 0,
             physical: 2,
             on_consecrated_ground: false,
             dormant_opening: true,
@@ -264,6 +296,7 @@ mod tests {
             draughts: 1,
             silver_bullets: 1,
             binding_charms: 0,
+            counter_blades: 0,
             physical: 2,
             on_consecrated_ground: false,
             dormant_opening: false,

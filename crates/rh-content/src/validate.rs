@@ -17,6 +17,8 @@ pub fn validate(cat: &Catalogue) -> Vec<String> {
     check_items_and_recipes(cat, &mut issues);
     check_enemies(cat, &mut issues);
     check_villains(cat, &mut issues);
+    check_origins(cat, &mut issues);
+    check_counter_ingredients(cat, &mut issues);
     check_schemes(cat, &mut issues);
     check_clues(cat, &mut issues);
     check_npcs(cat, &mut issues);
@@ -236,6 +238,23 @@ fn check_villains(cat: &Catalogue, issues: &mut Vec<String>) {
                 "villains: '{id}' needs enhanced behaviours for both threat tiers"
             ));
         }
+        // The decisive counter must actually be a counter.
+        match cat.items.get(&villain.weakness_item).map(|item| &item.kind) {
+            Some(ItemKind::WeaknessAmmunition { .. })
+            | Some(ItemKind::WeaknessBlade { .. })
+            | Some(ItemKind::BindingCharm) => {}
+            Some(_) => issues.push(format!(
+                "villains: '{id}' weakness item '{}' is not a counter kind",
+                villain.weakness_item
+            )),
+            None => {}
+        }
+        // Every villain needs a defining tactical behaviour to fight around.
+        if villain.pounce.is_none() && villain.cadence.is_none() && villain.ward.is_none() {
+            issues.push(format!(
+                "villains: '{id}' has no pounce, cadence, or ward to make its fight distinct"
+            ));
+        }
         match villain.concealment {
             Concealment::NpcHost => {
                 if !cat.npcs.archetypes.values().any(|npc| npc.can_host_villain) {
@@ -243,9 +262,9 @@ fn check_villains(cat: &Catalogue, issues: &mut Vec<String>) {
                         "villains: '{id}' hides in an NPC but no archetype can_host_villain"
                     ));
                 }
-                if villain.pounce.is_none() {
+                if villain.pounce.is_none() && villain.ward.is_none() {
                     issues.push(format!(
-                        "villains: NPC-host villain '{id}' must have a pounce"
+                        "villains: NPC-host villain '{id}' needs a pounce or a ward"
                     ));
                 }
             }
@@ -255,6 +274,11 @@ fn check_villains(cat: &Catalogue, issues: &mut Vec<String>) {
                         "villains: grave villain '{id}' must have a vulnerability cadence"
                     ));
                 }
+            }
+        }
+        if let Some(ward) = &villain.ward {
+            if ward.charges == 0 {
+                issues.push(format!("villains: '{id}' ward has no charges"));
             }
         }
         if villain.affected_by_consecration && villain.cadence.is_none() {
@@ -284,20 +308,186 @@ fn check_schemes(cat: &Catalogue, issues: &mut Vec<String>) {
                 ));
             }
         }
+        // The pre-emption must be placeable: some map of the named role has to
+        // offer the site kind it is performed at.
+        let preempt = &scheme.preempt;
+        let placeable = cat.maps.values().any(|map| {
+            map.role == preempt.map_role && map.slots.iter().any(|slot| slot.kind == preempt.site)
+        });
+        if !placeable {
+            issues.push(format!(
+                "schemes: '{id}' pre-emption needs a {:?} site on a {:?} map, and none exists",
+                preempt.site, preempt.map_role
+            ));
+        }
+        if preempt.cost == 0 {
+            issues.push(format!("schemes: '{id}' pre-emption must cost a point"));
+        }
+    }
+}
+
+/// How many independent ways a run has to obtain `item`: gathering sites,
+/// clues that hand it over, and the hunter's own starting kit.
+fn item_sources(cat: &Catalogue, item: &str) -> usize {
+    let gathered = cat
+        .gathers
+        .values()
+        .filter(|gather| gather.items.iter().any(|granted| granted == item))
+        .count();
+    let from_clues = cat
+        .clues
+        .values()
+        .filter(|clue| clue.grants_items.iter().any(|granted| granted == item))
+        .count();
+    // Anything in the starting kit is always available to both routes, so it
+    // can never be the thing that strands one of them.
+    let carried = usize::from(cat.hunter.starting_items.iter().any(|held| held == item));
+    gathered + from_clues + carried * 2
+}
+
+/// Every ingredient of a villain's counter must be obtainable twice over.
+///
+/// This is the same trap as the origin reagent one map further out: route
+/// certification forbids the two routes from sharing a node, so a single-source
+/// ingredient anywhere in a counter recipe strands the second route. The origin
+/// reagent rule alone missed it, because the reagent was not the ingredient
+/// that ran out.
+fn check_counter_ingredients(cat: &Catalogue, issues: &mut Vec<String>) {
+    for (villain_id, villain) in &cat.villains {
+        let Some(recipe) = cat
+            .recipes
+            .values()
+            .find(|recipe| recipe.output == villain.weakness_item)
+        else {
+            continue;
+        };
+        for input in &recipe.inputs {
+            let sources = item_sources(cat, input);
+            if sources < 2 {
+                issues.push(format!(
+                    "recipes: '{}' is the only counter to '{villain_id}' but its ingredient \
+                     '{input}' has {sources} source(s); it needs at least 2 so two independent \
+                     routes can each craft the counter",
+                    recipe.name
+                ));
+            }
+        }
+    }
+}
+
+fn check_origins(cat: &Catalogue, issues: &mut Vec<String>) {
+    for (id, origin) in &cat.origins {
+        // The reagent is what makes reading the origin load-bearing, so it
+        // must exist and be gatherable somewhere.
+        if !cat.items.contains_key(&origin.counter_reagent) {
+            issues.push(format!(
+                "origins: '{id}' counter reagent '{}' is not in items.toml",
+                origin.counter_reagent
+            ));
+            continue;
+        }
+        // Two independent certified routes may not share a node, so a reagent
+        // with a single source strands the second route with no way to finish
+        // its counter. Every reagent needs at least two ways to get it.
+        let sources = item_sources(cat, &origin.counter_reagent);
+        if sources < 2 {
+            issues.push(format!(
+                "origins: '{id}' counter reagent '{}' has {sources} source(s); it needs at \
+                 least 2 so two independent routes can each obtain it",
+                origin.counter_reagent
+            ));
+        }
+    }
+    // Each origin must demand a different reagent, or the axis decides nothing.
+    let mut reagents: Vec<&String> = cat
+        .origins
+        .values()
+        .map(|origin| &origin.counter_reagent)
+        .collect();
+    reagents.sort();
+    let distinct = {
+        let mut unique = reagents.clone();
+        unique.dedup();
+        unique.len()
+    };
+    if distinct != cat.origins.len() {
+        issues.push(
+            "origins: every origin must demand a distinct counter reagent, otherwise reading \
+             the origin changes nothing"
+                .into(),
+        );
     }
 }
 
 fn check_clues(cat: &Catalogue, issues: &mut Vec<String>) {
-    for (id, clue) in &cat.clues {
-        if clue.archetype != "any" && !cat.villains.contains_key(&clue.archetype) {
-            issues.push(format!(
-                "clues: '{id}' archetype '{}' is unknown",
-                clue.archetype
-            ));
+    let axis_values = |axis: EvidenceAxis| -> Vec<&String> {
+        match axis {
+            EvidenceAxis::Villain => cat.villains.keys().collect(),
+            EvidenceAxis::Origin => cat.origins.keys().collect(),
+            EvidenceAxis::Scheme => cat.schemes.keys().collect(),
         }
-        for origin in &clue.origins {
-            if !cat.origins.contains_key(origin) {
-                issues.push(format!("clues: '{id}' origin '{origin}' is unknown"));
+    };
+    for (id, clue) in &cat.clues {
+        // Cross-axis scoping filters must name real values.
+        for (label, list, known) in [
+            (
+                "villains",
+                &clue.villains,
+                cat.villains.keys().collect::<Vec<_>>(),
+            ),
+            (
+                "origins",
+                &clue.origins,
+                cat.origins.keys().collect::<Vec<_>>(),
+            ),
+            (
+                "schemes",
+                &clue.schemes,
+                cat.schemes.keys().collect::<Vec<_>>(),
+            ),
+        ] {
+            for value in list {
+                if !known.contains(&value) {
+                    issues.push(format!("clues: '{id}' {label} lists unknown '{value}'"));
+                }
+            }
+        }
+        // Evidence claims must name real values on the clue's own axis, and a
+        // clue may not both support and rule out the same value.
+        match clue.category.axis() {
+            None => {
+                if !clue.supports.is_empty() || !clue.rules_out.is_empty() {
+                    issues.push(format!(
+                        "clues: '{id}' is category {:?}, which makes no claim, so it must \
+                         not set supports/rules_out",
+                        clue.category
+                    ));
+                }
+            }
+            Some(axis) => {
+                let known = axis_values(axis);
+                for (label, list) in [("supports", &clue.supports), ("rules_out", &clue.rules_out)]
+                {
+                    for value in list {
+                        if !known.contains(&value) {
+                            issues.push(format!(
+                                "clues: '{id}' {label} names '{value}', which is not a value \
+                                 on the {axis:?} axis"
+                            ));
+                        }
+                    }
+                }
+                for value in &clue.rules_out {
+                    if clue.supports.contains(value) {
+                        issues.push(format!(
+                            "clues: '{id}' both supports and rules out '{value}'"
+                        ));
+                    }
+                }
+                // A discriminator that eliminates everything leaves no case.
+                if !clue.rules_out.is_empty() && clue.rules_out.len() >= known.len() {
+                    issues.push(format!("clues: '{id}' rules out every value on its axis"));
+                }
             }
         }
         if clue.obscurity > 3 {
@@ -325,34 +515,66 @@ fn check_clues(cat: &Catalogue, issues: &mut Vec<String>) {
             ));
         }
     }
-    // Every villain x origin combination needs enough raw material: at least
-    // four identity clues (early route pair + fallback pair) and one location clue.
+    // Every composition on the three axes must have enough raw material to
+    // build a readable, solvable case: identity clues to corroborate with,
+    // two discriminators per axis so uncertainty is always resolvable by
+    // investigation, a location clue, and a decisive weakness clue.
     for villain_id in cat.villains.keys() {
         for origin_id in cat.origins.keys() {
-            let fits = |clue: &ClueTemplate| {
-                (clue.archetype == "any" || clue.archetype == *villain_id)
-                    && (clue.origins.is_empty() || clue.origins.iter().any(|o| o == origin_id))
-            };
-            let identity = cat
-                .clues
-                .values()
-                .filter(|c| fits(c) && c.category == ClueCategory::Identity)
-                .count();
-            let location = cat
-                .clues
-                .values()
-                .filter(|c| fits(c) && c.category == ClueCategory::Location)
-                .count();
-            if identity < 4 {
-                issues.push(format!(
-                    "clues: villain '{villain_id}' origin '{origin_id}' has only {identity} \
-                     identity clue templates; the generator needs at least 4"
-                ));
-            }
-            if location < 1 {
-                issues.push(format!(
-                    "clues: villain '{villain_id}' origin '{origin_id}' has no location clue"
-                ));
+            for scheme_id in cat.schemes.keys() {
+                let case = format!("{villain_id}/{origin_id}/{scheme_id}");
+                let fitting: Vec<&ClueTemplate> = cat
+                    .clues
+                    .values()
+                    .filter(|clue| clue.fits(villain_id, origin_id, scheme_id))
+                    .collect();
+                let count = |category: ClueCategory| {
+                    fitting.iter().filter(|c| c.category == category).count()
+                };
+                let discriminators = |category: ClueCategory| {
+                    fitting
+                        .iter()
+                        .filter(|c| c.category == category && c.is_discriminating())
+                        .count()
+                };
+
+                let identity = count(ClueCategory::Identity);
+                if identity < 4 {
+                    issues.push(format!(
+                        "clues: case {case} has only {identity} identity clues; the generator \
+                         needs at least 4"
+                    ));
+                }
+                // The spec's contract: at least two reachable discriminators
+                // on every axis the case is composed on.
+                for (label, category) in [
+                    ("identity", ClueCategory::Identity),
+                    ("origin", ClueCategory::OriginSign),
+                    ("scheme", ClueCategory::SchemeSign),
+                ] {
+                    let found = discriminators(category);
+                    if found < 2 {
+                        issues.push(format!(
+                            "clues: case {case} has only {found} discriminating {label} \
+                             clue(s); every axis needs at least 2"
+                        ));
+                    }
+                }
+                // Soft signs are what make the case ambiguous at first; a case
+                // with none reads as a labelled answer from the first clue.
+                let soft_identity = fitting
+                    .iter()
+                    .filter(|c| c.category == ClueCategory::Identity && !c.is_discriminating())
+                    .count();
+                if soft_identity < 1 {
+                    issues.push(format!("clues: case {case} has no ambiguous identity sign"));
+                }
+                if count(ClueCategory::Location) < 1 {
+                    issues.push(format!("clues: case {case} has no location clue"));
+                }
+                if count(ClueCategory::Weakness) < 1 {
+                    issues.push(format!("clues: case {case} has no weakness clue"));
+                }
             }
         }
     }

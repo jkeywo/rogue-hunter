@@ -179,14 +179,75 @@ fn final_validation(catalogue: &Catalogue, world: &World) -> Result<(), String> 
             }
         }
     }
-    // Two identity clues must exist and be distinct.
+    // The evidence contract. A case must be corroborable, closable, and — on
+    // every axis that decides something — resolvable by investigation rather
+    // than by guessing.
+    use rh_core::world::{DiscoveryRule, OpportunityGrant};
     let identity = world
         .opportunities
         .iter()
-        .filter(|opp| opp.grants == rh_core::world::OpportunityGrant::IdentityClue)
+        .filter(|opp| matches!(opp.grants, OpportunityGrant::IdentityClue { .. }))
         .count();
     if identity < 2 {
         return Err(format!("only {identity} identity clues were placed"));
+    }
+    let identity_discriminators = world
+        .opportunities
+        .iter()
+        .filter(|opp| {
+            matches!(
+                opp.grants,
+                OpportunityGrant::IdentityClue {
+                    discriminating: true
+                }
+            )
+        })
+        .count();
+    if identity_discriminators < 2 {
+        return Err(format!(
+            "only {identity_discriminators} discriminating identity clues were placed; \
+             a case needs two so losing one informant cannot strand it"
+        ));
+    }
+    // A discriminator the player can only reach through another clue is not a
+    // guarantee, so the origin and scheme each need one findable by looking.
+    for (axis, is_axis) in [
+        (
+            "origin",
+            &(|grant: &OpportunityGrant| {
+                matches!(
+                    grant,
+                    OpportunityGrant::OriginSign {
+                        discriminating: true
+                    }
+                )
+            }) as &dyn Fn(&OpportunityGrant) -> bool,
+        ),
+        (
+            "scheme",
+            &(|grant: &OpportunityGrant| {
+                matches!(
+                    grant,
+                    OpportunityGrant::SchemeSign {
+                        discriminating: true
+                    }
+                )
+            }) as &dyn Fn(&OpportunityGrant) -> bool,
+        ),
+    ] {
+        let reachable = world.opportunities.iter().any(|opp| {
+            is_axis(&opp.grants)
+                && matches!(
+                    opp.discovery,
+                    DiscoveryRule::Sight | DiscoveryRule::SightOr(_)
+                )
+        });
+        if !reachable {
+            return Err(format!(
+                "no discriminating {axis} sign is findable by sight; the {axis} decides a \
+                 real preparation, so it must be resolvable by investigation"
+            ));
+        }
     }
     // Villain concealment must be consistent.
     let villain = &catalogue.villains[&world.villain.archetype];

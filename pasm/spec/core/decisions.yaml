@@ -153,3 +153,61 @@ entities:
       title: The favour is one point, once
       summary: The mystical favour grants exactly one temporary over-cap Mystic point once per run, so at most one Mystic-pool opportunity can ever be taken in a run. The planner models this and the certified routes may lean on it at most once between them.
       references: [seek-mystical-favour, investigation-pools]
+
+  # Milestone 2, stage 1: case composition and ambiguous evidence.
+
+  - decision: evidence-supports-rules-out
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Clues carry supports and rules-out sets
+      summary: Every clue template declares which candidates on its axis it supports and which it rules out. A clue with a non-empty rules-out set is discriminating; one with only supports is a soft sign that narrows suspicion without settling it. This is what makes evidence ambiguous but decisive - the player accumulates soft signs cheaply and pays for the eliminations that actually close the case.
+      references: [ambiguous-but-decisive-evidence, three-by-three-case-composition]
+
+  - decision: naming-requires-a-discriminator
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Naming the villain requires an elimination, not a pile of hints
+      summary: The Uncover command is rejected unless the hunter holds at least one discriminating identity clue. Soft signs alone can never name a villain, so a run cannot be won by guessing off atmosphere. The rejection is a distinct outcome (EvidenceNotDecisive) so clients can explain what is missing rather than reporting a generic refusal.
+      references: [ambiguous-but-decisive-evidence]
+
+  - decision: load-bearing-origin-and-scheme
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Origin and scheme each decide a real preparation
+      summary: Origin selects the counter reagent a villain-killing recipe requires, and scheme exposes a timed threat that can be pre-empted at a specific site for a pool cost. Neither axis is flavour - reading the origin wrong means crafting the wrong counter, and ignoring the scheme means eating an event that could have been blunted. Generation therefore guarantees a sight-findable discriminator on both axes.
+      references: [three-by-three-case-composition, ambiguous-but-decisive-evidence]
+
+  - decision: two-sources-per-origin-reagent
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Every origin reagent has at least two sources on different maps
+      summary: Route certification forbids the early and fallback routes from sharing a node, so a reagent with a single source strands the second route with no way to finish its counter. Content validation now rejects any origin whose counter reagent has fewer than two gathering sources. Interchangeable duplicate sources are deliberately not deduplicated - they are what keeps the two certified routes independent.
+      references: [hunter-selection-and-certification, three-by-three-case-composition]
+
+  - decision: two-sources-per-counter-ingredient
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Every counter ingredient needs two sources, not just the reagent
+      summary: The origin-reagent rule caught only half the trap. A villain's counter recipe strands the second certified route if any of its ingredients has a single source - cold iron had exactly one, so witch cases could certify a fallback route and then fail to certify an early one. Validation now walks every villain's weakness recipe and requires two sources for each input, counting gathering sites, clues that grant the item, and the hunter's starting kit. Starting-kit items count double because both routes always have them, which is why the silver bullet never stranded despite shot having one gathering site.
+      references: [two-sources-per-origin-reagent, hunter-selection-and-certification]
+
+  - decision: wards-as-second-defence-layer
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Wards absorb charges and reweave over time
+      summary: A warded villain spends a ward charge to absorb an incoming hit entirely unless the blow is struck with that villain's weakness, and regrows a charge on a fixed reweave cadence. This gives NPC-host villains a defence that reads as occult rather than physical, and the viability heuristic models it as a cycle-average damage-per-turn comparison so certification stays honest about how much slower an unarmed-with-the-counter hunter is.
+      references: [three-by-three-case-composition, occultist-hunter]
+
+  - decision: planner-ignores-non-goal-evidence
+    core:
+      status: accepted
+      confidence: confirmed
+      title: The planner searches only over what the goal requires
+      summary: Origin signs, scheme signs, location clues, and scheme pre-emption are excluded from the planner's operator set, and item slots belonging to other villains or origins are pruned from the tracked state. Twenty-seven compositions multiplied the branching factor past the search budget; restricting the search to the goal predicate - identity evidence, the counter recipe, and its ingredients - brought certification back under a second. Generation validates the excluded evidence separately, after certification.
+      references: [three-by-three-case-composition, hunter-selection-and-certification]

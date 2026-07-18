@@ -1,12 +1,24 @@
-# Origins change the villain's signs: which sites carry identity clues and
-# how the mystery reads. Weakness counters remain archetypal.
+# Origins change the villain's signs and, decisively, the reagent that every
+# counter must be quenched with. Read the origin wrong and the counter you
+# carry will not bite — so origin evidence is load-bearing, not flavour.
 
 [ancient-curse]
 name = "An Ancient Curse"
 sign_sites = ["grave", "church", "wilds"]
-description = "The evil is old. Its signs lie in parish records, weathered stones, and dreams that are not dreams."
+counter_reagent = "hallowed-water"
+counter_flavour = "You quench the work in hallowed water. Against a thing this old, only what the parish blessed will hold an edge."
+description = "The evil is old. Its signs lie in parish records, weathered stones, and dreams that are not dreams. What was cursed long ago is undone only by what was blessed long ago."
 
 [bitter-betrayal]
 name = "A Bitter Betrayal"
 sign_sites = ["npc", "kill-site", "outlying-site"]
-description = "The evil is fresh, born of a wrong done between the living. Its signs are grudges, whispers, and blood not yet dry."
+counter_reagent = "wronged-earth"
+counter_flavour = "You temper the work with earth from the wronged one's own plot. A debt answers to the one it was owed."
+description = "The evil is fresh, born of a wrong done between the living. Its signs are grudges, whispers, and blood not yet dry. Only the soil of the wronged will settle the account."
+
+[broken-covenant]
+name = "A Broken Covenant"
+sign_sites = ["outlying-site", "church", "grave"]
+counter_reagent = "covenant-seal"
+counter_flavour = "You bind the work with the seal of the broken compact. What was promised and withheld gives the work its bite."
+description = "An old obligation, kept for generations and then broken in living memory. Its traces read like a curse and like a betrayal both, because it is the ruin of the one becoming the other. The compact's own seal is what answers it."

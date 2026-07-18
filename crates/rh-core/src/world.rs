@@ -254,8 +254,18 @@ pub enum DiscoveryRule {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum OpportunityGrant {
-    /// One of the two corroborating identity proofs.
-    IdentityClue,
+    /// A corroborating identity proof. `discriminating` marks evidence that
+    /// positively eliminates at least one other villain; naming the quarry
+    /// needs two proofs of which at least one discriminates.
+    IdentityClue { discriminating: bool },
+    /// Evidence about how the evil began. Discriminating signs pin the origin,
+    /// which decides the reagent every counter must be quenched with.
+    OriginSign { discriminating: bool },
+    /// Evidence about what the evil is working toward. Discriminating signs
+    /// pin the scheme, which decides what can be pre-empted.
+    SchemeSign { discriminating: bool },
+    /// Blunt the scheme's escalation, if performed before its major event.
+    SchemePreempt,
     /// Reveals the villain's lair/grave marker without naming it.
     LocationClue,
     /// Knowledge that unlocks other opportunities (weakness sources).

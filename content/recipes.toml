@@ -5,7 +5,15 @@
 name = "Cast a Silver Bullet"
 inputs = ["silver", "flintlock-shot"]
 output = "silver-bullet"
-description = "Melt true silver over the forge and cast it about a lead core."
+requires_origin_reagent = true
+description = "Melt true silver over the forge and cast it about a lead core, then quench it in what this evil's beginning demands."
+
+[cold-iron-pin]
+name = "Draw a Cold Iron Pin"
+inputs = ["cold-iron"]
+output = "cold-iron-pin"
+requires_origin_reagent = true
+description = "Beat bog iron out cold — never let it see the fire — and temper it against what this evil's beginning demands."
 
 [wound-draught]
 name = "Brew a Wound Draught"
@@ -17,7 +25,8 @@ description = "Steep moon-herb with bitter-root into a physic against torn flesh
 name = "Sew a Binding Charm"
 inputs = ["grave-dust", "moon-herb"]
 output = "binding-charm"
-description = "Sew grave-dust and moon-herb into a caul to strip the risen dead of their shadow."
+requires_origin_reagent = true
+description = "Sew grave-dust and moon-herb into a caul, steeped in what this evil's beginning demands, to strip the risen dead of their shadow."
 
 [iron-charm]
 name = "Hammer an Iron Charm"

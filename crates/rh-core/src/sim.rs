@@ -563,15 +563,62 @@ impl Sim {
 
     fn apply_grant(&mut self, spec: &OpportunitySpec) {
         match &spec.grants {
-            OpportunityGrant::IdentityClue => {
+            OpportunityGrant::IdentityClue { discriminating } => {
                 self.state.identity_clues.insert(spec.id);
+                if *discriminating {
+                    self.state.discriminating_identity.insert(spec.id);
+                }
                 let have = self.state.identity_clues.len();
-                if have >= 2 && !self.state.villain_uncovered {
+                let decisive = !self.state.discriminating_identity.is_empty();
+                if !self.state.villain_uncovered {
+                    if have >= 2 && decisive {
+                        self.log(
+                            EventKind::Clue,
+                            "Two proofs corroborate, and one of them rules the alternatives out. \
+                             You could name your quarry now."
+                                .to_owned(),
+                        );
+                    } else if have >= 2 {
+                        self.log(
+                            EventKind::Clue,
+                            "The signs agree with each other — but they would agree with more \
+                             than one answer. You need something that rules an alternative out."
+                                .to_owned(),
+                        );
+                    }
+                }
+            }
+            OpportunityGrant::OriginSign { discriminating } => {
+                if *discriminating && !self.state.origin_identified {
+                    self.state.origin_identified = true;
+                    let origin = &self.catalogue.origins[&self.world.villain.origin];
                     self.log(
                         EventKind::Clue,
-                        "Two proofs corroborate. You could name your quarry now.".to_owned(),
+                        format!(
+                            "That settles how this began: {}. Any counter you make must be \
+                             quenched accordingly.",
+                            origin.name
+                        ),
                     );
                 }
+            }
+            OpportunityGrant::SchemeSign { discriminating } => {
+                if *discriminating && !self.state.scheme_identified {
+                    self.state.scheme_identified = true;
+                    let scheme = &self.catalogue.schemes[&self.world.villain.scheme];
+                    self.log(
+                        EventKind::Clue,
+                        format!(
+                            "That settles what it is working toward: {}. It can be interrupted — \
+                             {}.",
+                            scheme.name,
+                            scheme.preempt.name.to_lowercase()
+                        ),
+                    );
+                }
+            }
+            OpportunityGrant::SchemePreempt => {
+                self.state.scheme_preempted = true;
             }
             OpportunityGrant::LocationClue => {
                 self.state.villain_location_known = true;
@@ -765,8 +812,21 @@ impl Sim {
         for input in &recipe.inputs {
             *needed.entry(input.clone()).or_insert(0u16) += 1;
         }
+        // A decisive counter must also be quenched in the reagent this case's
+        // origin demands, which is what makes reading the origin matter.
+        if recipe.requires_origin_reagent {
+            let reagent = self.origin_reagent().to_owned();
+            *needed.entry(reagent).or_insert(0u16) += 1;
+        }
         for (item, count) in &needed {
             if self.state.hunter.item_count(item) < *count {
+                // Name the reagent specifically: "you lack the ingredients" is
+                // useless when the missing piece is the one you had to deduce.
+                if recipe.requires_origin_reagent && *item == self.origin_reagent() {
+                    return Err(Rejection::MissingOriginReagent {
+                        reagent: self.item_name(item),
+                    });
+                }
                 return Err(Rejection::MissingIngredients {
                     recipe: recipe.name.clone(),
                 });
@@ -778,8 +838,19 @@ impl Sim {
         self.state.hunter.add_item(&recipe.output, 1);
         let output = self.item_name(&recipe.output);
         self.log(EventKind::Item, format!("You craft: {output}."));
+        if recipe.requires_origin_reagent {
+            let flavour = self.catalogue.origins[&self.world.villain.origin]
+                .counter_flavour
+                .clone();
+            self.log(EventKind::Item, flavour);
+        }
         self.end_action();
         Ok(())
+    }
+
+    /// The item id this case's origin demands in every decisive counter.
+    pub fn origin_reagent(&self) -> &str {
+        &self.catalogue.origins[&self.world.villain.origin].counter_reagent
     }
 
     fn cmd_consecrate(&mut self) -> Result<(), Rejection> {
@@ -852,6 +923,11 @@ impl Sim {
         if have < 2 {
             return Err(Rejection::NeedMoreIdentityClues { have, need: 2 });
         }
+        // Ambiguous signs agreeing with each other prove nothing: at least one
+        // proof must positively rule an alternative out.
+        if self.state.discriminating_identity.is_empty() {
+            return Err(Rejection::EvidenceNotDecisive);
+        }
         self.state.villain_uncovered = true;
         self.state.villain_location_known = true;
         let title = self.world.villain.title.clone();
@@ -864,6 +940,23 @@ impl Sim {
     }
 
     // -- Helpers -----------------------------------------------------------------
+
+    /// Ward charges the villain stands up at its current threat tier.
+    pub fn villain_ward_charges(&self) -> u8 {
+        let def = self.villain_def();
+        let Some(ward) = &def.ward else { return 0 };
+        let tier = usize::from(self.state.villain.tier);
+        let bonus: u8 = def
+            .tier_behaviours
+            .iter()
+            .take(tier)
+            .map(|behaviour| match behaviour.effect {
+                rh_content::TierEffect::WardCharges { amount } => amount,
+                _ => 0,
+            })
+            .sum();
+        ward.charges + bonus
+    }
 
     pub fn villain_def(&self) -> &rh_content::VillainDef {
         &self.catalogue.villains[&self.world.villain.archetype]
@@ -895,18 +988,26 @@ impl Sim {
     }
 
     fn melee_damage(&self) -> u16 {
+        self.best_melee().0
+    }
+
+    /// The best melee option carried, and whether it is the counter that cuts
+    /// through this villain's ward (cold iron against the Witch).
+    fn best_melee(&self) -> (u16, bool) {
+        let weakness = &self.villain_def().weakness_item;
         self.state
             .hunter
             .inventory
             .keys()
             .filter_map(
                 |item| match self.catalogue.items.get(item).map(|def| &def.kind) {
-                    Some(ItemKind::MeleeWeapon { damage }) => Some(*damage),
+                    Some(ItemKind::MeleeWeapon { damage }) => Some((*damage, false)),
+                    Some(ItemKind::WeaknessBlade { damage }) => Some((*damage, item == weakness)),
                     _ => None,
                 },
             )
-            .max()
-            .unwrap_or(1)
+            .max_by_key(|(damage, _)| *damage)
+            .unwrap_or((1, false))
     }
 
     fn ranged_weapon(&self) -> Option<(u8, u16)> {
@@ -1081,9 +1182,11 @@ impl Sim {
         let def = self.villain_def().clone();
         let tier_hp = def.health + def.tier_bonus_health * u16::from(self.state.villain.tier);
         let id = self.state.spawn_actor(ActorKind::Villain, map, at, tier_hp);
+        let ward = self.villain_ward_charges();
         if let Some(actor) = self.state.actor_mut(id) {
             actor.dormant = 3;
             actor.awake = true;
+            actor.ward_charges = ward;
         }
         self.state.villain.active = true;
         self.state.villain.actor = Some(id);
@@ -1142,8 +1245,10 @@ impl Sim {
         let id = self
             .state
             .spawn_actor(ActorKind::Villain, self.state.current_map, at, tier_hp);
+        let ward = self.villain_ward_charges();
         if let Some(actor) = self.state.actor_mut(id) {
             actor.awake = true;
+            actor.ward_charges = ward;
         }
         self.state.villain.active = true;
         self.state.villain.actor = Some(id);
@@ -1222,7 +1327,8 @@ impl Sim {
         }
         // A coup de grace on a sleeping thing lands with terrible weight.
         let final_damage = if coup { damage * 3 } else { damage };
-        self.deal_damage_to_actor(id, final_damage, false);
+        let cuts_the_ward = self.best_melee().1;
+        self.deal_damage_to_actor(id, final_damage, cuts_the_ward);
     }
 
     pub(crate) fn hunter_ranged_strike(
@@ -1252,7 +1358,7 @@ impl Sim {
     }
 
     /// Apply damage with villain vulnerability gating; handles death and loot.
-    pub(crate) fn deal_damage_to_actor(&mut self, id: ActorId, damage: u16, silver: bool) {
+    pub(crate) fn deal_damage_to_actor(&mut self, id: ActorId, damage: u16, weakness: bool) {
         let Some(actor) = self.state.actor(id) else {
             return;
         };
@@ -1274,7 +1380,30 @@ impl Sim {
                     damage *= 2;
                 }
             }
-            if silver {
+            // A hex-ward soaks honest blows until it tears. The counter cuts
+            // straight through it and is never absorbed.
+            if !weakness {
+                if let Some(ward) = def.ward.clone() {
+                    let charges = self.state.actor(id).map(|a| a.ward_charges).unwrap_or(0);
+                    if charges > 0 {
+                        let remaining = charges - 1;
+                        if let Some(actor) = self.state.actor_mut(id) {
+                            actor.ward_charges = remaining;
+                            if remaining == 0 {
+                                actor.ward_reweave = ward.reweave_turns;
+                            }
+                        }
+                        damage = ward.leak_damage;
+                        let telegraph = if remaining == 0 {
+                            ward.break_telegraph.clone()
+                        } else {
+                            ward.absorb_telegraph.clone()
+                        };
+                        self.log(EventKind::Telegraph, telegraph);
+                    }
+                }
+            }
+            if weakness {
                 if let Some(regen) = &def.regeneration {
                     let already = self
                         .state
@@ -1484,6 +1613,12 @@ impl Sim {
 
     fn fire_scheme_event(&mut self, major: bool) {
         let scheme = self.catalogue.schemes[&self.world.villain.scheme].clone();
+        // A scheme pre-empted in time still stirs, but its escalation fails:
+        // no tier gained, no fresh minions.
+        if major && self.state.scheme_preempted {
+            self.log(EventKind::Clock, scheme.preempt.blunted_text.clone());
+            return;
+        }
         let event = if major {
             &scheme.major_event
         } else {
@@ -1597,8 +1732,10 @@ impl Sim {
         let id = self
             .state
             .spawn_actor(ActorKind::Villain, map, far, tier_hp);
+        let ward = self.villain_ward_charges();
         if let Some(actor) = self.state.actor_mut(id) {
             actor.awake = true;
+            actor.ward_charges = ward;
         }
         self.state.villain.active = true;
         self.state.villain.actor = Some(id);
@@ -1691,5 +1828,37 @@ impl Sim {
         if self.state.outcome.is_none() {
             self.refresh_senses();
         }
+    }
+
+    // -- Test hooks --------------------------------------------------------------
+    //
+    // Damage resolution and scheme events are internal because commands are the
+    // only supported way in. Reaching a warded villain or a major scheme event
+    // through commands alone takes a full winning run, which is what the golden
+    // replays already do; these let the mechanics be tested in isolation.
+
+    #[doc(hidden)]
+    pub fn deal_damage_to_actor_for_test(&mut self, id: ActorId, damage: u16, weakness: bool) {
+        self.deal_damage_to_actor(id, damage, weakness);
+    }
+
+    #[doc(hidden)]
+    pub fn fire_scheme_event_for_test(&mut self, major: bool) {
+        self.fire_scheme_event(major);
+    }
+
+    /// Put the villain on the board however this case conceals it, so combat
+    /// rules can be exercised without playing a whole run up to the reveal.
+    #[doc(hidden)]
+    pub fn expose_villain_for_test(&mut self) -> Option<ActorId> {
+        if let Some(host) = self.world.villain.host {
+            let at = self.state.npcs[host.0 as usize].pos;
+            self.state.current_map = self.world.npc(host).map;
+            self.reveal_host(host, at);
+        } else if let Some((map, feature)) = self.world.villain.grave {
+            let at = self.world.map(map).feature(feature).map(|f| f.at)?;
+            self.expose_dormant_villain(map, at);
+        }
+        self.state.villain.actor
     }
 }

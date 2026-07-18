@@ -213,11 +213,29 @@ pub struct VillainDef {
     pub pounce: Option<PounceDef>,
     pub regeneration: Option<RegenerationDef>,
     pub cadence: Option<CadenceDef>,
+    /// A hex-ward that soaks blows until broken (the Witch).
+    pub ward: Option<WardDef>,
     /// Item id that acts as this villain's decisive weakness counter.
     pub weakness_item: String,
     /// Whether the church consecration rite affects this villain.
     pub affected_by_consecration: bool,
     pub description: String,
+}
+
+/// A standing hex-ward: it soaks a number of blows before collapsing, and
+/// the villain's weakness item cuts straight through it.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct WardDef {
+    /// Blows the ward absorbs before it breaks.
+    pub charges: u8,
+    /// Damage that still leaks through each warded blow.
+    pub leak_damage: u16,
+    /// Encounter turns after breaking before the ward is rewoven.
+    pub reweave_turns: u8,
+    pub absorb_telegraph: String,
+    pub break_telegraph: String,
+    pub reweave_telegraph: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -233,9 +251,19 @@ pub struct TierBehaviour {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
 pub enum TierEffect {
-    PounceCooldown { turns: u8 },
-    DashCooldown { turns: u8 },
-    BonusMeleeDamage { amount: u16 },
+    PounceCooldown {
+        turns: u8,
+    },
+    DashCooldown {
+        turns: u8,
+    },
+    BonusMeleeDamage {
+        amount: u16,
+    },
+    /// Additional hex-ward charges (the Witch).
+    WardCharges {
+        amount: u8,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
@@ -286,18 +314,25 @@ pub struct CadenceDef {
 // origins.toml / schemes.toml
 // ---------------------------------------------------------------------------
 
-/// An origin changes the villain's signs (which clue templates apply) and
-/// which weakness-ingredient sources the generator seeds.
+/// An origin changes the villain's signs and, decisively, which reagent the
+/// villain's counter must be quenched with. Misreading the origin means
+/// crafting a counter that will not bite.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct OriginDef {
     pub name: String,
     /// Clue-site kinds this origin emphasises when placing identity clues.
     pub sign_sites: Vec<SiteKind>,
+    /// Item id every decisive counter recipe additionally requires in a case
+    /// of this origin. This is what makes reading the origin load-bearing.
+    pub counter_reagent: String,
+    /// Shown when a counter is crafted with this origin's reagent.
+    pub counter_flavour: String,
     pub description: String,
 }
 
-/// A scheme controls the timed events and which minion family serves the villain.
+/// A scheme controls the timed events, the minion family, and the one
+/// pre-emption that can blunt its escalation.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct SchemeDef {
@@ -306,7 +341,27 @@ pub struct SchemeDef {
     pub minion_enemy: String,
     pub minor_event: SchemeEvent,
     pub major_event: SchemeEvent,
+    /// The act that, taken before the major event, blunts this scheme.
+    pub preempt: SchemePreempt,
     pub description: String,
+}
+
+/// Disrupting a scheme before its major event: an authored, placeable act
+/// that suppresses the major event's escalation when done in time.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct SchemePreempt {
+    pub name: String,
+    /// Where the act can be performed.
+    pub site: SiteKind,
+    /// Map template role the site must belong to.
+    pub map_role: MapRole,
+    pub pool: PoolKind,
+    pub cost: u8,
+    pub prompt: String,
+    pub reveal: String,
+    /// Logged when the major event fires already blunted.
+    pub blunted_text: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -351,6 +406,10 @@ pub enum ItemKind {
         damage: u16,
         stops_regeneration: bool,
     },
+    /// A melee counter that cuts straight through a hex-ward (cold iron).
+    WeaknessBlade {
+        damage: u16,
+    },
     /// Consumable drink; restores health, consumes the encounter action.
     Draught {
         heal: u16,
@@ -371,6 +430,11 @@ pub struct RecipeDef {
     pub inputs: Vec<String>,
     /// Item id produced.
     pub output: String,
+    /// Decisive counters must additionally be quenched with the reagent of
+    /// the case's origin, so the recipe cannot be completed until the origin
+    /// has been read correctly.
+    #[serde(default)]
+    pub requires_origin_reagent: bool,
     pub description: String,
 }
 
@@ -383,12 +447,26 @@ pub struct RecipeDef {
 #[serde(deny_unknown_fields)]
 pub struct ClueTemplate {
     pub name: String,
-    /// Villain id this clue can point at, or "any".
-    pub archetype: String,
-    /// Origin ids this clue fits; empty means any origin.
+    pub category: ClueCategory,
+    /// Evidence claim on this category's axis: the values the sign is
+    /// consistent with. Empty means "consistent with anything on the axis".
+    /// This also scopes placement: the case's actual value must be listed.
+    #[serde(default)]
+    pub supports: Vec<String>,
+    /// Values on this category's axis that the clue positively eliminates.
+    /// A non-empty list makes the clue *discriminating*; certified routes
+    /// require at least one discriminating identity clue.
+    #[serde(default)]
+    pub rules_out: Vec<String>,
+    /// Cross-axis placement scoping (empty means any). Use these when a clue
+    /// only makes sense in, say, a Witch case, without claiming anything
+    /// about its own axis.
+    #[serde(default)]
+    pub villains: Vec<String>,
     #[serde(default)]
     pub origins: Vec<String>,
-    pub category: ClueCategory,
+    #[serde(default)]
+    pub schemes: Vec<String>,
     pub action: OpportunityAction,
     pub pool: PoolKind,
     /// Site kind where the generator may place this clue.
@@ -405,17 +483,75 @@ pub struct ClueTemplate {
     pub reveal: String,
 }
 
+impl ClueTemplate {
+    /// A clue that eliminates at least one alternative on its own axis.
+    pub fn is_discriminating(&self) -> bool {
+        !self.rules_out.is_empty()
+    }
+
+    /// Whether this clue may appear in a case with the given composition.
+    pub fn fits(&self, villain: &str, origin: &str, scheme: &str) -> bool {
+        let scoped =
+            |list: &[String], value: &str| list.is_empty() || list.iter().any(|v| v == value);
+        if !scoped(&self.villains, villain)
+            || !scoped(&self.origins, origin)
+            || !scoped(&self.schemes, scheme)
+        {
+            return false;
+        }
+        // The claim on its own axis must be true of this case.
+        match self.category.axis() {
+            None => true,
+            Some(axis) => {
+                let actual = match axis {
+                    EvidenceAxis::Villain => villain,
+                    EvidenceAxis::Origin => origin,
+                    EvidenceAxis::Scheme => scheme,
+                };
+                scoped(&self.supports, actual) && !self.rules_out.iter().any(|v| v == actual)
+            }
+        }
+    }
+}
+
+/// The three axes a case is composed on. Evidence speaks to exactly one.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum EvidenceAxis {
+    Villain,
+    Origin,
+    Scheme,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ClueCategory {
-    /// Corroborating identity evidence; two distinct ones uncover the villain.
+    /// Corroborating identity evidence; speaks to the villain axis.
     Identity,
+    /// A sign of how the evil began; speaks to the origin axis.
+    OriginSign,
+    /// A sign of what the evil is working toward; speaks to the scheme axis.
+    SchemeSign,
     /// Reveals where the villain rests or who hosts it.
     Location,
     /// Reveals a specific weakness preparation (e.g. the candles are silver).
     Weakness,
     /// Grants crafting ingredients.
     IngredientSource,
+}
+
+impl ClueCategory {
+    /// The case axis this category makes claims about, if any.
+    pub fn axis(self) -> Option<EvidenceAxis> {
+        match self {
+            ClueCategory::Identity => Some(EvidenceAxis::Villain),
+            ClueCategory::OriginSign => Some(EvidenceAxis::Origin),
+            ClueCategory::SchemeSign => Some(EvidenceAxis::Scheme),
+            ClueCategory::Location | ClueCategory::Weakness | ClueCategory::IngredientSource => {
+                None
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]

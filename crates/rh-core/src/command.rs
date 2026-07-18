@@ -100,6 +100,8 @@ pub enum Rejection {
     GraveAlreadyOpened,
     NothingToForce,
     NeedMoreIdentityClues { have: u8, need: u8 },
+    EvidenceNotDecisive,
+    MissingOriginReagent { reagent: String },
     AlreadyUncovered,
     UnknownAbility { id: String },
     BadAbilityArguments,
@@ -142,6 +144,16 @@ impl std::fmt::Display for Rejection {
                 write!(f, "There is nothing there that force will move.")
             }
             Rejection::GraveAlreadyOpened => write!(f, "This grave already lies open."),
+            Rejection::EvidenceNotDecisive => write!(
+                f,
+                "Your proofs agree with each other, but they would agree with more than one \
+                 answer. Find something that rules an alternative out."
+            ),
+            Rejection::MissingOriginReagent { reagent } => write!(
+                f,
+                "The work will not take without {reagent}. Read how this evil began, and \
+                 quench the work in what that beginning demands."
+            ),
             Rejection::NeedMoreIdentityClues { have, need } => {
                 write!(
                     f,

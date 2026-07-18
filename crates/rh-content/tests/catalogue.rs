@@ -15,7 +15,8 @@ fn embedded_catalogue_loads_and_validates() {
     assert_eq!(catalogue.hunter.physical_cap, 2);
     assert_eq!(catalogue.hunter.stamina_cap, 6);
 
-    // Both villain archetypes with their concealment styles.
+    // Three villain archetypes with their concealment styles. The Witch
+    // shares the Werewolf's NPC host but fights behind a ward.
     assert_eq!(
         catalogue.villains["werewolf"].concealment,
         Concealment::NpcHost
@@ -24,18 +25,46 @@ fn embedded_catalogue_loads_and_validates() {
         catalogue.villains["revenant"].concealment,
         Concealment::DormantGrave
     );
+    assert_eq!(
+        catalogue.villains["witch"].concealment,
+        Concealment::NpcHost
+    );
+    assert!(
+        catalogue.villains["witch"].ward.is_some(),
+        "the Witch fights through a hex-ward"
+    );
 
-    // The three ordinary enemy families.
-    for family in ["wolf", "bandit", "restless-dead"] {
+    // The ordinary enemy families, including the Calling's thralls.
+    for family in ["wolf", "bandit", "restless-dead", "thrall"] {
         assert!(
             catalogue.enemies.contains_key(family),
             "missing enemy family {family}"
         );
     }
 
-    // Eight villain combinations need two origins and two schemes.
-    assert_eq!(catalogue.origins.len(), 2);
-    assert_eq!(catalogue.schemes.len(), 2);
+    // Twenty-seven case compositions: three values on each of three axes.
+    assert_eq!(catalogue.villains.len(), 3);
+    assert_eq!(catalogue.origins.len(), 3);
+    assert_eq!(catalogue.schemes.len(), 3);
+
+    // Each origin demands its own counter reagent, which is what makes
+    // reading the origin load-bearing rather than flavour.
+    let mut reagents: Vec<&str> = catalogue
+        .origins
+        .values()
+        .map(|origin| origin.counter_reagent.as_str())
+        .collect();
+    reagents.sort_unstable();
+    reagents.dedup();
+    assert_eq!(reagents.len(), 3, "origins must demand distinct reagents");
+
+    // Every scheme offers exactly one pre-emption to blunt its escalation.
+    for (id, scheme) in &catalogue.schemes {
+        assert!(
+            scheme.preempt.cost > 0,
+            "scheme {id} pre-emption must cost a point"
+        );
+    }
 
     // The healing draught restores 4 health per the spec.
     match &catalogue.items["wound-draught"].kind {
