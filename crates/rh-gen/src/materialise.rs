@@ -859,7 +859,13 @@ impl<'a> Builder<'a> {
                 self.slot_index
                     .iter()
                     .find(|((template, _), (slot_map, _, kind))| {
-                        *template == map.template && *slot_map == map_id && *kind == preempt.site
+                        // Anchors are keyed by role, not by the template drawn
+                        // to fill it: comparing against the template id here
+                        // silently found nothing whenever a role was filled by
+                        // anything but the template named after it.
+                        *template == map.role.label()
+                            && *slot_map == map_id
+                            && *kind == preempt.site
                     })
                     .map(|(_, (_, at, _))| (map_id, *at))
             });

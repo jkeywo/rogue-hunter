@@ -8,7 +8,7 @@
 //! and never rely on lucky combat drops (the planner simply has no such
 //! action). At most one certified route may lean on the mystical favour.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use rh_content::{Catalogue, PoolKind};
 use rh_core::viability::{hunt_viability, HuntLoadout};
@@ -105,19 +105,36 @@ struct PState {
 
 /// Memo key: effort and obscurity are fully determined by (resolved, legs),
 /// so excluding them keeps deduplication exact while collapsing the space.
+///
+/// Pool points are excluded too, and that one is not merely a deduplication
+/// trick — see [`Pools`]. It is what stops a hunter with her own Mystic from
+/// making certification exponential.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct MemoKey {
     turn: u8,
     map: u8,
     min_op: u8,
-    lore: u8,
-    social: u8,
-    mystic: u8,
-    physical: u8,
     resolved: u64,
     items: [u8; TRACKED.len()],
     consecrated: bool,
     legs: u8,
+}
+
+/// Investigation points in hand: lore, social, mystic, physical.
+///
+/// Points are only ever spent, never required to be absent, so holding more of
+/// them cannot close off anything holding fewer would allow. That makes richer
+/// states *dominate* poorer ones: if a state failed to reach the goal, every
+/// state identical to it but poorer must fail too, and can be pruned without
+/// being searched. Tracking pools as part of the memo key instead treats each
+/// level as its own world to explore, which is why the Occultist's two Mystic
+/// points — affordable afresh every turn, since pools refresh — multiplied the
+/// search until it could not prove a negative inside any budget worth spending.
+type Pools = [u8; 4];
+
+/// Whether `richer` holds at least as much of every pool as `poorer`.
+fn dominates(richer: &Pools, poorer: &Pools) -> bool {
+    richer.iter().zip(poorer.iter()).all(|(a, b)| a >= b)
 }
 
 impl PState {
@@ -126,15 +143,15 @@ impl PState {
             turn: self.turn,
             map: self.map,
             min_op: self.min_op,
-            lore: self.lore,
-            social: self.social,
-            mystic: self.mystic,
-            physical: self.physical,
             resolved: self.resolved,
             items: self.items,
             consecrated: self.consecrated,
             legs: self.legs,
         }
+    }
+
+    fn pools(&self) -> Pools {
+        [self.lore, self.social, self.mystic, self.physical]
     }
 }
 
@@ -716,7 +733,7 @@ fn search(ctx: &Ctx, cfg: &PlannerConfig) -> Result<CertifiedRoute, String> {
             allow_favour: cfg.allow_favour,
             label: cfg.label.clone(),
         };
-        let mut memo: HashSet<MemoKey> = HashSet::new();
+        let mut memo: HashMap<MemoKey, Vec<Pools>> = HashMap::new();
         let mut path: Vec<(u8, String, Option<OpportunityId>)> = Vec::new();
         nodes = 0;
         if let Some(found) = dfs(
@@ -858,7 +875,7 @@ fn dfs(
     ctx: &Ctx,
     cfg: &PlannerConfig,
     state: PState,
-    memo: &mut HashSet<MemoKey>,
+    memo: &mut HashMap<MemoKey, Vec<Pools>>,
     nodes: &mut u32,
     path: &mut Vec<(u8, String, Option<OpportunityId>)>,
 ) -> Option<RouteFound> {
@@ -873,11 +890,23 @@ fn dfs(
             viability,
         });
     }
-    if !memo.insert(state.key()) {
-        return None;
+    // A state we already proved hopeless while *better supplied* proves this
+    // one hopeless too, so the whole pool dimension collapses to a handful of
+    // maximal failures per position rather than a grid to be walked.
+    let key = state.key();
+    let pools = state.pools();
+    if let Some(failed) = memo.get(&key) {
+        if failed.iter().any(|richer| dominates(richer, &pools)) {
+            return None;
+        }
     }
-    // Dead-end prune: stranded off the villain's map with no turns left.
-    if state.map != ctx.villain_map && state.turn >= cfg.deadline {
+    // Dead-end prune: the hunt must end on the villain's map, and a counter
+    // can only be forged at the settlement, so a state that cannot reach both
+    // in the turns it has left is finished no matter what else it does. Travel
+    // is the only thing that costs a turn, which makes this bound admissible:
+    // it never counts a turn the route could have avoided.
+    if state.turn.saturating_add(minimum_travels(ctx, cfg, &state)) > cfg.deadline {
+        record_failure(memo, key, pools);
         return None;
     }
 
@@ -890,7 +919,44 @@ fn dfs(
             return result;
         }
     }
+    record_failure(memo, key, pools);
     None
+}
+
+/// Fewest travel legs — and so fewest turns — still owed before the goal can
+/// possibly be met, ignoring every other cost.
+fn minimum_travels(ctx: &Ctx, cfg: &PlannerConfig, state: &PState) -> u8 {
+    // Still needs the forge: a trip to the settlement, then on to the hunt.
+    let weakness = ctx
+        .catalogue
+        .villains
+        .get(&ctx.world.villain.archetype)
+        .map(|villain| villain.weakness_item.as_str())
+        .unwrap_or("");
+    let has_counter = TRACKED
+        .iter()
+        .position(|tracked| *tracked == weakness)
+        .is_some_and(|slot| state.items[slot] > 0);
+    let mut legs = 0u8;
+    if !has_counter && state.map != SETTLEMENT {
+        legs += 1;
+    }
+    let from = if has_counter { state.map } else { SETTLEMENT };
+    if from != ctx.villain_map {
+        legs += 1;
+    }
+    // Never claim more legs than the travel budget still allows; beyond that
+    // the separate travel-budget check is the one that applies.
+    let _ = cfg;
+    legs
+}
+
+/// Remember that this position failed while holding `pools`, keeping only the
+/// best-supplied failures: a richer failure subsumes every poorer one.
+fn record_failure(memo: &mut HashMap<MemoKey, Vec<Pools>>, key: MemoKey, pools: Pools) {
+    let entry = memo.entry(key).or_default();
+    entry.retain(|poorer| !dominates(&pools, poorer));
+    entry.push(pools);
 }
 
 fn candidate_actions(ctx: &Ctx, cfg: &PlannerConfig, state: &PState) -> Vec<Action> {
