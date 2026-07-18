@@ -290,9 +290,17 @@ entities:
     core:
       status: provisional
       confidence: confirmed
-      title: Own-Mystic pools are what make certification expensive
-      summary: The Occultist's refusals were isolated by experiment, not inference. They are insensitive to her health, her denial credit, her Physical cap, and to a fourfold node budget, and they vanish entirely when her Mystic cap drops to zero - at any Mystic above zero the refusal rate is the same twelve percent. The cause is that investigation pools refresh every turn, so a hunter with her own Mystic can afford a Mystic action every turn rather than the single one the favour grants, which multiplies the branching factor in exactly the search that has to prove no second independent route exists. Seed rejection makes this harmless in play, but the planner is doing exponential work to prove a negative and that is real debt - the fix is a stronger admissible prune, not a larger budget, which was measured not to help.
-      references: [seed-rejection-for-uncertifiable-worlds, clue-graph-validator, investigation-pools, occultist-hunter]
+      title: Own-Mystic pools make certification expensive, and pool-state duplication is not why
+      summary: The Occultist's refusals were isolated by experiment. They are insensitive to her health, her denial credit, her Physical cap, and to a fourfold node budget, and they vanish entirely when her Mystic cap drops to zero - at any Mystic above zero the refusal rate is the same twelve percent. Pools refresh every turn, so a hunter with her own Mystic can afford a Mystic action every turn rather than the single one the favour grants, which multiplies the branching factor in the search that has to prove no second independent route exists. A first attempt at a fix was measured and reverted - see [[dominance-pruning-did-not-help]] - so this remains open. Seed rejection keeps it harmless in play.
+      references: [seed-rejection-for-uncertifiable-worlds, clue-graph-validator, investigation-pools, occultist-hunter, dominance-pruning-did-not-help]
+
+  - decision: dominance-pruning-did-not-help
+    core:
+      status: rejected
+      confidence: confirmed
+      title: Pool dominance pruning was sound, and changed nothing
+      summary: Investigation points are only ever spent, never required to be absent, so a state holding more of every pool dominates one holding fewer - if the richer state cannot reach the goal, the poorer one cannot either. Dropping pools from the memo key and instead recording the maximal failed pool vectors per position is therefore sound, and collapses what looked like the offending dimension. It was implemented, together with an admissible bound on remaining travel legs, and then measured - the Occultist's refusal rate was identical at fourteen seeds in a hundred and twenty, with and without. Both were reverted rather than kept on the theory that they ought to help. The lesson for the next attempt is that duplicated pool states are not the bottleneck, so the cost is in the breadth of genuinely distinct states - which points at goal-directed ordering or a real admissible heuristic, not at better deduplication.
+      references: [planner-cost-scales-with-mystic-pool, clue-graph-validator]
 
   # Milestone 2, stage 3: paired regional templates.
 
