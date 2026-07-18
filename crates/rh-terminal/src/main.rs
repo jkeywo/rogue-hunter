@@ -139,17 +139,41 @@ fn input_system(
                 None
             }
         };
+        let menu = client.areas.menu;
+        let in_menu = |column: u16, row: u16| -> Option<usize> {
+            if menu.width > 0
+                && menu.height > 0
+                && column >= menu.x
+                && column < menu.x + menu.width
+                && row >= menu.y
+                && row < menu.y + menu.height
+            {
+                Some((row - menu.y) as usize)
+            } else {
+                None
+            }
+        };
         match mouse.kind {
             MouseEventKind::Moved => {
-                // The mouse over the map is a look cursor; elsewhere it clears.
-                let intent = match in_map(mouse.column, mouse.row) {
-                    Some(point) => Intent::Hover(point),
-                    None => Intent::HoverClear,
+                // Over a menu the mouse moves the highlight, so confirming
+                // does what the highlight shows. Over the map it is a look
+                // cursor; anywhere else it clears.
+                let intent = match (
+                    in_menu(mouse.column, mouse.row),
+                    in_map(mouse.column, mouse.row),
+                ) {
+                    (Some(row), _) => Intent::HoverRow(row),
+                    (None, Some(point)) => Intent::Hover(point),
+                    (None, None) => Intent::HoverClear,
                 };
                 client.session.handle(intent);
             }
             MouseEventKind::Down(MouseButton::Left) => {
-                if let Some(point) = in_map(mouse.column, mouse.row) {
+                // A modal menu draws over the map, so it is tested first.
+                if let Some(row) = in_menu(mouse.column, mouse.row) {
+                    client.session.handle(Intent::Select(row));
+                    changed = true;
+                } else if let Some(point) = in_map(mouse.column, mouse.row) {
                     client.session.handle(Intent::Click(point));
                     changed = true;
                 } else if let Some(row) = in_actions(mouse.column, mouse.row) {

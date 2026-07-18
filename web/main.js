@@ -54,6 +54,16 @@ async function main() {
     render();
   });
 
+  // Hovering a menu row moves the highlight, so the detail pane follows the
+  // pointer and confirming does what the highlight shows.
+  document.addEventListener("mouseover", (event) => {
+    const row = event.target.closest?.("[data-choice]");
+    if (row) {
+      client.hover_row(Number(row.dataset.choice));
+      render();
+    }
+  });
+
   // Clicks on menus, splash options, and the copy button (delegated,
   // since panels re-render every frame).
   document.addEventListener("click", (event) => {

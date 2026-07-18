@@ -163,6 +163,37 @@ pub fn build(session: &ClientSession) -> ViewModel {
                 selected: *selected,
             }
         }
+        Screen::HunterSelect { selected, .. } => ScreenView::List {
+            title: "Who Takes the Case".to_owned(),
+            entries: session
+                .catalogue
+                .hunter_roster()
+                .map(|(_, hunter)| {
+                    // Lead with what actually differs between them, so the
+                    // choice reads as two approaches rather than two stat
+                    // blocks: pools first, then what only she can do.
+                    let pools = format!(
+                        "Health {}  Lore {}  Social {}  Mystic {}  Physical {}",
+                        hunter.health,
+                        hunter.lore_cap,
+                        hunter.social_cap,
+                        hunter.mystic_cap,
+                        hunter.physical_cap
+                    );
+                    let signatures = hunter
+                        .signatures
+                        .iter()
+                        .map(|signature| signature.name.clone())
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    (
+                        hunter.name.clone(),
+                        format!("{}\n{pools}\n{signatures}", hunter.title),
+                    )
+                })
+                .collect(),
+            selected: Some(*selected),
+        },
         Screen::SeedEntry { input, error } => ScreenView::TextEntry {
             title: "Enter Seed".to_owned(),
             prompt: "Type a number, then confirm.".to_owned(),

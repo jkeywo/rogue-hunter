@@ -1,6 +1,6 @@
 //! Ratatui rendering of the shared viewmodel.
 
-use ratatui::layout::{Alignment, Constraint, Direction, Layout, Rect};
+use ratatui::layout::{Alignment, Constraint, Direction, Layout, Margin, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap};
@@ -18,6 +18,9 @@ pub struct RunAreas {
     pub map: Rect,
     /// Interior of the action list; row N of it is action index N.
     pub actions: Rect,
+    /// Interior of a menu or list column; row N of it is entry index N.
+    /// Present on the splash, hunter selection, and the reference screens.
+    pub menu: Rect,
 }
 
 /// Draw one frame. Returns the interactive regions for mouse hit-testing.
@@ -30,8 +33,11 @@ pub fn draw(frame: &mut Frame, view: &ViewModel) -> RunAreas {
             options,
             selected,
         } => {
-            draw_splash(frame, title, intro, bindings, options, *selected);
-            RunAreas::default()
+            let menu = draw_splash(frame, title, intro, bindings, options, *selected);
+            RunAreas {
+                menu,
+                ..Default::default()
+            }
         }
         ScreenView::TextEntry {
             title,
@@ -48,8 +54,11 @@ pub fn draw(frame: &mut Frame, view: &ViewModel) -> RunAreas {
             entries,
             selected,
         } => {
-            draw_list(frame, title, entries, *selected);
-            RunAreas::default()
+            let menu = draw_list(frame, title, entries, *selected);
+            RunAreas {
+                menu,
+                ..Default::default()
+            }
         }
         ScreenView::CaseReport(report) => {
             draw_case_report(frame, report);
@@ -249,16 +258,21 @@ fn draw_run(frame: &mut Frame, run: &RunView, status: &str) -> RunAreas {
     );
 
     // Modal overlay.
-    if let Some(overlay) = &run.overlay {
-        draw_overlay(frame, overlay);
-    }
+    let overlay_menu = run
+        .overlay
+        .as_ref()
+        .map(|overlay| draw_overlay(frame, overlay));
     RunAreas {
         map: map_inner,
         actions: actions_inner,
+        // The in-run modal menu draws over the map, so its rows are hit-tested
+        // from the overlay rectangle rather than from here.
+        menu: overlay_menu.unwrap_or_default(),
     }
 }
 
-fn draw_overlay(frame: &mut Frame, overlay: &OverlayView) {
+/// Returns the rows the menu items occupy, so a click can select one.
+fn draw_overlay(frame: &mut Frame, overlay: &OverlayView) -> Rect {
     let area = centered(frame.area(), 46, (overlay.items.len() as u16 + 4).max(5));
     frame.render_widget(Clear, area);
     if overlay.items.is_empty() {
@@ -268,7 +282,7 @@ fn draw_overlay(frame: &mut Frame, overlay: &OverlayView) {
                 .block(Block::default().borders(Borders::ALL)),
             area,
         );
-        return;
+        return Rect::default();
     }
     let items: Vec<ListItem> = overlay
         .items
@@ -297,8 +311,13 @@ fn draw_overlay(frame: &mut Frame, overlay: &OverlayView) {
         area,
         &mut state,
     );
+    area.inner(Margin {
+        horizontal: 1,
+        vertical: 1,
+    })
 }
 
+/// Returns the strip the options occupy, so a click can be mapped to a row.
 fn draw_splash(
     frame: &mut Frame,
     title: &str,
@@ -306,7 +325,7 @@ fn draw_splash(
     bindings: &[(String, String)],
     options: &[String],
     selected: usize,
-) {
+) -> Rect {
     let area = frame.area();
     let mut lines: Vec<Line> = Vec::new();
     lines.push(Line::raw(""));
@@ -334,7 +353,21 @@ fn draw_splash(
             .alignment(Alignment::Center),
         );
     }
-    lines.push(Line::raw(""));
+    // The options get their own strip rather than trailing the wrapped
+    // paragraph, so a click can be mapped to a row exactly: with wrapping, the
+    // row an option lands on depends on the terminal width.
+    let rows = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Min(0),
+            Constraint::Length(options.len() as u16 + 1),
+        ])
+        .split(area);
+    frame.render_widget(
+        Paragraph::new(Text::from(lines)).wrap(Wrap { trim: false }),
+        rows[0],
+    );
+    let mut option_lines: Vec<Line> = Vec::new();
     for (index, option) in options.iter().enumerate() {
         let style = if index == selected {
             Style::default()
@@ -344,12 +377,14 @@ fn draw_splash(
         } else {
             Style::default().fg(Color::White)
         };
-        lines.push(Line::styled(format!("  {option}  "), style).alignment(Alignment::Center));
+        option_lines
+            .push(Line::styled(format!("  {option}  "), style).alignment(Alignment::Center));
     }
-    frame.render_widget(
-        Paragraph::new(Text::from(lines)).wrap(Wrap { trim: false }),
-        area,
-    );
+    frame.render_widget(Paragraph::new(Text::from(option_lines)), rows[1]);
+    Rect {
+        height: options.len() as u16,
+        ..rows[1]
+    }
 }
 
 fn draw_text_entry(
@@ -397,12 +432,13 @@ fn draw_text_entry(
     );
 }
 
+/// Returns the interior of the entry column, so a click can be mapped to a row.
 fn draw_list(
     frame: &mut Frame,
     title: &str,
     entries: &[(String, String)],
     selected: Option<usize>,
-) {
+) -> Rect {
     let area = frame.area();
     let columns = Layout::default()
         .direction(Direction::Horizontal)
@@ -441,6 +477,11 @@ fn draw_list(
             .block(Block::default().borders(Borders::ALL).title("Detail")),
         columns[1],
     );
+    // Inside the border: row N of this rectangle is entry N.
+    columns[0].inner(Margin {
+        horizontal: 1,
+        vertical: 1,
+    })
 }
 
 fn draw_case_report(frame: &mut Frame, report: &CaseReportView) {

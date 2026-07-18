@@ -86,14 +86,14 @@ impl WebClient {
 
     /// Click on a menu/list row (splash options, overlay items, list entries).
     pub fn choose(&mut self, index: u32) {
-        for _ in 0..64 {
-            self.session.handle(Intent::Up);
-        }
-        for _ in 0..index {
-            self.session.handle(Intent::Down);
-        }
-        self.session.handle(Intent::Confirm);
+        self.session.handle(Intent::Select(index as usize));
         self.persist();
+    }
+
+    /// Move the menu highlight to a row the mouse is over, without choosing
+    /// it. Keeps the detail pane following the pointer.
+    pub fn hover_row(&mut self, index: u32) {
+        self.session.handle(Intent::HoverRow(index as usize));
     }
 
     /// Fire the action at `index` in the on-screen action panel (a click).

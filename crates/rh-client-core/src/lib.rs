@@ -28,6 +28,13 @@ pub enum Screen {
         input: String,
         error: Option<String>,
     },
+    /// Choosing who takes the case. The world is certified for the hunter, so
+    /// this is asked before generation, not after.
+    HunterSelect {
+        selected: usize,
+        /// The seed the player asked for, or `None` to take a fresh one.
+        seed: Option<u64>,
+    },
     CodeEntry {
         input: String,
         error: Option<String>,
@@ -150,6 +157,7 @@ impl ClientSession {
         match &self.screen {
             Screen::Splash { .. } => self.handle_splash(intent),
             Screen::SeedEntry { .. } => self.handle_seed_entry(intent),
+            Screen::HunterSelect { .. } => self.handle_hunter_select(intent),
             Screen::CodeEntry { .. } => self.handle_code_entry(intent),
             Screen::Run => self.handle_run(intent),
             Screen::Grimoire { .. } => self.handle_list_screen(intent),
@@ -169,10 +177,17 @@ impl ClientSession {
         match intent {
             Intent::Up => *selected = selected.saturating_sub(1),
             Intent::Down => *selected = (*selected + 1).min(2),
+            Intent::HoverRow(index) if index <= 2 => *selected = index,
+            Intent::Select(index) if index <= 2 => {
+                *selected = index;
+                self.handle_splash(Intent::Confirm);
+            }
             Intent::Confirm => match *selected {
                 0 => {
-                    let seed = self.next_seed();
-                    self.start_run(seed);
+                    self.screen = Screen::HunterSelect {
+                        selected: 0,
+                        seed: None,
+                    }
                 }
                 1 => {
                     self.screen = Screen::SeedEntry {
@@ -206,9 +221,41 @@ impl ClientSession {
             }
             Intent::Cancel => self.screen = Screen::Splash { selected: 1 },
             Intent::Confirm => match input.parse::<u64>() {
-                Ok(seed) => self.start_run(seed),
+                Ok(seed) => {
+                    self.screen = Screen::HunterSelect {
+                        selected: 0,
+                        seed: Some(seed),
+                    }
+                }
                 Err(_) => *error = Some("Enter a number.".to_owned()),
             },
+            _ => {}
+        }
+    }
+
+    fn handle_hunter_select(&mut self, intent: Intent) {
+        let count = self.catalogue.hunters.len();
+        let Screen::HunterSelect { selected, seed } = &mut self.screen else {
+            return;
+        };
+        match intent {
+            Intent::Up => *selected = selected.saturating_sub(1),
+            Intent::Down => *selected = (*selected + 1).min(count.saturating_sub(1)),
+            Intent::HoverRow(index) if index < count => *selected = index,
+            Intent::Select(index) if index < count => {
+                *selected = index;
+                self.handle_hunter_select(Intent::Confirm);
+            }
+            Intent::Cancel => self.screen = Screen::Splash { selected: 0 },
+            Intent::Confirm => {
+                let chosen = *selected;
+                let seed = *seed;
+                let Some(hunter) = self.catalogue.hunters.keys().nth(chosen).cloned() else {
+                    return;
+                };
+                let seed = seed.unwrap_or_else(|| self.next_seed());
+                self.start_run(seed, &hunter);
+            }
             _ => {}
         }
     }
@@ -262,6 +309,12 @@ impl ClientSession {
                     *selected = selected.saturating_sub(1);
                     return;
                 }
+                Intent::Select(index) | Intent::HoverRow(index) if *index < count => {
+                    // Reference lists have nothing to activate, so a click or
+                    // a hover both just move the reading position.
+                    *selected = *index;
+                    return;
+                }
                 Intent::Down => {
                     *selected = (*selected + 1).min(count.saturating_sub(1));
                     return;
@@ -313,15 +366,23 @@ impl ClientSession {
         self.seed_nonce % 1_000_000
     }
 
-    fn start_run(&mut self, seed: u64) {
-        match RunSession::new(seed, self.catalogue.clone()) {
-            Ok(run) => {
+    fn start_run(&mut self, seed: u64, hunter: &str) {
+        match RunSession::new_from_viable_seed(seed, self.catalogue.clone(), hunter) {
+            Ok((run, used)) => {
+                let name = run.sim.catalogue.hunter.name.clone();
                 self.run = Some(run);
                 self.modal = None;
                 self.look_cursor = None;
                 self.hover = None;
                 self.screen = Screen::Run;
-                self.status = format!("Seed {seed}.");
+                // Say so when the requested seed had no fair case for this
+                // hunter: the player asked for a specific world and did not
+                // get it, which they should hear from us rather than notice.
+                self.status = if used == seed {
+                    format!("{name}. Seed {seed}.")
+                } else {
+                    format!("{name}. Seed {seed} had no case for her; seed {used}.")
+                };
             }
             Err(error) => {
                 self.screen = Screen::SeedEntry {
@@ -508,6 +569,21 @@ impl ClientSession {
                         items,
                         selected: (selected + 1).min(last),
                     })
+                }
+                Intent::HoverRow(index) if index < items.len() => {
+                    self.modal = Some(Modal::Menu {
+                        title,
+                        items,
+                        selected: index,
+                    });
+                }
+                Intent::Select(index) if index < items.len() => {
+                    self.modal = Some(Modal::Menu {
+                        title,
+                        items,
+                        selected: index,
+                    });
+                    self.handle(Intent::Confirm);
                 }
                 Intent::Confirm | Intent::Interact => {
                     let choice = items.get(selected).cloned();

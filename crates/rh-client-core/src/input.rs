@@ -49,6 +49,14 @@ pub enum Intent {
     Down,
     Confirm,
     Cancel,
+    /// Pick the row at this index directly, as a mouse click on a menu does.
+    /// On a menu whose rows do something, this also activates the row; on a
+    /// reference list it just moves the selection.
+    Select(usize),
+    /// Move the highlight to this row without activating it: the mouse is
+    /// merely over it. Keeps keyboard and mouse agreeing about what is
+    /// selected, so confirming after hovering does what the highlight shows.
+    HoverRow(usize),
     /// Text entry for seed / share-code screens.
     Char(char),
     Backspace,

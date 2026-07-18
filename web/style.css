@@ -107,6 +107,7 @@ ul.actionlist .note { color: var(--dim); }
 
 ul.menu { list-style: none; padding: 0; max-width: 640px; margin: 16px auto; }
 ul.menu .item { padding: 4px 10px; cursor: pointer; }
+ul.menu .item:hover { background: var(--border); }
 ul.menu .item.selected { background: var(--accent); color: #14120e; font-weight: bold; }
 ul.menu .item.blocked { color: var(--dim); }
 ul.menu.big { text-align: center; font-size: 18px; }
