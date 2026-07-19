@@ -94,7 +94,11 @@ const STEP_BUDGET: u32 = 150;
 impl Bot {
     fn act(&mut self, session: &mut RunSession) {
         // Free knowledge action first: name the villain once proven.
-        if session.sim.state.identity_clues.len() >= 2
+        if session
+            .sim
+            .state
+            .corroboration(&session.sim.catalogue)
+            .met()
             && !session.sim.state.villain_uncovered
             && session.apply(Command::UncoverVillain).is_ok()
         {

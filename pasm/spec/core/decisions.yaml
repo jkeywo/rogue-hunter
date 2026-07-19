@@ -481,6 +481,14 @@ entities:
       summary: Content validation refuses a gather that names a pool with a cost of zero and a scheme pre-emption that costs nothing; clue templates and generated NPC actions have their cost fixed at one by materialisation. This closes a real divergence at the settlement-hostility surcharge - the planner only surcharges Social actions already costing a point, while the sim surcharges unconditionally, so a free Social opportunity would have certified as free and then charged a point in play. Rather than pick which guard was right, the case is made unrepresentable - consequential work spends a point, per the original Social contract, and a free interaction does not name a pool at all.
       references: [social-action-costs, innocent-fallout-model, conditions-may-not-touch-the-final-fight]
 
+  - decision: corroboration-threshold-is-authored-tuning
+    core:
+      status: accepted
+      confidence: confirmed
+      title: The corroboration threshold is one authored number, read everywhere
+      summary: How many identity proofs naming the quarry demands was the literal two written independently at nine sites across six crates - the sim's gate and its log twin, the autoplayer's readiness, the interact menu, the dossier, the planner's goal, and generation's final validation. It is now corroborating_proofs in balance.toml, per the standing rule that anything the rules branch on is authored tuning, and rh-core exposes one Corroboration reading - have, need, decisive - that every layer asks instead of counting for itself. Supply-side checks that look like the same two are not it and keep their own literals - two discriminating clues per axis and two placed discriminators are route-independence arithmetic, two disjoint routes each needing one, and say so in their messages.
+      references: [naming-requires-a-discriminator, evidence-supports-rules-out, authored-content-catalogue, two-sources-per-origin-reagent]
+
   - decision: search-moves-and-route-steps-stay-two-types
     core:
       status: accepted

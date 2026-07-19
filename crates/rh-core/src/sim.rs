@@ -965,10 +965,9 @@ impl Sim {
                 if *discriminating {
                     self.state.discriminating_identity.insert(spec.id);
                 }
-                let have = self.state.identity_clues.len();
-                let decisive = !self.state.discriminating_identity.is_empty();
+                let proof = self.state.corroboration(&self.catalogue);
                 if !self.state.villain_uncovered {
-                    if have >= 2 && decisive {
+                    if proof.met() {
                         self.log(
                             EventKind::Clue,
                             self.catalogue
@@ -976,7 +975,7 @@ impl Sim {
                                 .ui("log.clue.can-name-quarry")
                                 .to_owned(),
                         );
-                    } else if have >= 2 {
+                    } else if proof.corroborated() {
                         self.log(
                             EventKind::Clue,
                             self.catalogue
@@ -1340,13 +1339,16 @@ impl Sim {
         if self.state.villain_uncovered {
             return Err(Rejection::AlreadyUncovered);
         }
-        let have = self.state.identity_clues.len() as u8;
-        if have < 2 {
-            return Err(Rejection::NeedMoreIdentityClues { have, need: 2 });
+        let proof = self.state.corroboration(&self.catalogue);
+        if !proof.corroborated() {
+            return Err(Rejection::NeedMoreIdentityClues {
+                have: proof.have,
+                need: proof.need,
+            });
         }
         // Ambiguous signs agreeing with each other prove nothing: at least one
         // proof must positively rule an alternative out.
-        if self.state.discriminating_identity.is_empty() {
+        if !proof.decisive {
             return Err(Rejection::EvidenceNotDecisive);
         }
         self.state.villain_uncovered = true;

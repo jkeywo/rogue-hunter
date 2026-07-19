@@ -16,6 +16,11 @@ travel_turns = 6
 minor_event_turn = 2
 major_event_turn = 4
 
+[case]
+# Naming the quarry demands this many corroborating identity proofs, at
+# least one of which must rule an alternative out.
+corroborating_proofs = 2
+
 [loot]
 drop_percent = 15
 

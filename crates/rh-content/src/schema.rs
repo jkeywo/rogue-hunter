@@ -22,6 +22,7 @@ pub type Coord = [u8; 2];
 pub struct Balance {
     pub combat: CombatBalance,
     pub clock: ClockBalance,
+    pub case: CaseBalance,
     pub loot: LootBalance,
     pub generator: GeneratorBalance,
     pub vision: VisionBalance,
@@ -57,6 +58,15 @@ pub struct ClockBalance {
     pub minor_event_turn: u8,
     /// Global turn on which the scheme's major event fires.
     pub major_event_turn: u8,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct CaseBalance {
+    /// Corroborating identity proofs naming the quarry demands; at least
+    /// one of them must be discriminating. The sim's gate, the planner's
+    /// goal, the clients, and generation validation all read this number.
+    pub corroborating_proofs: u8,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

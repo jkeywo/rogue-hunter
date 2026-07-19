@@ -273,13 +273,16 @@ fn final_validation(catalogue: &Catalogue, world: &World) -> Result<(), String> 
     // every axis that decides something — resolvable by investigation rather
     // than by guessing.
     use rh_core::world::{DiscoveryRule, OpportunityGrant};
+    let need = usize::from(catalogue.balance.case.corroborating_proofs);
     let identity = world
         .opportunities
         .iter()
         .filter(|opp| matches!(opp.grants, OpportunityGrant::IdentityClue { .. }))
         .count();
-    if identity < 2 {
-        return Err(format!("only {identity} identity clues were placed"));
+    if identity < need {
+        return Err(format!(
+            "only {identity} identity clues were placed; naming needs {need}"
+        ));
     }
     let identity_discriminators = world
         .opportunities

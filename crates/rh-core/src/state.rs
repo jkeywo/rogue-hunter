@@ -247,7 +247,43 @@ pub enum Outcome {
     Defeat,
 }
 
+/// The case's standing against the corroboration rule, in one place for
+/// the sim's gate, the autoplayer, the clients, and the planner's goal:
+/// naming the quarry demands `need` identity proofs of which at least one
+/// is discriminating.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Corroboration {
+    /// Identity proofs held.
+    pub have: u8,
+    /// Proofs naming the quarry demands (authored tuning).
+    pub need: u8,
+    /// Whether any held proof rules an alternative out.
+    pub decisive: bool,
+}
+
+impl Corroboration {
+    /// Whether the quarry can be named right now.
+    pub fn met(&self) -> bool {
+        self.have >= self.need && self.decisive
+    }
+
+    /// Whether enough proofs are held, decisive or not — the corroborated-
+    /// but-ambiguous state the UI narrates differently from "keep looking".
+    pub fn corroborated(&self) -> bool {
+        self.have >= self.need
+    }
+}
+
 impl RunState {
+    /// Where the case stands against the corroboration rule.
+    pub fn corroboration(&self, catalogue: &Catalogue) -> Corroboration {
+        Corroboration {
+            have: self.identity_clues.len() as u8,
+            need: catalogue.balance.case.corroborating_proofs,
+            decisive: !self.discriminating_identity.is_empty(),
+        }
+    }
+
     /// Fresh state for a generated world. The RNG continues from wherever
     /// generation left it: one stream drives generation and runtime.
     pub fn new(world: &World, catalogue: &Catalogue, rng: SimRng) -> Self {

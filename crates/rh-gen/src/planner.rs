@@ -929,7 +929,7 @@ fn goal(ctx: &Ctx, state: &PState) -> Option<u16> {
             matches!(op.grants, OpGrant::Identity { .. }) && state.resolved & (1 << index) != 0
         })
     };
-    if resolved_identity().count() < 2 {
+    if resolved_identity().count() < usize::from(ctx.catalogue.balance.case.corroborating_proofs) {
         return None;
     }
     // Corroboration between ambiguous signs is not proof: naming the quarry

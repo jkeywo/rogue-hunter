@@ -59,11 +59,12 @@ fn soft_signs_alone_cannot_name_the_villain() {
         "every case places at least one soft identity sign"
     );
 
-    for id in soft.iter().take(2) {
+    let need = usize::from(sim.catalogue.balance.case.corroborating_proofs);
+    for id in soft.iter().take(need) {
         sim.state.identity_clues.insert(*id);
     }
-    // Two clues held, none of them decisive.
-    if sim.state.identity_clues.len() >= 2 {
+    // Enough clues held to corroborate, none of them decisive.
+    if sim.state.identity_clues.len() >= need {
         assert!(
             matches!(
                 sim.apply(&Command::UncoverVillain),
@@ -131,7 +132,7 @@ fn one_clue_is_never_enough_however_decisive() {
     sim.state.discriminating_identity.insert(first);
     assert!(matches!(
         sim.apply(&Command::UncoverVillain),
-        Err(Rejection::NeedMoreIdentityClues { have: 1, need: 2 })
+        Err(Rejection::NeedMoreIdentityClues { have: 1, .. })
     ));
 }
 

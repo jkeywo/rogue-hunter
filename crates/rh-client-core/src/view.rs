@@ -873,7 +873,7 @@ pub(crate) fn dossier_entries(session: &ClientSession) -> Vec<(String, String)> 
         strings
             .ui(if state.villain_uncovered {
                 "ui.dossier.quarry.named"
-            } else if state.identity_clues.len() >= 2 {
+            } else if state.corroboration(&sim.catalogue).corroborated() {
                 "ui.dossier.quarry.can-name"
             } else {
                 "ui.dossier.quarry.cannot-name"

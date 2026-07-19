@@ -1681,7 +1681,7 @@ impl ClientSession {
         }
 
         // Naming the villain once the proofs agree.
-        if state.identity_clues.len() >= 2 && !state.villain_uncovered {
+        if state.corroboration(&sim.catalogue).corroborated() && !state.villain_uncovered {
             items.push(MenuItem {
                 label: sim.catalogue.strings.ui("ui.action.name-quarry").to_owned(),
                 blocked: None,
