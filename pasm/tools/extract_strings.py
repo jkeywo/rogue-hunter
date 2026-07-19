@@ -219,6 +219,11 @@ def extract() -> tuple[list[tuple[str, str, str]], dict[pathlib.Path, dict[str, 
                     if string_id in seen_ids:
                         sys.exit(f"duplicate id {string_id} (from {rel})")
                     seen_ids[string_id] = value
+                    # Already migrated: the field holds its own id. Emitting a
+                    # row here would bracket the id and overwrite the English,
+                    # so leave the existing row alone and skip the rewrite.
+                    if value == string_id:
+                        continue
                     rows.append((string_id, context, f"[{value}]"))
                     plan[value] = string_id
             plans[path] = plan

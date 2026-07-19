@@ -21,6 +21,7 @@ The generator is graph-first: it builds a directed, costed clue graph before it 
 
 ```
 content/          Authored TOML game data (monsters, items, clues, NPCs, maps) — no gameplay numbers live in code
+content/strings.csv  Every player-facing string, by id, with context and English — see "Writing and translating"
 crates/
   rh-content/      Content schema, loading, and validation
   rh-core/         Deterministic headless simulation (state, commands, combat, AI)
@@ -55,6 +56,45 @@ To build the browser client locally:
 wasm-pack build crates/rh-web --target web --release --out-dir ../../web/pkg
 python -m http.server 8571 --directory web   # then open http://localhost:8571
 ```
+
+## Writing and translating
+
+Every string a player reads lives in `content/strings.csv`, one row per string:
+
+| column | what it is |
+| --- | --- |
+| `id` | stable lookup key. `enemies.wolf.name` and friends come from the content files; `ui.*`, `log.*` and `gen.*` are named by code |
+| `context` | where the line appears and how it is used, for whoever writes or translates it |
+| `english` | the text |
+
+**Every line is currently wrapped in `[square brackets]`.** All of it was
+written by an agent, and the brackets say so. To write real copy, replace a
+row's English and delete its brackets. Nested brackets mean a template and the
+thing it names are both still placeholder, and they clear independently.
+
+The bracket gate is a test, not a load-time error, so partially-written copy
+never breaks the build. Once enough real copy lands, narrow
+`every_string_is_bracketed_placeholder_copy` in `crates/rh-content/tests/catalogue.rs`
+to the rows still awaiting a writer.
+
+Editing text needs a rebuild — the table is embedded at compile time so native,
+WASM and CI ship identical content. It is deliberately excluded from
+`content_fingerprint`, so rewriting or translating a line leaves existing share
+codes valid. That only holds while nothing reads the text back, which is the
+rule to keep:
+
+> Anything the RNG indexes, or that generation or the simulation branches on,
+> stays in TOML. `strings.csv` holds only strings that are rendered and never
+> read.
+
+NPC name pools are the clearest case — pool order is a generation input, so
+they stay in `npcs.toml`. Validation refuses content pointing at an id that
+does not resolve, and tests check the reverse: no row goes unreferenced.
+
+To re-run the extraction after adding prose fields to the schema, add them to
+the manifest in `pasm/tools/extract_strings.py` and run it. It refuses to run
+while any string in the content files is unclassified, so new prose cannot be
+missed by omission.
 
 ## CI and deployment
 
