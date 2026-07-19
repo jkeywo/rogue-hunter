@@ -705,7 +705,46 @@ pub struct MapTemplate {
     /// Baseline enemies present from the start of a run.
     #[serde(default)]
     pub initial_enemies: Vec<InitialEnemy>,
+    /// Authored variation packs; a run draws a compatible subset per map.
+    #[serde(default)]
+    pub packs: Vec<VariationPack>,
     pub description: StringId,
+}
+
+/// A compatible variation on a template: the same place on a different day.
+///
+/// A pack may move an anchor, rewrite a little geometry, add ordinary enemy
+/// pressure, or merely be a line of incidental fiction. The planner is
+/// geometry-blind — it reasons about maps, pools and gates, never tiles — so
+/// no pack can make a certified route depend on it; what a pack *can* do is
+/// wall something off by accident, which validation and generation both check
+/// for by flood-fill.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct VariationPack {
+    pub id: String,
+    /// One line of incidental fiction, logged on first arrival.
+    pub label: StringId,
+    /// Slot id -> new coordinate on this template.
+    #[serde(default)]
+    pub slot_moves: BTreeMap<String, Coord>,
+    /// Terrain rewrites.
+    #[serde(default)]
+    pub terrain_patches: Vec<TerrainPatch>,
+    /// Extra ordinary enemies, clustered near a slot.
+    #[serde(default)]
+    pub extra_enemies: Vec<InitialEnemy>,
+    /// Packs on the same template that rewrite the same ground and may not
+    /// be drawn together.
+    #[serde(default)]
+    pub conflicts_with: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct TerrainPatch {
+    pub at: Coord,
+    pub to: Terrain,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -1025,4 +1064,71 @@ pub struct UiText {
 pub struct KeyBinding {
     pub keys: StringId,
     pub action: StringId,
+}
+
+// ---------------------------------------------------------------------------
+// machines.toml
+// ---------------------------------------------------------------------------
+
+/// An authored optional machine embedded in one template: a visible device
+/// with a lever's worth of interaction and an observable payoff. Machines use
+/// the ordinary Interact command and the ordinary opportunity affordances;
+/// the planner never models them, so a certified route can never lean on one.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct MachineDef {
+    pub name: StringId,
+    /// The template this machine is built into.
+    pub template: String,
+    /// Where the lever or counter sits.
+    pub at: Coord,
+    pub effect: MachineEffect,
+    pub prompt: StringId,
+    pub reveal: StringId,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
+pub enum MachineEffect {
+    /// Rewrite terrain: a sluice drains a ford, a hidden passage opens.
+    Patch { patches: Vec<TerrainPatch> },
+    /// Drive every enemy on the map away from the machine.
+    Scatter { tiles: u8 },
+    /// Raise warding ground centred on the machine.
+    Ward { turns: u8, radius: u8 },
+}
+
+// ---------------------------------------------------------------------------
+// events.toml
+// ---------------------------------------------------------------------------
+
+/// One optional mission event. Each generated map receives a small seeded
+/// deck of these, filtered by role and scheme; one fires per arrival until
+/// the deck runs dry. Every effect is additive — an event may add pressure,
+/// supply, or information, never remove access.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct EventDef {
+    /// Map roles this event can appear on ("settlement", "wilderness",
+    /// "outlying").
+    pub roles: Vec<String>,
+    /// Schemes this event belongs to; empty means any.
+    #[serde(default)]
+    pub schemes: Vec<String>,
+    pub effect: EventEffect,
+    /// Logged when the event fires.
+    pub body: StringId,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
+pub enum EventEffect {
+    /// Pure fiction.
+    None,
+    /// An enemy arrives nearby.
+    Spawn { enemy: String, count: u8 },
+    /// Something changes hands.
+    Cache { items: Vec<String> },
+    /// An undiscovered opportunity on this map announces itself.
+    Reveal,
 }

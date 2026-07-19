@@ -152,3 +152,21 @@ tiles = [[3, 12], [4, 12], [3, 13], [4, 13]]
 
 [[cover_pockets]]
 tiles = [[29, 12], [30, 12], [29, 13], [30, 13]]
+
+# -- Variation packs. A town in flood does not hold a wool fair. ------------
+
+[[packs]]
+id = "race-in-spate"
+label = "maps.settlement-mill.packs.race-in-spate.label"
+conflicts_with = ["wool-fair"]
+terrain_patches = [
+  { at = [20, 9], to = "water" },
+  { at = [20, 10], to = "water" },
+  { at = [20, 11], to = "water" },
+]
+
+[[packs]]
+id = "wool-fair"
+label = "maps.settlement-mill.packs.wool-fair.label"
+conflicts_with = ["race-in-spate"]
+slot_moves = { market-stall = [7, 5] }

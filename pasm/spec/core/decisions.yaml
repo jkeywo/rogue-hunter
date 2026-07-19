@@ -436,3 +436,29 @@ entities:
       title: Teaching happens at the moment it bites, and again at the end
       summary: Six first-time lines fire at most once each and at most one per action, most urgent first - the final hunt beginning, dropping to half health, the quarry gaining a tier, the first day spent, stamina running out, and the first lead standing open. They are checked against state after every applied command rather than raised by the simulation, so the simulation knows nothing about them and they cannot reach the log, the state digest, or the share code. The consequence, accepted rather than fixed, is that restoring a share code shows them again - the seen set is session memory, and putting it in the code would invalidate every code in the wild for something that is not part of the run. The case report gains the other half - the threat tier reached, what was carried into the ending against what would actually have bitten, and every step of both certified routes marked done or not done against the resolved set. No other roguelike can show the intended solution, because no other one certifies routes before materialising the world - this is the payoff for having done that.
       references: [route-certification-strategy, seeded-mystery-generator, text-is-data-and-never-branched-on]
+
+  # Milestone 2, stages 4 and 5: variation packs, machines, event decks.
+
+  - decision: packs-rewrite-the-template-before-anchoring
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Variation packs apply during materialisation, not after certification
+      summary: The spec ordered pack choice after route certification so packs could never decide whether a world certifies. That guarantee holds here by a stronger argument - the planner is geometry-blind, reasoning about maps, pools and gates and never about tiles, so slot moves, terrain patches and enemy pressure are invisible to it whichever side of certification they land. Applying packs while the map is built, before anything anchors to it, means features, opportunities and spawns all land on the varied map rather than being retargeted afterwards, which removed a whole class of retargeting bugs. What a pack genuinely can do is wall something off by accident, and that is guarded twice - per-pack flood-fill in content validation, and a whole-world reachability check in final validation that treats forceable terrain as a price rather than a wall.
+      references: [regional-variation-packs, paired-regional-template-selection, clue-graph-validator]
+
+  - decision: machines-are-never-load-bearing
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Machines open ground, never close it, and the planner cannot see them
+      summary: A machine is an ordinary opportunity worked through the ordinary Interact command - a lever's worth of input, one observable payoff, spent once. The spec's rule that a random optional machine may never be the sole support for a certified route is enforced structurally, the same way scheme signs are - the planner does not know machines exist, so no route can lean on one, and a sweep asserts no certified route step ever touches one. Validation additionally forbids a machine patching toward blocking terrain, because a machine fires at runtime, after every generation-time reachability check has already passed - machines may only ever open the map further.
+      references: [mission-machine-library, semantic-command-boundary, visible-opportunity-affordances]
+
+  - decision: event-decks-are-additive-only
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Each map deals a small seeded deck, and events only ever add
+      summary: Every generated map receives a two-card deck drawn from its role's pool, narrowed by the case's scheme, during generation from the seed stream. One event fires per arrival until the deck runs dry, never at run start - turn zero belongs to the opening. The effect vocabulary is closed and additive - fiction, an enemy arriving, something changing hands, an undiscovered opportunity announcing itself - so an event can add pressure, supply or information but has no way to remove access to a certified route. Firing happens inside the sim on the travel command, so replays reproduce it from the command log and the run PRNG.
+      references: [mission-event-decks, travel-clock, command-replay, event-log]

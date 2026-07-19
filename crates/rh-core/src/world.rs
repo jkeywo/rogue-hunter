@@ -35,6 +35,12 @@ pub struct World {
     pub certified_routes: Vec<CertifiedRoute>,
     /// How the run opens.
     pub opening: OpeningSituation,
+    /// Variation pack ids drawn for each map, in map order. Recorded so the
+    /// inspector and the replay state can name how the valley was dressed.
+    pub packs: Vec<Vec<String>>,
+    /// Seeded optional-event deck for each map, in map order. One fires per
+    /// arrival until the deck runs dry.
+    pub event_decks: Vec<Vec<String>>,
 }
 
 /// The situation a run begins in.
@@ -298,6 +304,9 @@ pub enum OpportunityGrant {
     Items { items: Vec<String> },
     /// The mystical favour: one temporary over-cap Mystic point.
     MysticFavour,
+    /// Work an authored machine: a lever's worth of input, an observable
+    /// payoff. Never modelled by the planner, so never load-bearing.
+    Machine { machine: String },
     /// Learn an undiscovered relationship link of the anchored NPC.
     RelationshipInfo,
     /// Learn the anchored NPC's secret (spying route).

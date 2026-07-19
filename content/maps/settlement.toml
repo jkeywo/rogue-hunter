@@ -143,3 +143,19 @@ tiles = [[13, 8], [14, 8], [13, 9], [14, 9]]
 
 [[cover_pockets]]
 tiles = [[3, 13], [4, 13], [5, 13], [6, 13]]
+
+# -- Variation packs: the same town on a different day. ---------------------
+
+[[packs]]
+id = "washed-lanes"
+label = "maps.settlement.packs.washed-lanes.label"
+terrain_patches = [
+  { at = [7, 11], to = "water" },
+  { at = [8, 11], to = "water" },
+  { at = [7, 12], to = "water" },
+]
+
+[[packs]]
+id = "fair-day"
+label = "maps.settlement.packs.fair-day.label"
+slot_moves = { square = [12, 12] }

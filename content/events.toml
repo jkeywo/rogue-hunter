@@ -1,0 +1,40 @@
+# Optional mission events. Each generated map receives a small seeded deck,
+# filtered by role and scheme; one fires per arrival until the deck is dry.
+# Effects are additive only — pressure, supply, or information, never the
+# removal of access.
+
+[weather-turns]
+roles = ["settlement", "wilderness", "outlying"]
+effect = { kind = "none" }
+body = "events.weather-turns.body"
+
+[old-signs]
+roles = ["settlement", "wilderness", "outlying"]
+effect = { kind = "reveal" }
+body = "events.old-signs.body"
+
+[survivor-gift]
+roles = ["settlement", "outlying"]
+effect = { kind = "cache", items = ["wound-draught"] }
+body = "events.survivor-gift.body"
+
+[road-agents]
+roles = ["wilderness", "outlying"]
+effect = { kind = "spawn", enemy = "bandit", count = 1 }
+body = "events.road-agents.body"
+
+[contested-cache]
+roles = ["wilderness", "outlying"]
+effect = { kind = "cache", items = ["flintlock-shot", "coin"] }
+body = "events.contested-cache.body"
+
+[frightened-flock]
+roles = ["settlement", "wilderness"]
+effect = { kind = "none" }
+body = "events.frightened-flock.body"
+
+[thralls-abroad]
+roles = ["wilderness", "outlying"]
+schemes = ["the-calling"]
+effect = { kind = "spawn", enemy = "thrall", count = 1 }
+body = "events.thralls-abroad.body"

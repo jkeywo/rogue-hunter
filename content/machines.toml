@@ -1,0 +1,47 @@
+# Optional machines, each built into one template. A machine is a visible
+# device worked through the ordinary Interact command: a lever's worth of
+# input, an observable payoff. The planner never models them, so no certified
+# route can lean on one — a machine improves a route, never carries it.
+
+[mill-sluice]
+name = "machines.mill-sluice.name"
+template = "settlement-mill"
+at = [9, 6]
+effect = { kind = "patch", patches = [
+  { at = [10, 10], to = "grass" },
+  { at = [11, 10], to = "grass" },
+  { at = [12, 10], to = "grass" },
+  { at = [13, 10], to = "grass" },
+  { at = [14, 10], to = "grass" },
+  { at = [15, 10], to = "grass" },
+  { at = [16, 10], to = "grass" },
+  { at = [17, 10], to = "grass" },
+  { at = [18, 10], to = "grass" },
+  { at = [19, 10], to = "grass" },
+] }
+prompt = "machines.mill-sluice.prompt"
+reveal = "machines.mill-sluice.reveal"
+
+[bell-rope]
+name = "machines.bell-rope.name"
+template = "settlement"
+at = [3, 3]
+effect = { kind = "scatter", tiles = 4 }
+prompt = "machines.bell-rope.prompt"
+reveal = "machines.bell-rope.reveal"
+
+[smugglers-way]
+name = "machines.smugglers-way.name"
+template = "outlying"
+at = [19, 17]
+effect = { kind = "patch", patches = [{ at = [20, 17], to = "floor" }] }
+prompt = "machines.smugglers-way.prompt"
+reveal = "machines.smugglers-way.reveal"
+
+[warding-stone]
+name = "machines.warding-stone.name"
+template = "wilderness"
+at = [24, 16]
+effect = { kind = "ward", turns = 8, radius = 2 }
+prompt = "machines.warding-stone.prompt"
+reveal = "machines.warding-stone.reveal"

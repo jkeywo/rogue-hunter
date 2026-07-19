@@ -37,6 +37,12 @@ pub struct GenReport {
     /// The opening entry id, and the node banked before play if any.
     pub opening: String,
     pub conditions: Vec<String>,
+    /// Variation packs drawn for each map, in map order.
+    pub packs: Vec<Vec<String>>,
+    /// Machines embedded in this run's templates.
+    pub machines: Vec<String>,
+    /// The optional-event deck dealt to each map, in map order.
+    pub events: Vec<Vec<String>>,
     pub banked_node: Option<String>,
     pub villain: String,
     pub origin: String,
@@ -147,6 +153,16 @@ pub fn generate(seed: u64, catalogue: &Catalogue) -> Result<Generated, GenError>
                     world.maps.iter().map(|m| m.template.clone()).collect();
                 let opening_id = world.opening.opening.clone();
                 let condition_ids = world.opening.conditions.clone();
+                let pack_ids = world.packs.clone();
+                let machine_ids: Vec<String> = world
+                    .opportunities
+                    .iter()
+                    .filter(|opp| {
+                        matches!(opp.grants, rh_core::world::OpportunityGrant::Machine { .. })
+                    })
+                    .map(|opp| opp.source.clone())
+                    .collect();
+                let event_decks = world.event_decks.clone();
                 let banked_node = world
                     .opening
                     .prior
@@ -160,6 +176,9 @@ pub fn generate(seed: u64, catalogue: &Catalogue) -> Result<Generated, GenError>
                         templates,
                         opening: opening_id,
                         conditions: condition_ids,
+                        packs: pack_ids,
+                        machines: machine_ids,
+                        events: event_decks,
                         banked_node,
                         villain: combo.villain.clone(),
                         origin: combo.origin.clone(),
@@ -184,6 +203,41 @@ pub fn generate(seed: u64, catalogue: &Catalogue) -> Result<Generated, GenError>
         attempts: MAX_ATTEMPTS,
         last_reason,
     })
+}
+
+/// Flood fill over walkable-or-forceable terrain, eight ways.
+fn forceable_flood(tiles: &[rh_content::Terrain], from: rh_core::geometry::Point) -> Vec<bool> {
+    use rh_core::geometry::{MAP_HEIGHT, MAP_WIDTH};
+    let passable = |terrain: rh_content::Terrain| {
+        rh_core::fov::is_walkable(terrain)
+            || matches!(
+                terrain,
+                rh_content::Terrain::BarredDoor | rh_content::Terrain::Rubble
+            )
+    };
+    let mut seen = vec![false; MAP_WIDTH as usize * MAP_HEIGHT as usize];
+    let start = from.y as usize * MAP_WIDTH as usize + from.x as usize;
+    if !passable(tiles[start]) {
+        return seen;
+    }
+    seen[start] = true;
+    let mut queue = vec![from];
+    while let Some(point) = queue.pop() {
+        for dx in -1i16..=1 {
+            for dy in -1i16..=1 {
+                let next = rh_core::geometry::Point::new(point.x + dx, point.y + dy);
+                if !next.in_bounds() {
+                    continue;
+                }
+                let index = next.y as usize * MAP_WIDTH as usize + next.x as usize;
+                if !seen[index] && passable(tiles[index]) {
+                    seen[index] = true;
+                    queue.push(next);
+                }
+            }
+        }
+    }
+    seen
 }
 
 fn build_candidate(
@@ -302,6 +356,45 @@ fn final_validation(catalogue: &Catalogue, world: &World) -> Result<(), String> 
         rh_content::Concealment::DormantGrave => {
             if world.villain.grave.is_none() {
                 return Err("grave villain has no grave".to_owned());
+            }
+        }
+    }
+    // Nothing the varied maps carry may be walled off. The planner never
+    // reasons about tiles, so a pack combination that sealed a feature or an
+    // exit would break a certified route in silence; this is the last line
+    // after per-pack content validation.
+    for map in &world.maps {
+        // Forceable terrain counts as passable: a barred door is a price, not
+        // a wall, and routes are allowed to schedule that price.
+        let reached = forceable_flood(&map.tiles, map.entry);
+        let index_of = |at: rh_core::geometry::Point| {
+            at.y as usize * rh_core::geometry::MAP_WIDTH as usize + at.x as usize
+        };
+        for feature in &map.features {
+            // Features are used from beside them (altars, workstations), so a
+            // reached neighbour is as good as a reached tile.
+            let mut approachable = reached[index_of(feature.at)];
+            for dx in -1i16..=1 {
+                for dy in -1i16..=1 {
+                    let near = rh_core::geometry::Point::new(feature.at.x + dx, feature.at.y + dy);
+                    if near.in_bounds() && reached[index_of(near)] {
+                        approachable = true;
+                    }
+                }
+            }
+            if !approachable {
+                return Err(format!(
+                    "feature '{}' on '{}' cannot be walked to",
+                    feature.name, map.template
+                ));
+            }
+        }
+        for exit in &map.exits {
+            if !reached[index_of(exit.at)] {
+                return Err(format!(
+                    "the exit from '{}' to map {} cannot be walked to",
+                    map.template, exit.to_map.0
+                ));
             }
         }
     }

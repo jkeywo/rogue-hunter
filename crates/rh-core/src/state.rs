@@ -66,6 +66,10 @@ pub struct RunState {
     pub sight_penalty: u8,
     /// Tiles added to the hunter's field of view by the run's boon.
     pub sight_bonus: u8,
+    /// Maps the hunter has set foot on, for first-arrival narration.
+    pub arrived: BTreeSet<MapId>,
+    /// How far into each map's optional-event deck the run has drawn.
+    pub event_cursor: Vec<u8>,
     pub opened_graves: BTreeSet<FeatureId>,
     pub snares: Vec<Snare>,
     pub wards: Vec<GroundWard>,
@@ -332,6 +336,8 @@ impl RunState {
             settlement_hostile: false,
             sight_penalty: 0,
             sight_bonus: 0,
+            arrived: BTreeSet::new(),
+            event_cursor: vec![0; world.maps.len()],
             opened_graves: BTreeSet::new(),
             snares: Vec::new(),
             wards: Vec::new(),

@@ -25,6 +25,8 @@ pub const SOURCES: &[(&str, &str)] = &[
     content!("grimoire.toml"),
     content!("ui.toml"),
     content!("openings.toml"),
+    content!("machines.toml"),
+    content!("events.toml"),
     content!("maps/settlement.toml"),
     content!("maps/settlement-mill.toml"),
     content!("maps/wilderness.toml"),

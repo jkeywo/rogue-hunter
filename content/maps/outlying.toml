@@ -161,3 +161,23 @@ tiles = [[2, 2], [3, 2]]
 
 [[cover_pockets]]
 tiles = [[2, 14], [3, 14]]
+
+# -- Variation packs. ------------------------------------------------------
+
+[[packs]]
+id = "looters-been"
+label = "maps.outlying.packs.looters-been.label"
+
+[[packs.extra_enemies]]
+enemy = "bandit"
+near_slot = "campsite"
+count = 1
+
+[[packs]]
+id = "overgrown"
+label = "maps.outlying.packs.overgrown.label"
+terrain_patches = [
+  { at = [8, 15], to = "tree" },
+  { at = [9, 15], to = "tree" },
+  { at = [8, 16], to = "tree" },
+]

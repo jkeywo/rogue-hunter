@@ -594,3 +594,102 @@ fn no_route_step_shows_the_player_a_raw_string_id() {
         }
     }
 }
+
+/// The first generated run whose maps carry `machine`, plus the machine's
+/// opportunity id.
+fn sim_with_machine(machine: &str) -> Option<(Sim, rh_core::world::OpportunityId)> {
+    let cat = catalogue();
+    for seed in 0..96u64 {
+        let Ok(generated) = rh_gen::generate(seed, &cat) else {
+            continue;
+        };
+        let found = generated
+            .world
+            .opportunities
+            .iter()
+            .find(|opp| opp.source == machine)
+            .map(|opp| opp.id);
+        if let Some(id) = found {
+            return Some((Sim::new(cat, generated.world, generated.rng), id));
+        }
+    }
+    None
+}
+
+#[test]
+fn the_sluice_drains_a_crossing() {
+    let (mut sim, id) = sim_with_machine("mill-sluice").expect("some seed builds the mill");
+    let map = sim.world.opportunity(id).map;
+    let ford = rh_core::geometry::Point::new(12, 10);
+    assert_eq!(
+        sim.state.terrain(&sim.world, map, ford),
+        rh_content::Terrain::Water,
+        "the race starts full"
+    );
+    sim.resolve_for_test(id);
+    assert_eq!(
+        sim.state.terrain(&sim.world, map, ford),
+        rh_content::Terrain::Grass,
+        "working the sluice leaves a crossing where the water was"
+    );
+    // One-shot: the lever is spent.
+    assert!(sim.state.resolved.contains(&id));
+}
+
+#[test]
+fn the_warding_stone_raises_ground_that_takes_a_side() {
+    let (mut sim, id) = sim_with_machine("warding-stone").expect("some seed has the stones");
+    assert!(sim.state.wards.is_empty());
+    sim.resolve_for_test(id);
+    assert_eq!(sim.state.wards.len(), 1, "the stone raises warding ground");
+}
+
+#[test]
+fn an_event_deck_pays_out_once_per_arrival_and_runs_dry() {
+    let cat = catalogue();
+    for seed in 0..64u64 {
+        let Ok(generated) = rh_gen::generate(seed, &cat) else {
+            continue;
+        };
+        // Find a map whose deck opens with a cache, so the payoff is checkable.
+        let Some((index, deck)) =
+            generated
+                .world
+                .event_decks
+                .iter()
+                .enumerate()
+                .find(|(_, deck)| {
+                    deck.first().is_some_and(|id| {
+                        matches!(cat.events[id].effect, rh_content::EventEffect::Cache { .. })
+                    })
+                })
+        else {
+            continue;
+        };
+        let deck = deck.clone();
+        let map = rh_core::world::MapId(index as u8);
+        let mut sim = Sim::new(cat.clone(), generated.world, generated.rng);
+
+        let rh_content::EventEffect::Cache { items } = &cat.events[&deck[0]].effect else {
+            unreachable!()
+        };
+        let before = sim.state.hunter.item_count(&items[0]);
+        sim.fire_next_event_for_test(map);
+        assert!(
+            sim.state.hunter.item_count(&items[0]) > before,
+            "seed {seed}: the cache event must hand something over"
+        );
+
+        // The deck advances, and runs dry rather than repeating.
+        for _ in 0..deck.len() + 2 {
+            sim.fire_next_event_for_test(map);
+        }
+        assert_eq!(
+            sim.state.event_cursor[index] as usize,
+            deck.len(),
+            "seed {seed}: the deck must stop at its end"
+        );
+        return;
+    }
+    panic!("no seed dealt a cache-first deck");
+}

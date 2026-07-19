@@ -36,6 +36,7 @@ pub fn build_world(
         maps: Vec::new(),
         slot_index: BTreeMap::new(),
         chosen_templates: Vec::new(),
+        chosen_packs: Vec::new(),
         npcs: Vec::new(),
         opportunities: Vec::new(),
         next_feature: 0,
@@ -50,6 +51,8 @@ pub fn build_world(
     builder.place_gathers(&clue_ids)?;
     builder.place_scheme_preempt()?;
     builder.place_social_ops()?;
+    builder.place_machines();
+    let event_decks = builder.draw_event_decks();
 
     Ok(World {
         seed,
@@ -59,6 +62,8 @@ pub fn build_world(
         opportunities: builder.opportunities,
         ambush_percent,
         certified_routes: Vec::new(),
+        packs: builder.chosen_packs,
+        event_decks,
         // Filled in at the acceptance point, once certification has said
         // whether a node must be banked.
         opening: rh_core::world::OpeningSituation {
@@ -81,6 +86,8 @@ struct Builder<'a> {
     slot_index: BTreeMap<(String, String), (MapId, Point, SiteKind)>,
     /// Template chosen for each role this run, in `MapRole::ORDER`.
     chosen_templates: Vec<String>,
+    /// Variation packs drawn for each map, in map order.
+    chosen_packs: Vec<Vec<String>>,
     npcs: Vec<NpcSpec>,
     opportunities: Vec<OpportunitySpec>,
     next_feature: u16,
@@ -127,7 +134,26 @@ impl<'a> Builder<'a> {
                 .maps
                 .get(&template_id)
                 .ok_or_else(|| format!("missing map template '{template_id}'"))?;
-            let map = self.build_map(role.label(), &template_id, template)?;
+            // Draw a compatible pack subset from the seed stream. Half odds
+            // per pack keeps every pack reachable across seeds while most maps
+            // stay near their authored baseline; conflicts are skipped rather
+            // than re-rolled so the draw stays one pass.
+            let mut drawn: Vec<&rh_content::VariationPack> = Vec::new();
+            for pack in &template.packs {
+                if self.rng.below(2) == 0 {
+                    continue;
+                }
+                let conflicted = drawn.iter().any(|chosen| {
+                    chosen.conflicts_with.contains(&pack.id)
+                        || pack.conflicts_with.contains(&chosen.id)
+                });
+                if !conflicted {
+                    drawn.push(pack);
+                }
+            }
+            let map = self.build_map(role.label(), &template_id, template, &drawn)?;
+            self.chosen_packs
+                .push(drawn.iter().map(|pack| pack.id.clone()).collect());
             self.chosen_templates.push(template_id);
             self.maps.push(map);
         }
@@ -158,6 +184,7 @@ impl<'a> Builder<'a> {
         role_label: &str,
         template_id: &str,
         template: &MapTemplate,
+        packs: &[&rh_content::VariationPack],
     ) -> Result<WorldMap, String> {
         let mut tiles = Vec::with_capacity((MAP_WIDTH * MAP_HEIGHT) as usize);
         for row in &template.rows {
@@ -170,11 +197,31 @@ impl<'a> Builder<'a> {
                 tiles.push(terrain);
             }
         }
+        // The drawn packs rewrite the template before anything is anchored to
+        // it, so features, opportunities and spawns all land on the varied map
+        // rather than being retargeted afterwards.
+        for pack in packs {
+            for patch in &pack.terrain_patches {
+                let index = patch.at[1] as usize * MAP_WIDTH as usize + patch.at[0] as usize;
+                tiles[index] = patch.to;
+            }
+        }
+        let moved_slot = |slot: &str, at: Point| -> Point {
+            packs
+                .iter()
+                .rev()
+                .find_map(|pack| pack.slot_moves.get(slot))
+                .map(|coord| Point::new(i16::from(coord[0]), i16::from(coord[1])))
+                .unwrap_or(at)
+        };
 
         let map_id = self.map_id(role_label);
         let mut features = Vec::new();
         for slot in &template.slots {
-            let at = Point::new(i16::from(slot.at[0]), i16::from(slot.at[1]));
+            let at = moved_slot(
+                &slot.id,
+                Point::new(i16::from(slot.at[0]), i16::from(slot.at[1])),
+            );
             self.slot_index.insert(
                 (role_label.to_owned(), slot.id.clone()),
                 (map_id, at, slot.kind),
@@ -261,7 +308,11 @@ impl<'a> Builder<'a> {
         let entry = closest_walkable(&tiles, Point::new(15, 10));
 
         let mut initial_enemies = Vec::new();
-        for spawn in &template.initial_enemies {
+        let pack_enemies: Vec<rh_content::InitialEnemy> = packs
+            .iter()
+            .flat_map(|pack| pack.extra_enemies.iter().cloned())
+            .collect();
+        for spawn in template.initial_enemies.iter().chain(pack_enemies.iter()) {
             let (_, near, _) = self
                 .slot_index
                 .get(&(role_label.to_owned(), spawn.near_slot.clone()))
@@ -920,6 +971,75 @@ impl<'a> Builder<'a> {
         Ok(())
     }
 
+    /// Embed the machines built into whichever templates this run drew.
+    fn place_machines(&mut self) {
+        for (index, template_id) in self.chosen_templates.clone().iter().enumerate() {
+            let machines: Vec<(String, rh_content::MachineDef)> = self
+                .catalogue
+                .machines
+                .iter()
+                .filter(|(_, machine)| &machine.template == template_id)
+                .map(|(id, machine)| (id.clone(), machine.clone()))
+                .collect();
+            for (machine_id, machine) in machines {
+                let id = self.next_opportunity_id();
+                self.opportunities.push(OpportunitySpec {
+                    id,
+                    source: machine_id.clone(),
+                    name: self.text(&machine.name).to_owned(),
+                    map: MapId(index as u8),
+                    anchor: OpportunityAnchor::Tile(Point::new(
+                        i16::from(machine.at[0]),
+                        i16::from(machine.at[1]),
+                    )),
+                    pool: None,
+                    cost: 0,
+                    obscurity: 0,
+                    discovery: DiscoveryRule::Sight,
+                    grants: OpportunityGrant::Machine {
+                        machine: machine_id,
+                    },
+                    requires: None,
+                    clears_terrain: false,
+                    covert: false,
+                    prompt: self.text(&machine.prompt).to_owned(),
+                    reveal: self.text(&machine.reveal).to_owned(),
+                });
+            }
+        }
+    }
+
+    /// Deal each map its seeded deck of optional events: the role's pool,
+    /// narrowed by the case's scheme, two drawn without replacement.
+    fn draw_event_decks(&mut self) -> Vec<Vec<String>> {
+        let mut decks = Vec::new();
+        for role in MapRole::ORDER {
+            let mut eligible: Vec<String> = self
+                .catalogue
+                .events
+                .iter()
+                .filter(|(_, event)| {
+                    event
+                        .roles
+                        .iter()
+                        .any(|named| MapRole::from_content(named) == Some(role))
+                        && (event.schemes.is_empty() || event.schemes.contains(&self.combo.scheme))
+                })
+                .map(|(id, _)| id.clone())
+                .collect();
+            let mut deck = Vec::new();
+            for _ in 0..2 {
+                if eligible.is_empty() {
+                    break;
+                }
+                let pick = self.rng.index(eligible.len());
+                deck.push(eligible.remove(pick));
+            }
+            decks.push(deck);
+        }
+        decks
+    }
+
     fn place_social_ops(&mut self) -> Result<(), String> {
         for index in 0..self.npcs.len() {
             let npc = self.npcs[index].clone();
@@ -1142,7 +1262,12 @@ fn flood_floor(tiles: &[Terrain], from: Point) -> Vec<Point> {
 }
 
 /// Walkability search treating `unlocked` as cleared terrain.
-fn reachable(tiles: &[Terrain], from: Point, to: Point, unlocked: Option<Point>) -> bool {
+pub(crate) fn reachable(
+    tiles: &[Terrain],
+    from: Point,
+    to: Point,
+    unlocked: Option<Point>,
+) -> bool {
     if from == to {
         return true;
     }

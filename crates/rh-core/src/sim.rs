@@ -55,9 +55,202 @@ impl Sim {
             ],
         );
         sim.log(EventKind::System, arrival);
+        sim.note_arrival();
         // Quietly: the opening prose is what turn zero is for.
         sim.refresh_senses_quietly();
         sim
+    }
+
+    /// First footfall on a map: narrate how its variation packs dressed it.
+    /// Later, this is also where a region's event deck is consulted.
+    fn note_arrival(&mut self) {
+        let map = self.state.current_map;
+        if !self.state.arrived.insert(map) {
+            return;
+        }
+        let template = self.world.map(map).template.clone();
+        let pack_ids = self
+            .world
+            .packs
+            .get(map.0 as usize)
+            .cloned()
+            .unwrap_or_default();
+        let lines: Vec<String> = self
+            .catalogue
+            .maps
+            .get(&template)
+            .map(|def| {
+                pack_ids
+                    .iter()
+                    .filter_map(|id| def.packs.iter().find(|pack| &pack.id == id))
+                    .map(|pack| self.catalogue.strings.get(&pack.label).to_owned())
+                    .collect()
+            })
+            .unwrap_or_default();
+        for line in lines {
+            self.log(EventKind::Travel, line);
+        }
+        // The region's event deck: one optional novelty per arrival until it
+        // runs dry. Never at run start — turn zero belongs to the opening.
+        if self.state.local_turn > 0 {
+            self.fire_next_event(map);
+        }
+    }
+
+    /// Work an authored machine: apply its one observable payoff.
+    fn fire_machine(&mut self, machine_id: String, anchor: &OpportunityAnchor) {
+        let Some(machine) = self.catalogue.machines.get(&machine_id).cloned() else {
+            return;
+        };
+        let at = match anchor {
+            OpportunityAnchor::Tile(at) => *at,
+            OpportunityAnchor::Npc(npc) => self.state.npcs[npc.0 as usize].pos,
+        };
+        let map = self.state.current_map;
+        match machine.effect {
+            rh_content::MachineEffect::Patch { patches } => {
+                for patch in patches {
+                    let point = Point::new(i16::from(patch.at[0]), i16::from(patch.at[1]));
+                    self.state.terrain_overrides.insert((map, point), patch.to);
+                }
+            }
+            rh_content::MachineEffect::Scatter { tiles } => {
+                let ids: Vec<ActorId> = self
+                    .state
+                    .actors
+                    .iter()
+                    .filter(|actor| actor.map == map && actor.hp > 0)
+                    .map(|actor| actor.id)
+                    .collect();
+                for id in ids {
+                    for _ in 0..tiles {
+                        let Some(actor) = self.state.actor(id) else {
+                            break;
+                        };
+                        let from = actor.pos;
+                        let dx = (from.x - at.x).signum();
+                        let dy = (from.y - at.y).signum();
+                        let next = Point::new(from.x + dx, from.y + dy);
+                        if !next.in_bounds()
+                            || !is_walkable(self.state.terrain(&self.world, map, next))
+                            || self.state.actor_at(map, next).is_some()
+                        {
+                            break;
+                        }
+                        if let Some(actor) = self.state.actor_mut(id) {
+                            actor.pos = next;
+                        }
+                    }
+                }
+            }
+            rh_content::MachineEffect::Ward { turns, radius } => {
+                self.state.wards.push(GroundWard {
+                    map,
+                    centre: at,
+                    radius,
+                    turns_left: turns,
+                });
+            }
+        }
+    }
+
+    /// Draw the next optional event from this map's deck, if any remain.
+    fn fire_next_event(&mut self, map: MapId) {
+        let cursor = self
+            .state
+            .event_cursor
+            .get(map.0 as usize)
+            .copied()
+            .unwrap_or(0) as usize;
+        let Some(event_id) = self
+            .world
+            .event_decks
+            .get(map.0 as usize)
+            .and_then(|deck| deck.get(cursor))
+            .map(|id| id.to_owned())
+        else {
+            return;
+        };
+        if let Some(slot) = self.state.event_cursor.get_mut(map.0 as usize) {
+            *slot += 1;
+        }
+        let Some(event) = self.catalogue.events.get(&event_id).cloned() else {
+            return;
+        };
+        let body = self.catalogue.strings.get(&event.body).to_owned();
+        self.log(EventKind::Clock, body);
+        match event.effect {
+            rh_content::EventEffect::None => {}
+            rh_content::EventEffect::Cache { items } => {
+                for item in items {
+                    self.state.hunter.add_item(&item, 1);
+                    let name = self.item_name(&item);
+                    self.log_fill(EventKind::Item, "log.item.gained", &[("item", &name)]);
+                }
+            }
+            rh_content::EventEffect::Spawn { enemy, count } => {
+                for _ in 0..count {
+                    self.spawn_event_enemy(&enemy);
+                }
+            }
+            rh_content::EventEffect::Reveal => {
+                let found = self
+                    .world
+                    .opportunities
+                    .iter()
+                    .find(|opp| {
+                        opp.map == map
+                            && !self.state.discovered.contains(&opp.id)
+                            && matches!(
+                                opp.discovery,
+                                DiscoveryRule::Sight | DiscoveryRule::SightOr(_)
+                            )
+                    })
+                    .map(|opp| (opp.id, opp.name.clone()));
+                if let Some((id, name)) = found {
+                    self.state.discovered.insert(id);
+                    self.log_fill(
+                        EventKind::Clue,
+                        "log.discovery.opportunity",
+                        &[("what", &name)],
+                    );
+                }
+            }
+        }
+    }
+
+    /// A walkable, unoccupied tile a wary distance from the hunter, for an
+    /// event arrival. Deterministic: candidates in row-major order, one draw.
+    fn spawn_event_enemy(&mut self, enemy: &str) {
+        let map = self.state.current_map;
+        let hunter = self.state.hunter.pos;
+        let mut candidates = Vec::new();
+        for y in 0..crate::geometry::MAP_HEIGHT {
+            for x in 0..crate::geometry::MAP_WIDTH {
+                let point = Point::new(x, y);
+                let distance = point.distance(hunter);
+                if (4..=8).contains(&distance)
+                    && is_walkable(self.state.terrain(&self.world, map, point))
+                    && self.state.actor_at(map, point).is_none()
+                {
+                    candidates.push(point);
+                }
+            }
+        }
+        if candidates.is_empty() {
+            return;
+        }
+        let at = candidates[self.state.rng.index(candidates.len())];
+        let Some(def) = self.catalogue.enemies.get(enemy) else {
+            return;
+        };
+        let hp = def.health;
+        let id = self
+            .state
+            .spawn_actor(ActorKind::Enemy(enemy.to_owned()), map, at, hp);
+        if let Some(actor) = self.state.actor_mut(id) {
+            actor.awake = true;
+        }
     }
 
     /// Put the run in the situation it opens in.
@@ -851,6 +1044,9 @@ impl Sim {
                     self.catalogue.strings.ui("log.social.favour").to_owned(),
                 );
             }
+            OpportunityGrant::Machine { machine } => {
+                self.fire_machine(machine.clone(), &spec.anchor);
+            }
             OpportunityGrant::RelationshipInfo => {
                 if let OpportunityAnchor::Npc(npc) = spec.anchor {
                     self.reveal_link_of(npc);
@@ -1018,6 +1214,7 @@ impl Sim {
                 self.spawn_ambush(exit.to_point);
             }
         }
+        self.note_arrival();
         self.maybe_begin_final_hunt();
         self.refresh_senses();
         Ok(())
@@ -1097,6 +1294,7 @@ impl Sim {
                 .to_owned(),
         );
         self.advance_clock(ClockReason::CostlyAction);
+        self.note_arrival();
         self.maybe_begin_final_hunt();
         self.refresh_senses();
         Ok(())
@@ -2143,6 +2341,24 @@ impl Sim {
     #[doc(hidden)]
     pub fn fire_scheme_event_for_test(&mut self, major: bool) {
         self.fire_scheme_event(major);
+    }
+
+    /// Resolve an opportunity as though the hunter had walked to it, without
+    /// the walking: machines sit at authored corners of the map, and testing
+    /// their payoffs should not require replaying a route to each one.
+    #[doc(hidden)]
+    pub fn resolve_for_test(&mut self, id: OpportunityId) {
+        let spec = self.world.opportunity(id).clone();
+        self.state.discovered.insert(id);
+        self.state.resolved.insert(id);
+        self.apply_grant(&spec);
+        self.cascade_discovery(id);
+    }
+
+    /// Draw the next optional event from a map's deck, as arrival does.
+    #[doc(hidden)]
+    pub fn fire_next_event_for_test(&mut self, map: MapId) {
+        self.fire_next_event(map);
     }
 
     /// Put the villain on the board however this case conceals it, so combat

@@ -35,6 +35,10 @@ pub struct Catalogue {
     pub openings: Vec<OpeningDef>,
     /// What the valley is like on arrival; a run draws exactly one.
     pub conditions: Vec<ConditionDef>,
+    /// Optional machines, keyed by id.
+    pub machines: BTreeMap<String, MachineDef>,
+    /// Optional mission events, keyed by id.
+    pub events: BTreeMap<String, EventDef>,
     pub ui: UiText,
     /// Every string the player reads. Resolved at display time from the ids
     /// held in the TOML above and in the clients.
@@ -132,6 +136,8 @@ impl Catalogue {
             grimoire: grimoire_file.entries,
             openings: openings_file.openings,
             conditions: openings_file.conditions,
+            machines: parse("machines.toml", text("machines.toml")?)?,
+            events: parse("events.toml", text("events.toml")?)?,
             ui: parse("ui.toml", text("ui.toml")?)?,
             strings,
         };

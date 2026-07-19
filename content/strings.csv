@@ -130,6 +130,13 @@ enemies.thrall.description,"Enemy description, shown when inspecting it","[A vil
 enemies.thrall.name,"Name of an ordinary enemy, shown when you fight or inspect it",[Thrall]
 enemies.wolf.description,"Enemy description, shown when inspecting it","[A lean grey wolf, bolder than it should be. It runs straight at what it means to kill.]"
 enemies.wolf.name,"Name of an ordinary enemy, shown when you fight or inspect it",[Wolf]
+events.contested-cache.body,"Mission event, logged on arrival","[Under the third stone of the fallen wall, exactly where a careful man would leave it: powder, shot, and a little money nobody living has a claim to.]"
+events.frightened-flock.body,"Mission event, logged on arrival","[The flock comes down the lane at a run with no shepherd behind it. Sheep are fools, but they are honest fools, and they are running from something.]"
+events.old-signs.body,"Mission event, logged on arrival","[Something has been through here since you last looked, and it was not careful.]"
+events.road-agents.body,"Mission event, logged on arrival","[There are strangers on the road who are not strangers to each other, and they have seen you first.]"
+events.survivor-gift.body,"Mission event, logged on arrival",[A woman you have never met presses a bottle into your hands and is gone before you can ask her name. The stopper is sealed with the herbwife's wax.]
+events.thralls-abroad.body,"Mission event, logged on arrival","[Figures on the ridgeline, walking in step. Nobody in this valley walks in step.]"
+events.weather-turns.body,"Mission event, logged on arrival","[The weather turns as you come in — cloud off the tops, and the light gone grey and flat. The valley does nothing kindly by halves.]"
 gathers.buy-simples.name,"Name of a gathering opportunity, shown on the map and in the action list",[Buy simples at the market stall]
 gathers.buy-simples.prompt,Opportunity text shown before gathering here,[The herb-stall sells remedies to those the seller likes the look of.]
 gathers.buy-simples.reveal,Log line once the gathering is done,"[A little talk, a little coin, and the bundle changes hands: moon-herb and bitter-root, fresh-cut.]"
@@ -376,8 +383,22 @@ log.villain.unmasked,Log line when a villain hiding as a villager is exposed,[{n
 log.ward.crossed,Log line when an unnatural thing crosses the Occultist's warded ground,"[The marks flare as the {name} crosses them, and it comes away torn.]"
 log.ward.expired,Log line when the Occultist's warded ground runs out,[The marks go quiet. The ground is only ground again.]
 log.ward.sears-revenant,Log line when warded ground burns the revenant,[The warded ground sears the revenant; grave-shadow boils away.]
+machines.bell-rope.name,"Machine name, shown on the map and action list",[The bell rope]
+machines.bell-rope.prompt,"Machine prompt, shown before it is worked",[The great bell has hung silent since the trouble began. Everything in this valley knows what it means when it speaks.]
+machines.bell-rope.reveal,"Machine result, logged when it is worked",[You haul the rope and the bell goes out over the roofs like a struck sky. Everything ill-meant within earshot flinches away from it.]
+machines.mill-sluice.name,"Machine name, shown on the map and action list",[The sluice gear]
+machines.mill-sluice.prompt,"Machine prompt, shown before it is worked","[The sluice stands open and the race runs full. The gear is stiff, but it is a gear, and gears turn.]"
+machines.mill-sluice.reveal,"Machine result, logged when it is worked",[You put your back into the wheel and the sluice grinds shut. The race falls away to mud and gravel; by the time you straighten up there is a crossing where the water was.]
+machines.smugglers-way.name,"Machine name, shown on the map and action list",[The smugglers' way]
+machines.smugglers-way.prompt,"Machine prompt, shown before it is worked","[Scuffed stone and a draught where no draught should be. Somebody moved goods through this wall once, and walls remember.]"
+machines.smugglers-way.reveal,"Machine result, logged when it is worked","[The false facing comes away, and there is the way through: low, dark, and older than the barred door it was cut to avoid.]"
+machines.warding-stone.name,"Machine name, shown on the map and action list",[The warding stone]
+machines.warding-stone.prompt,"Machine prompt, shown before it is worked","[The smallest of the standing stones is loose in its socket, and the marks on it are the turning kind. It could be faced a different way.]"
+machines.warding-stone.reveal,"Machine result, logged when it is worked","[You heave the stone about to face the old quarter. The air over the ground tightens, and the ground itself takes a side.]"
 maps.outlying-abbey.description,"Map description, shown on the travel screen","[An abbey the river took back. Roofless walls, a flooded cloister, and a crypt that has stayed dry rather longer than it should have.]"
 maps.outlying-abbey.name,"Map name, shown on the travel screen and status panel",[Saint Ceolwulf's]
+maps.outlying-abbey.packs.herons-year.label,"Variation-pack note, logged the first time the hunter arrives on this map","[It is a heron year on the flood, dozens of them, grey and patient and wrong for the season.]"
+maps.outlying-abbey.packs.pilgrims-camp.label,"Variation-pack note, logged the first time the hunter arrives on this map","[Pilgrims still come to the drowned abbey, and their camp stands nearer the road this year.]"
 maps.outlying-abbey.slots.campsite.label,"Landmark name, shown when inspecting this spot on the map",[the campsite]
 maps.outlying-abbey.slots.crypt-1.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 1]
 maps.outlying-abbey.slots.crypt-2.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 2]
@@ -396,6 +417,8 @@ maps.outlying-abbey.slots.manor-study.label,"Landmark name, shown when inspectin
 maps.outlying-abbey.slots.well.label,"Landmark name, shown when inspecting this spot on the map",[the well]
 maps.outlying.description,"Map description, shown on the travel screen","[A manor abandoned to damp and worse. The family crypt still stands in the grounds, and someone barred its door from the outside.]"
 maps.outlying.name,"Map name, shown on the travel screen and status panel",[The Forsaken Manor]
+maps.outlying.packs.looters-been.label,"Variation-pack note, logged the first time the hunter arrives on this map","[Somebody has been at the manor before you, and by the tracks they have not entirely left.]"
+maps.outlying.packs.overgrown.label,"Variation-pack note, logged the first time the hunter arrives on this map",[Nobody has cut anything back here in years; the gardens have closed over like water.]
 maps.outlying.slots.campsite.label,"Landmark name, shown when inspecting this spot on the map",[the campsite]
 maps.outlying.slots.crypt-1.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 1]
 maps.outlying.slots.crypt-2.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 2]
@@ -414,6 +437,8 @@ maps.outlying.slots.manor-study.label,"Landmark name, shown when inspecting this
 maps.outlying.slots.well.label,"Landmark name, shown when inspecting this spot on the map",[the well]
 maps.settlement-mill.description,"Map description, shown on the travel screen","[A town built either side of its own mill race. Two bridges, and a long walk if you pick the wrong one.]"
 maps.settlement-mill.name,"Map name, shown on the travel screen and status panel",[Millrace]
+maps.settlement-mill.packs.race-in-spate.label,"Variation-pack note, logged the first time the hunter arrives on this map",[The race is in spate and over its banks; the east path is under a hand of brown water.]
+maps.settlement-mill.packs.wool-fair.label,"Variation-pack note, logged the first time the hunter arrives on this map","[The wool fair is on, and the stalls have shifted up toward the forge, where the buyers are.]"
 maps.settlement-mill.slots.church-altar.label,"Landmark name, shown when inspecting this spot on the map",[the church altar]
 maps.settlement-mill.slots.church-candles.label,"Landmark name, shown when inspecting this spot on the map",[the church candles]
 maps.settlement-mill.slots.church-records.label,"Landmark name, shown when inspecting this spot on the map",[the church records]
@@ -431,6 +456,8 @@ maps.settlement-mill.slots.market-stall.label,"Landmark name, shown when inspect
 maps.settlement-mill.slots.square.label,"Landmark name, shown when inspecting this spot on the map",[the square]
 maps.settlement.description,"Map description, shown on the travel screen","[A huddle of stone and thatch around a church, a forge, and a market square. Safe by daylight. Probably.]"
 maps.settlement.name,"Map name, shown on the travel screen and status panel",[The Settlement]
+maps.settlement.packs.fair-day.label,"Variation-pack note, logged the first time the hunter arrives on this map","[It is fair day, of all days, and the square has moved itself wholesale to drier ground.]"
+maps.settlement.packs.washed-lanes.label,"Variation-pack note, logged the first time the hunter arrives on this map",[The autumn rains stood in the lanes and never quite left; the low ground is half water and the duckboards are out.]
 maps.settlement.slots.church-altar.label,"Landmark name, shown when inspecting this spot on the map",[the church altar]
 maps.settlement.slots.church-candles.label,"Landmark name, shown when inspecting this spot on the map",[the church candles]
 maps.settlement.slots.church-records.label,"Landmark name, shown when inspecting this spot on the map",[the church records]
@@ -448,6 +475,8 @@ maps.settlement.slots.market-stall.label,"Landmark name, shown when inspecting t
 maps.settlement.slots.square.label,"Landmark name, shown when inspecting this spot on the map",[the square]
 maps.wilderness-gorge.description,"Map description, shown on the travel screen","[A cleft in the moor with a beck at the bottom. One ledge path, one ford, and a great deal of rock.]"
 maps.wilderness-gorge.name,"Map name, shown on the travel screen and status panel",[The Gorge]
+maps.wilderness-gorge.packs.beck-in-flood.label,"Variation-pack note, logged the first time the hunter arrives on this map","[The beck is running high and loud, and everything that hunts along it has moved up onto the ledge.]"
+maps.wilderness-gorge.packs.shepherds-cairns.label,"Variation-pack note, logged the first time the hunter arrives on this map","[Shepherds have moved the old stones, or the stones have moved; either way they stand lower down the gorge than the maps say.]"
 maps.wilderness-gorge.slots.ambush-site.label,"Landmark name, shown when inspecting this spot on the map",[the ambush site]
 maps.wilderness-gorge.slots.herb-clearing-north.label,"Landmark name, shown when inspecting this spot on the map",[the herb clearing north]
 maps.wilderness-gorge.slots.herb-clearing-south.label,"Landmark name, shown when inspecting this spot on the map",[the herb clearing south]
@@ -456,6 +485,8 @@ maps.wilderness-gorge.slots.standing-stones.label,"Landmark name, shown when ins
 maps.wilderness-gorge.slots.wolf-den.label,"Landmark name, shown when inspecting this spot on the map",[the wolf den]
 maps.wilderness.description,"Map description, shown on the travel screen","[Old forest pressing close on a rutted trail. The shortcut to the manor runs through here — when the road is watched, so does trouble.]"
 maps.wilderness.name,"Map name, shown on the travel screen and status panel",[The Deep Wood]
+maps.wilderness.packs.deadfall.label,"Variation-pack note, logged the first time the hunter arrives on this map",[A storm brought down a stand of elms across the middle ground; the wood has new walls in it.]
+maps.wilderness.packs.wolf-season.label,"Variation-pack note, logged the first time the hunter arrives on this map","[It is a hungry season in the wood, and the packs are running larger than they should.]"
 maps.wilderness.slots.ambush-site.label,"Landmark name, shown when inspecting this spot on the map",[the ambush site]
 maps.wilderness.slots.herb-clearing-north.label,"Landmark name, shown when inspecting this spot on the map",[the herb clearing north]
 maps.wilderness.slots.herb-clearing-south.label,"Landmark name, shown when inspecting this spot on the map",[the herb clearing south]

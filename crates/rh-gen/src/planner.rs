@@ -574,7 +574,11 @@ fn build_ctx<'a>(
             OpportunityGrant::LocationClue
             | OpportunityGrant::OriginSign { .. }
             | OpportunityGrant::SchemeSign { .. }
-            | OpportunityGrant::SchemePreempt => continue,
+            | OpportunityGrant::SchemePreempt
+            // A random optional machine may never be the sole support for a
+            // certified route, which the planner enforces by not knowing
+            // machines exist.
+            | OpportunityGrant::Machine { .. } => continue,
             OpportunityGrant::MysticFavour => OpGrant::Favour,
             OpportunityGrant::Lead => OpGrant::Lead,
             OpportunityGrant::Items { items } => {

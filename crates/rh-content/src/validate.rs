@@ -29,6 +29,8 @@ pub fn validate(cat: &Catalogue) -> Vec<String> {
     check_ui(cat, &mut issues);
     check_openings(cat, &mut issues);
     check_conditions(cat, &mut issues);
+    check_machines(cat, &mut issues);
+    check_events(cat, &mut issues);
     check_strings(cat, &mut issues);
     issues
 }
@@ -736,6 +738,8 @@ fn check_maps(cat: &Catalogue, issues: &mut Vec<String>) {
             }
         }
 
+        check_packs(id, map, issues);
+
         let mut slot_ids: Vec<&str> = map.slots.iter().map(|s| s.id.as_str()).collect();
         slot_ids.sort_unstable();
         slot_ids.dedup();
@@ -903,6 +907,21 @@ fn check_ui(cat: &Catalogue, issues: &mut Vec<String>) {
 /// field here is worth more than the boilerplate it saves.
 pub fn referenced_ids(cat: &Catalogue) -> Vec<(String, &StringId)> {
     let mut ids: Vec<(String, &StringId)> = Vec::new();
+
+    for (key, machine) in &cat.machines {
+        ids.push((format!("machines.{key}.name"), &machine.name));
+        ids.push((format!("machines.{key}.prompt"), &machine.prompt));
+        ids.push((format!("machines.{key}.reveal"), &machine.reveal));
+    }
+    for (key, event) in &cat.events {
+        ids.push((format!("events.{key}.body"), &event.body));
+    }
+
+    for (key, map) in &cat.maps {
+        for pack in &map.packs {
+            ids.push((format!("maps/{key}.pack.{}.label", pack.id), &pack.label));
+        }
+    }
 
     for (key, hunter) in &cat.hunters {
         ids.push((format!("hunters/{key}.name"), &hunter.name));
@@ -1332,4 +1351,220 @@ fn walkable_from(
         }
     }
     seen
+}
+
+/// Every pack, applied alone, must leave the template sound: slots on walkable
+/// ground, everything reachable, cover pockets still opaque. Combinations are
+/// the author's business via `conflicts_with`, and generation re-checks the
+/// assembled world anyway.
+fn check_packs(id: &str, map: &MapTemplate, issues: &mut Vec<String>) {
+    let mut pack_ids: Vec<&str> = map.packs.iter().map(|p| p.id.as_str()).collect();
+    pack_ids.sort_unstable();
+    let unique = pack_ids.len();
+    pack_ids.dedup();
+    if pack_ids.len() != unique {
+        issues.push(format!("maps: '{id}' has duplicate pack ids"));
+    }
+    for pack in &map.packs {
+        for other in &pack.conflicts_with {
+            if !map.packs.iter().any(|p| &p.id == other) {
+                issues.push(format!(
+                    "maps: '{id}' pack '{}' conflicts with unknown pack '{other}'",
+                    pack.id
+                ));
+            }
+        }
+        for slot in pack.slot_moves.keys() {
+            if !map.slots.iter().any(|s| &s.id == slot) {
+                issues.push(format!(
+                    "maps: '{id}' pack '{}' moves unknown slot '{slot}'",
+                    pack.id
+                ));
+            }
+        }
+        // Build the patched grid and the moved slot positions.
+        let terrain_at = |at: Coord| -> Option<Terrain> {
+            for patch in &pack.terrain_patches {
+                if patch.at == at {
+                    return Some(patch.to);
+                }
+            }
+            map.rows
+                .get(at[1] as usize)
+                .and_then(|row| row.chars().nth(at[0] as usize))
+                .and_then(|glyph| map.legend.get(&glyph))
+                .copied()
+        };
+        for patch in &pack.terrain_patches {
+            if patch.at[0] as usize >= MAP_WIDTH || patch.at[1] as usize >= MAP_HEIGHT {
+                issues.push(format!(
+                    "maps: '{id}' pack '{}' patches out-of-bounds tile {},{}",
+                    pack.id, patch.at[0], patch.at[1]
+                ));
+            }
+            for pocket in &map.cover_pockets {
+                if pocket.tiles.contains(&patch.at) && !is_opaque(patch.to) {
+                    issues.push(format!(
+                        "maps: '{id}' pack '{}' opens a hole in a cover pocket at {},{}",
+                        pack.id, patch.at[0], patch.at[1]
+                    ));
+                }
+            }
+            for exit in &map.exits {
+                if exit.at == patch.at {
+                    issues.push(format!(
+                        "maps: '{id}' pack '{}' patches the exit tile {},{}",
+                        pack.id, patch.at[0], patch.at[1]
+                    ));
+                }
+            }
+        }
+        if let Some(start) = map.exits.first().map(|exit| exit.at) {
+            let reachable = walkable_from(start, &terrain_at);
+            for slot in &map.slots {
+                let at = pack.slot_moves.get(&slot.id).copied().unwrap_or(slot.at);
+                if !reachable.contains(&at) {
+                    issues.push(format!(
+                        "maps: '{id}' pack '{}' leaves slot '{}' at {},{} unreachable",
+                        pack.id, slot.id, at[0], at[1]
+                    ));
+                }
+            }
+            for exit in &map.exits {
+                if !reachable.contains(&exit.at) {
+                    issues.push(format!(
+                        "maps: '{id}' pack '{}' cuts off the exit to '{}'",
+                        pack.id, exit.to
+                    ));
+                }
+            }
+        }
+        for enemy in &pack.extra_enemies {
+            if !map.slots.iter().any(|s| s.id == enemy.near_slot) {
+                issues.push(format!(
+                    "maps: '{id}' pack '{}' spawns near unknown slot '{}'",
+                    pack.id, enemy.near_slot
+                ));
+            }
+        }
+    }
+}
+
+/// Machines are optional, but a broken one is not: it must sit on a real
+/// template, beside ground the hunter can stand on, and only ever open the
+/// map further.
+fn check_machines(cat: &Catalogue, issues: &mut Vec<String>) {
+    for (id, machine) in &cat.machines {
+        let Some(map) = cat.maps.get(&machine.template) else {
+            issues.push(format!(
+                "machines: '{id}' is built into unknown template '{}'",
+                machine.template
+            ));
+            continue;
+        };
+        if machine.at[0] as usize >= MAP_WIDTH || machine.at[1] as usize >= MAP_HEIGHT {
+            issues.push(format!("machines: '{id}' sits out of bounds"));
+        }
+        if let MachineEffect::Patch { patches } = &machine.effect {
+            for patch in patches {
+                if patch.at[0] as usize >= MAP_WIDTH || patch.at[1] as usize >= MAP_HEIGHT {
+                    issues.push(format!("machines: '{id}' patches out of bounds"));
+                }
+                // A machine may only ever open the map further: patching to
+                // blocking terrain could seal a certified route at runtime,
+                // after every generation-time check has already passed.
+                if is_opaque(patch.to) || patch.to == Terrain::Water {
+                    issues.push(format!(
+                        "machines: '{id}' patches toward blocking terrain; machines open                          ground, never close it"
+                    ));
+                }
+            }
+        }
+        // The machine tile itself need not be walkable, but working it is an
+        // adjacent interaction, so something beside it must be.
+        let walkable_near = (-1i16..=1).any(|dx| {
+            (-1i16..=1).any(|dy| {
+                let x = machine.at[0] as i16 + dx;
+                let y = machine.at[1] as i16 + dy;
+                if x < 0 || y < 0 || x as usize >= MAP_WIDTH || y as usize >= MAP_HEIGHT {
+                    return false;
+                }
+                map.rows
+                    .get(y as usize)
+                    .and_then(|row| row.chars().nth(x as usize))
+                    .and_then(|glyph| map.legend.get(&glyph))
+                    .is_some_and(|terrain| {
+                        matches!(
+                            terrain,
+                            Terrain::Floor | Terrain::Grass | Terrain::Road | Terrain::Door
+                        )
+                    })
+            })
+        });
+        if !walkable_near {
+            issues.push(format!("machines: '{id}' cannot be reached to be worked"));
+        }
+    }
+}
+
+/// Events are additive by construction; validation keeps their references
+/// real and their scoping sane.
+fn check_events(cat: &Catalogue, issues: &mut Vec<String>) {
+    for (id, event) in &cat.events {
+        if event.roles.is_empty() {
+            issues.push(format!("events: '{id}' can appear nowhere"));
+        }
+        for role in &event.roles {
+            if MapRole::from_content(role).is_none() {
+                issues.push(format!("events: '{id}' names unknown role '{role}'"));
+            }
+        }
+        for scheme in &event.schemes {
+            if !cat.schemes.contains_key(scheme) {
+                issues.push(format!("events: '{id}' names unknown scheme '{scheme}'"));
+            }
+        }
+        match &event.effect {
+            EventEffect::Spawn { enemy, count } => {
+                if !cat.enemies.contains_key(enemy) {
+                    issues.push(format!("events: '{id}' spawns unknown enemy '{enemy}'"));
+                }
+                if *count == 0 {
+                    issues.push(format!("events: '{id}' spawns nothing"));
+                }
+            }
+            EventEffect::Cache { items } => {
+                for item in items {
+                    if !cat.items.contains_key(item) {
+                        issues.push(format!("events: '{id}' grants unknown item '{item}'"));
+                    }
+                }
+                if items.is_empty() {
+                    issues.push(format!("events: '{id}' grants nothing"));
+                }
+            }
+            EventEffect::None | EventEffect::Reveal => {}
+        }
+    }
+    // Every role needs a deck worth drawing from whatever the scheme, or an
+    // arrival there has no chance of novelty.
+    for role in MapRole::ORDER {
+        let eligible = cat
+            .events
+            .values()
+            .filter(|event| {
+                event
+                    .roles
+                    .iter()
+                    .any(|named| MapRole::from_content(named) == Some(role))
+                    && event.schemes.is_empty()
+            })
+            .count();
+        if eligible < 2 {
+            issues.push(format!(
+                "events: role '{}' has only {eligible} scheme-independent events; it needs at                  least 2 so every deck has something in it",
+                role.label()
+            ));
+        }
+    }
 }

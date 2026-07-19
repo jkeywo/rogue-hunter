@@ -159,3 +159,14 @@ tiles = [[2, 14], [3, 14]]
 
 [[cover_pockets]]
 tiles = [[26, 1], [27, 1]]
+
+# -- Variation packs. ------------------------------------------------------
+
+[[packs]]
+id = "pilgrims-camp"
+label = "maps.outlying-abbey.packs.pilgrims-camp.label"
+slot_moves = { campsite = [3, 13] }
+
+[[packs]]
+id = "herons-year"
+label = "maps.outlying-abbey.packs.herons-year.label"

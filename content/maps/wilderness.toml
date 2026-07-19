@@ -94,3 +94,23 @@ tiles = [[14, 4], [15, 4], [16, 4]]
 
 [[cover_pockets]]
 tiles = [[24, 15], [25, 15], [26, 15]]
+
+# -- Variation packs: the wood on a different day. --------------------------
+
+[[packs]]
+id = "wolf-season"
+label = "maps.wilderness.packs.wolf-season.label"
+
+[[packs.extra_enemies]]
+enemy = "wolf"
+near_slot = "wolf-den"
+count = 1
+
+[[packs]]
+id = "deadfall"
+label = "maps.wilderness.packs.deadfall.label"
+terrain_patches = [
+  { at = [8, 12], to = "tree" },
+  { at = [9, 12], to = "tree" },
+  { at = [8, 13], to = "tree" },
+]

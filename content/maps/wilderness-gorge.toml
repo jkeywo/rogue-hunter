@@ -100,3 +100,19 @@ tiles = [[7, 12], [8, 12], [9, 12]]
 
 [[cover_pockets]]
 tiles = [[3, 16], [4, 16], [5, 16]]
+
+# -- Variation packs. ------------------------------------------------------
+
+[[packs]]
+id = "beck-in-flood"
+label = "maps.wilderness-gorge.packs.beck-in-flood.label"
+
+[[packs.extra_enemies]]
+enemy = "wolf"
+near_slot = "wolf-den"
+count = 1
+
+[[packs]]
+id = "shepherds-cairns"
+label = "maps.wilderness-gorge.packs.shepherds-cairns.label"
+slot_moves = { standing-stones = [22, 15] }

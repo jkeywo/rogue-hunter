@@ -211,6 +211,29 @@ fn print_report(generated: &rh_gen::Generated) {
         report.villain, report.origin, report.scheme, world.villain.title
     );
     println!("ambush chance: {}%", report.ambush_percent);
+    println!("hunter: {}", report.hunter);
+    println!("templates: {}", report.templates.join(", "));
+    for (index, packs) in report.packs.iter().enumerate() {
+        if !packs.is_empty() {
+            println!("packs[{index}]: {}", packs.join(", "));
+        }
+    }
+    if !report.machines.is_empty() {
+        println!("machines: {}", report.machines.join(", "));
+    }
+    for (index, deck) in report.events.iter().enumerate() {
+        if !deck.is_empty() {
+            println!("events[{index}]: {}", deck.join(", "));
+        }
+    }
+    println!(
+        "opening: {} + [{}]",
+        report.opening,
+        report.conditions.join(", ")
+    );
+    if let Some(banked) = &report.banked_node {
+        println!("banked node: {banked}");
+    }
     println!("npcs:");
     for npc in &world.npcs {
         let host = if world.villain.host == Some(npc.id) {

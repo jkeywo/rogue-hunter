@@ -304,3 +304,105 @@ fn banking_lets_the_occultist_be_given_every_seed() {
         failures.join("\n")
     );
 }
+
+#[test]
+fn milestone_two_variety_is_observable() {
+    // The corpus must actually show a player everything that was authored:
+    // every pack, every machine, every event family. Content no seed can
+    // reach is a bug, not a spare — the same assertion that caught the
+    // materialiser reporting role labels as template ids in stage 3.
+    let catalogue = catalogue();
+    let mut packs_seen: BTreeSet<String> = BTreeSet::new();
+    let mut machines_seen: BTreeSet<String> = BTreeSet::new();
+    let mut events_seen: BTreeSet<String> = BTreeSet::new();
+
+    for seed in 0..96u64 {
+        let Ok(result) = rh_gen::generate(seed, &catalogue) else {
+            continue;
+        };
+        let report = &result.report;
+        for packs in &report.packs {
+            for pack in packs {
+                packs_seen.insert(pack.clone());
+            }
+        }
+        for machine in &report.machines {
+            machines_seen.insert(machine.clone());
+        }
+        for deck in &report.events {
+            for event in deck {
+                events_seen.insert(event.clone());
+            }
+        }
+
+        // Conflicting packs never co-occur on the same map.
+        for (index, map) in result.world.maps.iter().enumerate() {
+            let template = &catalogue.maps[&map.template];
+            let drawn = &result.world.packs[index];
+            for id in drawn {
+                let Some(pack) = template.packs.iter().find(|pack| &pack.id == id) else {
+                    panic!(
+                        "seed {seed}: pack '{id}' is not authored on '{}'",
+                        map.template
+                    );
+                };
+                for conflict in &pack.conflicts_with {
+                    assert!(
+                        !drawn.contains(conflict),
+                        "seed {seed}: '{id}' and '{conflict}' drawn together on '{}'",
+                        map.template
+                    );
+                }
+            }
+        }
+
+        // A machine is never load-bearing: no certified route step touches one.
+        for route in &result.world.certified_routes {
+            for step in &route.steps {
+                if let Some(op) = step.opportunity() {
+                    assert!(
+                        !matches!(
+                            result.world.opportunity(op).grants,
+                            rh_core::world::OpportunityGrant::Machine { .. }
+                        ),
+                        "seed {seed}: route '{}' leans on a machine",
+                        route.label
+                    );
+                }
+            }
+        }
+
+        // Same seed, same dressing.
+        let again = rh_gen::generate(seed, &catalogue).expect("regenerates");
+        assert_eq!(
+            again.report.packs, report.packs,
+            "seed {seed}: packs drifted"
+        );
+        assert_eq!(
+            again.report.events, report.events,
+            "seed {seed}: decks drifted"
+        );
+    }
+
+    for (template, def) in &catalogue.maps {
+        for pack in &def.packs {
+            assert!(
+                packs_seen.contains(&pack.id),
+                "no seed in 0..96 ever drew pack '{}' on '{template}'",
+                pack.id
+            );
+        }
+    }
+    for machine in catalogue.machines.keys() {
+        assert!(
+            machines_seen.contains(machine),
+            "no seed in 0..96 ever embedded machine '{machine}'"
+        );
+    }
+    for event in catalogue.events.keys() {
+        assert!(
+            events_seen.contains(event),
+            "no seed in 0..96 ever dealt event '{event}'"
+        );
+    }
+}
