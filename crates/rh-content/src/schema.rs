@@ -813,6 +813,31 @@ pub enum Terrain {
     Workstation,
 }
 
+/// Whether actors can stand on this terrain.
+///
+/// These classifiers live beside the enum so movement semantics are written
+/// once: the sim's walkability, the validator's reachability, and the
+/// generator's flood fills all compose these rather than re-listing variants.
+pub fn is_walkable(terrain: Terrain) -> bool {
+    matches!(
+        terrain,
+        Terrain::Floor | Terrain::Door | Terrain::Road | Terrain::Grass | Terrain::Grave
+    )
+}
+
+/// Whether this terrain can be cleared with a Physical-point forceful action.
+pub fn is_forceable(terrain: Terrain) -> bool {
+    matches!(terrain, Terrain::BarredDoor | Terrain::Rubble)
+}
+
+/// Whether this terrain blocks line of sight (and pounce lanes).
+pub fn is_opaque(terrain: Terrain) -> bool {
+    matches!(
+        terrain,
+        Terrain::Wall | Terrain::Tree | Terrain::Rubble | Terrain::BarredDoor
+    )
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct SlotDef {

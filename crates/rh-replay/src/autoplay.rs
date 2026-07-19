@@ -624,12 +624,12 @@ impl Bot {
         };
         if session.sim.state.hunter.pos == exit_at {
             if session.apply(Command::Travel).is_ok() {
-                // Route travel steps complete when the map changes.
-                if self.step_index < self.steps.len() {
-                    let step = &self.steps[self.step_index];
-                    if step.description.starts_with("Travel to ") {
-                        self.step_index += 1;
-                    }
+                // Route travel steps complete when the map changes. The step's
+                // action says which map, so ask it — description is display.
+                if self.step_index < self.steps.len()
+                    && self.steps[self.step_index].action == RouteAction::Travel(destination)
+                {
+                    self.step_index += 1;
                 }
             }
         } else {

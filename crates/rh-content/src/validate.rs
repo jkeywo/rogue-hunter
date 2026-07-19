@@ -723,7 +723,7 @@ fn check_maps(cat: &Catalogue, issues: &mut Vec<String>) {
             for slot in &map.slots {
                 if !reachable.contains(&slot.at) {
                     issues.push(format!(
-                        "maps: '{id}' slot '{}' at {},{} cannot be walked to from the map's                          own exit",
+                        "maps: '{id}' slot '{}' at {},{} cannot be walked to from the map's own exit",
                         slot.id, slot.at[0], slot.at[1]
                     ));
                 }
@@ -1115,27 +1115,6 @@ fn check_strings(cat: &Catalogue, issues: &mut Vec<String>) {
     }
 }
 
-/// Whether actors can stand on this terrain.
-pub fn is_walkable(terrain: Terrain) -> bool {
-    matches!(
-        terrain,
-        Terrain::Floor | Terrain::Door | Terrain::Road | Terrain::Grass | Terrain::Grave
-    )
-}
-
-/// Whether this terrain can be cleared with a Physical-point forceful action.
-pub fn is_forceable(terrain: Terrain) -> bool {
-    matches!(terrain, Terrain::BarredDoor | Terrain::Rubble)
-}
-
-/// Whether this terrain blocks line of sight (and pounce lanes).
-pub fn is_opaque(terrain: Terrain) -> bool {
-    matches!(
-        terrain,
-        Terrain::Wall | Terrain::Tree | Terrain::Rubble | Terrain::BarredDoor
-    )
-}
-
 /// Openings must cover every kind of node that can be banked before play, or
 /// generation could produce a run whose opening it cannot narrate.
 fn check_openings(cat: &Catalogue, issues: &mut Vec<String>) {
@@ -1247,7 +1226,7 @@ fn check_conditions(cat: &Catalogue, issues: &mut Vec<String>) {
             for placeholder in ["{npc}", "{clue}"] {
                 if line.contains(placeholder) {
                     issues.push(format!(
-                        "conditions: '{}' uses {placeholder}, but a condition is drawn                          independently of whether anything was banked",
+                        "conditions: '{}' uses {placeholder}, but a condition is drawn independently of whether anything was banked",
                         condition.id
                     ));
                 }
@@ -1277,7 +1256,7 @@ fn check_conditions(cat: &Catalogue, issues: &mut Vec<String>) {
             cat.conditions.iter().filter(|c| c.axis == axis).collect();
         if on_axis.len() < 3 {
             issues.push(format!(
-                "conditions: axis {axis:?} has only {} entries; an axis worth drawing from                  needs at least three",
+                "conditions: axis {axis:?} has only {} entries; an axis worth drawing from needs at least three",
                 on_axis.len()
             ));
         }
@@ -1288,17 +1267,17 @@ fn check_conditions(cat: &Catalogue, issues: &mut Vec<String>) {
         let boons = on_axis.iter().filter(|c| c.is_boon()).count();
         if banes != 1 {
             issues.push(format!(
-                "conditions: axis {axis:?} has {banes} conditions that bite; it needs exactly                  one, since any axis may be the one that bites this run"
+                "conditions: axis {axis:?} has {banes} conditions that bite; it needs exactly one, since any axis may be the one that bites this run"
             ));
         }
         if boons != 1 {
             issues.push(format!(
-                "conditions: axis {axis:?} has {boons} conditions that help; it needs exactly                  one, since any axis may be the one that helps this run"
+                "conditions: axis {axis:?} has {boons} conditions that help; it needs exactly one, since any axis may be the one that helps this run"
             ));
         }
         if on_axis.iter().filter(|c| c.is_cosmetic()).count() < 3 {
             issues.push(format!(
-                "conditions: axis {axis:?} needs at least three neutral entries; two axes are                  texture every run"
+                "conditions: axis {axis:?} needs at least three neutral entries; two axes are texture every run"
             ));
         }
     }
@@ -1313,21 +1292,14 @@ fn walkable_from(
     start: Coord,
     terrain_at: &impl Fn(Coord) -> Option<Terrain>,
 ) -> std::collections::HashSet<Coord> {
+    // Features (altar, workstation) count as passable so a slot sitting on
+    // one registers as reachable; they are used from beside in play.
     let passable = |at: Coord| {
-        matches!(
-            terrain_at(at),
-            Some(
-                Terrain::Floor
-                    | Terrain::Grass
-                    | Terrain::Road
-                    | Terrain::Door
-                    | Terrain::BarredDoor
-                    | Terrain::Rubble
-                    | Terrain::Grave
-                    | Terrain::Altar
-                    | Terrain::Workstation
-            )
-        )
+        terrain_at(at).is_some_and(|terrain| {
+            is_walkable(terrain)
+                || is_forceable(terrain)
+                || matches!(terrain, Terrain::Altar | Terrain::Workstation)
+        })
     };
     let mut seen = std::collections::HashSet::new();
     if !passable(start) {
@@ -1475,7 +1447,7 @@ fn check_machines(cat: &Catalogue, issues: &mut Vec<String>) {
                 // after every generation-time check has already passed.
                 if is_opaque(patch.to) || patch.to == Terrain::Water {
                     issues.push(format!(
-                        "machines: '{id}' patches toward blocking terrain; machines open                          ground, never close it"
+                        "machines: '{id}' patches toward blocking terrain; machines open ground, never close it"
                     ));
                 }
             }
@@ -1562,7 +1534,7 @@ fn check_events(cat: &Catalogue, issues: &mut Vec<String>) {
             .count();
         if eligible < 2 {
             issues.push(format!(
-                "events: role '{}' has only {eligible} scheme-independent events; it needs at                  least 2 so every deck has something in it",
+                "events: role '{}' has only {eligible} scheme-independent events; it needs at least 2 so every deck has something in it",
                 role.label()
             ));
         }

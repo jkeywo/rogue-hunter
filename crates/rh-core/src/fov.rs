@@ -5,27 +5,13 @@
 //! symmetric Bresenham line of sight, shared with pounce-lane checks so
 //! "you can see it" and "it can leap at you" always agree.
 
-use rh_content::Terrain;
-
 use crate::geometry::{line_between, Point, MAP_HEIGHT, MAP_WIDTH};
 use crate::state::RunState;
 use crate::world::{MapId, World};
 
-/// Whether terrain blocks sight (and pounce lanes).
-pub fn is_opaque(terrain: Terrain) -> bool {
-    matches!(
-        terrain,
-        Terrain::Wall | Terrain::Tree | Terrain::Rubble | Terrain::BarredDoor
-    )
-}
-
-/// Whether actors can stand on this terrain.
-pub fn is_walkable(terrain: Terrain) -> bool {
-    matches!(
-        terrain,
-        Terrain::Floor | Terrain::Door | Terrain::Road | Terrain::Grass | Terrain::Grave
-    )
-}
+// Terrain movement semantics are authored beside the `Terrain` enum itself;
+// re-export them so sim, AI, and clients keep one source through this path.
+pub use rh_content::{is_opaque, is_walkable};
 
 /// Clear line of sight between two points (endpoints excluded).
 pub fn has_line_of_sight(

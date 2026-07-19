@@ -462,3 +462,21 @@ entities:
       title: Each map deals a small seeded deck, and events only ever add
       summary: Every generated map receives a two-card deck drawn from its role's pool, narrowed by the case's scheme, during generation from the seed stream. One event fires per arrival until the deck runs dry, never at run start - turn zero belongs to the opening. The effect vocabulary is closed and additive - fiction, an enemy arriving, something changing hands, an undiscovered opportunity announcing itself - so an event can add pressure, supply or information but has no way to remove access to a certified route. Firing happens inside the sim on the travel command, so replays reproduce it from the command log and the run PRNG.
       references: [mission-event-decks, travel-clock, command-replay, event-log]
+
+  # Architecture deepening: concentrating rules that had been written N times.
+
+  - decision: terrain-semantics-live-beside-the-enum
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Terrain movement semantics are written once, beside the enum
+      summary: What terrain can be walked, forced, or seen through was written four times - once in rh-core's fov for the sim, once in rh-content's validation, and twice more as spelled-out variant lists inside the two reachability flood fills. A new terrain variant had to be added everywhere in lockstep or the sim and the validators would quietly disagree about where a hunter can stand. The classifiers now live in rh-content beside the Terrain enum itself; fov re-exports them so every existing rh-core path still resolves, and both flood fills compose is_walkable and is_forceable instead of re-listing variants. The validator's fill keeps its one deliberate extra - features count as passable so a slot sitting on an altar or workstation registers as reachable, being used from beside in play.
+      references: [authored-content-catalogue, map-visibility, three-map-world]
+
+  - decision: a-pool-costed-opportunity-costs-at-least-a-point
+    core:
+      status: accepted
+      confidence: confirmed
+      title: No opportunity may name a pool and cost nothing
+      summary: Content validation refuses a gather that names a pool with a cost of zero and a scheme pre-emption that costs nothing; clue templates and generated NPC actions have their cost fixed at one by materialisation. This closes a real divergence at the settlement-hostility surcharge - the planner only surcharges Social actions already costing a point, while the sim surcharges unconditionally, so a free Social opportunity would have certified as free and then charged a point in play. Rather than pick which guard was right, the case is made unrepresentable - consequential work spends a point, per the original Social contract, and a free interaction does not name a pool at all.
+      references: [social-action-costs, innocent-fallout-model, conditions-may-not-touch-the-final-fight]

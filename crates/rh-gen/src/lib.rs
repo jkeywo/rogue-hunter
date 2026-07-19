@@ -15,8 +15,6 @@ use rh_content::{Catalogue, ConditionAxis, ConditionDef};
 use rh_core::rng::SimRng;
 use rh_core::world::World;
 
-pub use planner::{PlanOp, PlannerConfig};
-
 /// Successful generation: the world, the RNG mid-stream (runtime continues
 /// it), and the inspector report.
 pub struct Generated {
@@ -209,11 +207,7 @@ pub fn generate(seed: u64, catalogue: &Catalogue) -> Result<Generated, GenError>
 fn forceable_flood(tiles: &[rh_content::Terrain], from: rh_core::geometry::Point) -> Vec<bool> {
     use rh_core::geometry::{MAP_HEIGHT, MAP_WIDTH};
     let passable = |terrain: rh_content::Terrain| {
-        rh_core::fov::is_walkable(terrain)
-            || matches!(
-                terrain,
-                rh_content::Terrain::BarredDoor | rh_content::Terrain::Rubble
-            )
+        rh_content::is_walkable(terrain) || rh_content::is_forceable(terrain)
     };
     let mut seen = vec![false; MAP_WIDTH as usize * MAP_HEIGHT as usize];
     let start = from.y as usize * MAP_WIDTH as usize + from.x as usize;
