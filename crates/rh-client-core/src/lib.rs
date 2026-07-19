@@ -175,6 +175,20 @@ impl Default for WalkWatch {
 /// pathological path cannot spin.
 const MAX_WALK_STEPS: usize = 64;
 
+/// Move a list highlight with the one semantics every screen and modal
+/// shares: Up and Down clamp to the list, and a hover moves the highlight
+/// to the row it points at without choosing it. Returns the new highlight,
+/// or `None` when the intent is not highlight movement — choosing and
+/// closing stay with each list's own handler.
+fn list_move(intent: &Intent, selected: usize, count: usize) -> Option<usize> {
+    match intent {
+        Intent::Up => Some(selected.saturating_sub(1)),
+        Intent::Down => Some((selected + 1).min(count.saturating_sub(1))),
+        Intent::HoverRow(index) if *index < count => Some(*index),
+        _ => None,
+    }
+}
+
 impl ClientSession {
     pub fn new(catalogue: Catalogue, seed_nonce: u64) -> Self {
         Self {
@@ -238,10 +252,11 @@ impl ClientSession {
         let Screen::Splash { selected } = &mut self.screen else {
             return;
         };
+        if let Some(row) = list_move(&intent, *selected, 3) {
+            *selected = row;
+            return;
+        }
         match intent {
-            Intent::Up => *selected = selected.saturating_sub(1),
-            Intent::Down => *selected = (*selected + 1).min(2),
-            Intent::HoverRow(index) if index <= 2 => *selected = index,
             Intent::Select(index) if index <= 2 => {
                 *selected = index;
                 self.handle_splash(Intent::Confirm);
@@ -309,10 +324,11 @@ impl ClientSession {
         let Screen::HunterSelect { selected, seed } = &mut self.screen else {
             return;
         };
+        if let Some(row) = list_move(&intent, *selected, count) {
+            *selected = row;
+            return;
+        }
         match intent {
-            Intent::Up => *selected = selected.saturating_sub(1),
-            Intent::Down => *selected = (*selected + 1).min(count.saturating_sub(1)),
-            Intent::HoverRow(index) if index < count => *selected = index,
             Intent::Select(index) if index < count => {
                 *selected = index;
                 self.handle_hunter_select(Intent::Confirm);
@@ -377,23 +393,20 @@ impl ClientSession {
             | Screen::Relationships { selected }
             | Screen::RegionMap { selected }
             | Screen::EventLog { selected }
-            | Screen::Dossier { selected } => match &intent {
-                Intent::Up => {
-                    *selected = selected.saturating_sub(1);
+            | Screen::Dossier { selected } => {
+                if let Some(row) = list_move(&intent, *selected, count) {
+                    *selected = row;
                     return;
                 }
-                Intent::Select(index) | Intent::HoverRow(index) if *index < count => {
-                    // Reference lists have nothing to activate, so a click or
-                    // a hover both just move the reading position.
-                    *selected = *index;
+                // Reference lists have nothing to activate, so a click just
+                // moves the reading position like a hover does.
+                if let Intent::Select(index) = intent {
+                    if index < count {
+                        *selected = index;
+                    }
                     return;
                 }
-                Intent::Down => {
-                    *selected = (*selected + 1).min(count.saturating_sub(1));
-                    return;
-                }
-                _ => {}
-            },
+            }
             _ => return,
         }
         if matches!(intent, Intent::Cancel | Intent::Confirm) || Some(&intent) == toggle.as_ref() {
@@ -611,6 +624,44 @@ impl ClientSession {
         let Some(modal) = self.modal.clone() else {
             return;
         };
+        // Highlight movement is one semantics for every list-shaped modal;
+        // the arms below only choose and close.
+        let moved = match &modal {
+            Modal::FireTarget { silver, selected } => {
+                list_move(&intent, *selected, self.fire_targets().len()).map(|row| {
+                    Modal::FireTarget {
+                        silver: *silver,
+                        selected: row,
+                    }
+                })
+            }
+            Modal::Menu {
+                title,
+                items,
+                selected,
+            } => list_move(&intent, *selected, items.len()).map(|row| Modal::Menu {
+                title: title.clone(),
+                items: items.clone(),
+                selected: row,
+            }),
+            Modal::Confirm {
+                prompt,
+                detail,
+                command,
+                selected,
+            } => list_move(&intent, *selected, 2).map(|row| Modal::Confirm {
+                prompt: prompt.clone(),
+                detail: detail.clone(),
+                command: command.clone(),
+                selected: row,
+            }),
+            _ => None,
+        };
+        if let Some(next) = moved {
+            self.modal = Some(next);
+            self.check_run_over();
+            return;
+        }
         match (modal, intent) {
             (Modal::SprintDirection, Intent::Move(dir)) => {
                 self.modal = None;
@@ -632,18 +683,6 @@ impl ClientSession {
             (Modal::FireTarget { silver, selected }, intent) => {
                 let targets = self.fire_targets();
                 match intent {
-                    Intent::Up => {
-                        self.modal = Some(Modal::FireTarget {
-                            silver,
-                            selected: selected.saturating_sub(1),
-                        })
-                    }
-                    Intent::Down => {
-                        self.modal = Some(Modal::FireTarget {
-                            silver,
-                            selected: (selected + 1).min(targets.len().saturating_sub(1)),
-                        })
-                    }
                     Intent::Confirm | Intent::Fire | Intent::FireSilver => {
                         self.modal = None;
                         if let Some((target, _)) = targets.get(selected) {
@@ -680,28 +719,6 @@ impl ClientSession {
                 },
                 intent,
             ) => match intent {
-                Intent::Up => {
-                    self.modal = Some(Modal::Menu {
-                        title,
-                        items,
-                        selected: selected.saturating_sub(1),
-                    })
-                }
-                Intent::Down => {
-                    let last = items.len().saturating_sub(1);
-                    self.modal = Some(Modal::Menu {
-                        title,
-                        items,
-                        selected: (selected + 1).min(last),
-                    })
-                }
-                Intent::HoverRow(index) if index < items.len() => {
-                    self.modal = Some(Modal::Menu {
-                        title,
-                        items,
-                        selected: index,
-                    });
-                }
                 Intent::Select(index) if index < items.len() => {
                     self.modal = Some(Modal::Menu {
                         title,
@@ -726,25 +743,11 @@ impl ClientSession {
             },
             (
                 Modal::Confirm {
-                    prompt,
-                    detail,
-                    command,
-                    selected,
+                    command, selected, ..
                 },
                 intent,
             ) => {
-                let restore = |session: &mut Self, selected: usize| {
-                    session.modal = Some(Modal::Confirm {
-                        prompt: prompt.clone(),
-                        detail: detail.clone(),
-                        command: command.clone(),
-                        selected,
-                    });
-                };
                 match intent {
-                    Intent::Up => restore(self, selected.saturating_sub(1)),
-                    Intent::Down => restore(self, (selected + 1).min(1)),
-                    Intent::HoverRow(index) if index <= 1 => restore(self, index),
                     Intent::Select(index) if index <= 1 => {
                         self.modal = None;
                         if index == 0 {
@@ -758,7 +761,8 @@ impl ClientSession {
                         }
                     }
                     Intent::Cancel => self.modal = None,
-                    _ => restore(self, selected),
+                    // Anything else leaves the confirmation standing.
+                    _ => {}
                 }
             }
             (kept, Intent::Cancel) => {
