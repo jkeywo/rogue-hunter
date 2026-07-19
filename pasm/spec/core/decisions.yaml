@@ -489,6 +489,14 @@ entities:
       summary: How many identity proofs naming the quarry demands was the literal two written independently at nine sites across six crates - the sim's gate and its log twin, the autoplayer's readiness, the interact menu, the dossier, the planner's goal, and generation's final validation. It is now corroborating_proofs in balance.toml, per the standing rule that anything the rules branch on is authored tuning, and rh-core exposes one Corroboration reading - have, need, decisive - that every layer asks instead of counting for itself. Supply-side checks that look like the same two are not it and keep their own literals - two discriminating clues per axis and two placed discriminators are route-independence arithmetic, two disjoint routes each needing one, and say so in their messages.
       references: [naming-requires-a-discriminator, evidence-supports-rules-out, authored-content-catalogue, two-sources-per-origin-reagent]
 
+  - decision: viability-agreement-is-a-corpus-scan
+    core:
+      status: accepted
+      confidence: confirmed
+      title: The estimate is held to the driven game by a corpus scan
+      summary: The viability heuristic is empirical - calibrated against autoplayer runs, per viability-model-calibration - so its agreement test is empirical too. A slow-tier scan autoplays a per-hunter seed corpus and asserts the win rate does not fall more than a fixed band below the mean certified viability. One-sided by design - the autoplayer out-performing the estimate is fine, and the failure being caught is the estimate over-promising, which is the direction that would certify worlds a hunter cannot actually win. The band is wide, five hundred and fifty permille, because the two numbers measure different journeys - the estimate prices the final fight under the route's loadout while the scan drives the whole run, and ambushes, events and the bot's own imperfect play are deliberately unmodelled variance. The first run made the historical calibration a number - the huntress won 645 against a certified 946, a gap of three hundred - and surfaced a debt nothing had measured before - the occultist won 354 against a certified 884, five hundred and thirty adrift, so either her bot tactics or her estimate need work. The band pins today's measured reality rather than an aspiration, and tightens as the debt is paid. A deterministic no-variance fixture comparison was considered and declined - it would mean teaching the sim a second way to roll, and the corpus is the calibration instrument this model was already built with.
+      references: [viability-model-calibration, autoplayer-golden-replays, combat-viability-threshold]
+
   - decision: search-moves-and-route-steps-stay-two-types
     core:
       status: accepted

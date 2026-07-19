@@ -359,21 +359,9 @@ fn revenant_act(
     let map = sim.state.current_map;
     let hunter = sim.state.hunter.pos;
 
-    // Advance the shared vulnerability/dash cadence.
-    let (pos, was_bound) = {
-        let Some(actor) = sim.state.actor_mut(id) else {
-            return;
-        };
-        actor.cadence = (actor.cadence + 1) % cadence.period;
-        if actor.bound > 0 {
-            actor.bound -= 1;
-        }
-        (actor.pos, actor.bound > 0)
+    let Some((pos, was_bound)) = advance_cadence(sim, id, cadence) else {
+        return;
     };
-    let vulnerable_now = sim.villain_is_vulnerable(id);
-    if vulnerable_now && sim.state.is_visible(pos) {
-        sim.log_id(EventKind::Telegraph, &cadence.vulnerable_telegraph);
-    }
 
     // Consecrated ground scalds it while it stands there.
     if def.affected_by_consecration
@@ -794,19 +782,27 @@ fn tick_villain_cadence(sim: &mut Sim, id: ActorId) {
     if !is_villain {
         return;
     }
-    let pos = {
-        let Some(actor) = sim.state.actor_mut(id) else {
-            return;
-        };
+    advance_cadence(sim, id, &cadence);
+}
+
+/// Advance the shared vulnerability/dash cadence one turn: the count moves,
+/// a binding wears, and the vulnerable telegraph sounds if the thing is
+/// seen. Every path that ticks the cadence — acting or held in a snare —
+/// goes through here, so the two can never count differently. Returns the
+/// villain's position and whether it is still bound.
+fn advance_cadence(sim: &mut Sim, id: ActorId, cadence: &CadenceDef) -> Option<(Point, bool)> {
+    let (pos, still_bound) = {
+        let actor = sim.state.actor_mut(id)?;
         actor.cadence = (actor.cadence + 1) % cadence.period;
         if actor.bound > 0 {
             actor.bound -= 1;
         }
-        actor.pos
+        (actor.pos, actor.bound > 0)
     };
     if sim.villain_is_vulnerable(id) && sim.state.is_visible(pos) {
         sim.log_id(EventKind::Telegraph, &cadence.vulnerable_telegraph);
     }
+    Some((pos, still_bound))
 }
 
 /// Villagers and neutral NPCs take routine local turns: moving, working, and

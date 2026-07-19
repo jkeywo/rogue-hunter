@@ -621,6 +621,18 @@ entities:
       summary: Clients map raw events onto a platform-neutral Key; what a key means is decided once, in intent_for_key, against the session's input mode - text entry, list navigation, or tactical. The action panel prints its key hints off the same table, and the persisted-save policy lives behind save_action, so the clients cannot drift apart at the keyboard or the save file.
       references: [semantic-command-boundary, terminal-client, web-client, visible-opportunity-affordances]
 
+  - component: villain-combat-primitives
+    implementation:
+      status: confirmed
+      paths: [crates/rh-core/src/combat.rs, crates/rh-core/src/viability.rs]
+      tests: [cargo test -p rh-core, cargo test -p rh-replay --test golden]
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Structural combat multipliers written once
+      summary: The vulnerability double, the coup triple, the Killing Blow double, and the halves convention for melee multipliers are the shape of the combat rules rather than tuning. They live in one module that both the sim's damage resolution and the viability estimate read; the loadout the estimate prices is derived beside the model in HuntLoadout::from_kit; and the revenant's cadence ticks through one function whether it acts or sits held in a snare.
+      references: [encounter-turn-rules, combat-viability-threshold, revenant-cadence-ai, clue-graph-validator]
+
   - component: first-time-hints
     implementation:
       status: confirmed

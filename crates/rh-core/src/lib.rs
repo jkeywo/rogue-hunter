@@ -6,6 +6,7 @@
 //! [`sim::Sim::apply`]; every rejection carries a player-readable reason.
 
 pub mod ai;
+pub mod combat;
 pub mod command;
 pub mod events;
 pub mod fov;

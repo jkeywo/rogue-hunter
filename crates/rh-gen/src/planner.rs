@@ -965,16 +965,12 @@ fn goal(ctx: &Ctx, state: &PState) -> Option<u16> {
     // the free opening blow, while one with a single point may do better
     // keeping it for the ability she brings to the fight. Certify on whichever
     // she would actually choose.
-    let base = HuntLoadout {
-        hunter_hp: ctx.catalogue.hunter.health,
-        draughts: item("wound-draught"),
-        silver_bullets: item("silver-bullet"),
-        binding_charms: item("binding-charm"),
-        counter_blades: item("cold-iron-pin"),
-        physical: state.physical,
-        on_consecrated_ground: state.consecrated && ctx.villain_map == SETTLEMENT,
-        dormant_opening: false,
-    };
+    let base = HuntLoadout::from_kit(
+        ctx.catalogue,
+        item,
+        state.physical,
+        state.consecrated && ctx.villain_map == SETTLEMENT,
+    );
     let score = |loadout: &HuntLoadout| {
         hunt_viability(
             ctx.catalogue,

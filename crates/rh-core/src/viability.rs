@@ -12,6 +12,8 @@
 
 use rh_content::{Catalogue, ItemKind, ManoeuvreEffect, SignatureEffect};
 
+use crate::combat;
+
 /// What the hunter brings to the hunt, as tracked by the planner.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct HuntLoadout {
@@ -27,6 +29,31 @@ pub struct HuntLoadout {
     pub on_consecrated_ground: bool,
     /// The hunt opens on the dormant villain in its grave (coup de grace).
     pub dormant_opening: bool,
+}
+
+impl HuntLoadout {
+    /// What a kit is worth in the hunt, derived beside the model that prices
+    /// it so a caller cannot invent a mapping of its own — that is how the
+    /// estimate once credited a hunter with a finisher she did not have.
+    /// `item_count` answers for whatever inventory the caller tracks; the
+    /// openings (`dormant_opening`) stay the caller's choice to weigh.
+    pub fn from_kit(
+        catalogue: &Catalogue,
+        item_count: impl Fn(&str) -> u16,
+        physical: u8,
+        on_consecrated_ground: bool,
+    ) -> Self {
+        Self {
+            hunter_hp: catalogue.hunter.health,
+            draughts: item_count("wound-draught"),
+            silver_bullets: item_count("silver-bullet"),
+            binding_charms: item_count("binding-charm"),
+            counter_blades: item_count("cold-iron-pin"),
+            physical,
+            on_consecrated_ground,
+            dormant_opening: false,
+        }
+    }
 }
 
 /// Estimated final-fight viability in permille (750 = 75%).
@@ -180,16 +207,23 @@ pub fn hunt_viability(
             Some(cadence) => {
                 // Revenant-style: damage lands only in vulnerability windows,
                 // where it bites twice as deep.
-                let vulnerable_dpt = melee_dpt * 2;
+                let vulnerable_dpt = melee_dpt * u32::from(combat::VULNERABILITY_MULTIPLIER);
                 let mut remaining = villain_hp;
                 let mut turns: i32 = 0;
                 if loadout.dormant_opening {
                     // Coup de grace on the dormant thing in its grave. The coup
-                    // triple is for striking something asleep and is open to
-                    // anyone; only the Killing Blow double needs the signature.
-                    let finisher = if has_killing_blow { 2 } else { 1 };
-                    let opener =
-                    u32::from(blade) * power_numerator * 1000 / 2 * finisher * 3 /* coup */;
+                    // multiplier is for striking something asleep and is open
+                    // to anyone; only the Killing Blow bonus needs the
+                    // signature.
+                    let finisher = if has_killing_blow {
+                        u32::from(combat::KILLING_BLOW_MULTIPLIER)
+                    } else {
+                        1
+                    };
+                    let opener = u32::from(blade) * power_numerator * 1000
+                        / u32::from(combat::MULTIPLIER_HALVES)
+                        * finisher
+                        * u32::from(combat::COUP_MULTIPLIER);
                     remaining = remaining.saturating_sub(opener);
                     turns += 1;
                 }

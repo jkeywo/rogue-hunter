@@ -8,6 +8,7 @@ use rh_content::{
     Catalogue, ItemKind, ManoeuvreEffect, PoolKind, SignatureEffect, StringId, Terrain,
 };
 
+use crate::combat;
 use crate::command::{Command, Rejection, Target};
 use crate::events::{EventKind, LogEvent};
 use crate::fov::{self, has_line_of_sight, is_walkable};
@@ -509,7 +510,7 @@ impl Sim {
                     return Err(Rejection::NotAdjacent);
                 }
                 let multiplier = self.take_melee_multiplier();
-                let damage = weapon_damage * u16::from(multiplier) / 2;
+                let damage = weapon_damage * u16::from(multiplier) / combat::MULTIPLIER_HALVES;
                 self.hunter_strike(id, damage, dormant, false);
                 self.end_action();
                 Ok(())
@@ -737,7 +738,9 @@ impl Sim {
                 }
                 self.state.hunter.physical -= def.physical_cost;
                 let multiplier = self.take_melee_multiplier();
-                let damage = self.melee_damage() * u16::from(multiplier) / 2 * 2;
+                let damage = self.melee_damage() * u16::from(multiplier)
+                    / combat::MULTIPLIER_HALVES
+                    * combat::KILLING_BLOW_MULTIPLIER;
                 self.log(
                     EventKind::Combat,
                     self.catalogue
@@ -1679,7 +1682,7 @@ impl Sim {
             // The strike that outed it lands on the transformed villain.
             if let Some(actor_id) = self.state.villain.actor {
                 let multiplier = self.take_melee_multiplier();
-                let final_damage = damage * u16::from(multiplier) / 2;
+                let final_damage = damage * u16::from(multiplier) / combat::MULTIPLIER_HALVES;
                 self.hunter_strike(actor_id, final_damage, false, false);
             }
             return Ok(());
@@ -1794,7 +1797,11 @@ impl Sim {
             return;
         }
         // A coup de grace on a sleeping thing lands with terrible weight.
-        let final_damage = if coup { damage * 3 } else { damage };
+        let final_damage = if coup {
+            damage * combat::COUP_MULTIPLIER
+        } else {
+            damage
+        };
         let cuts_the_ward = self.best_melee().1;
         self.deal_damage_to_actor(id, final_damage, cuts_the_ward);
     }
@@ -1824,7 +1831,11 @@ impl Sim {
             return;
         }
         // A coup de grace on a sleeping thing lands with terrible weight.
-        let final_damage = if coup { damage * 3 } else { damage };
+        let final_damage = if coup {
+            damage * combat::COUP_MULTIPLIER
+        } else {
+            damage
+        };
         self.deal_damage_to_actor(id, final_damage, silver);
     }
 
@@ -1846,9 +1857,9 @@ impl Sim {
                     return;
                 }
                 // Blows land twice as deep in a vulnerability window. The
-                // dormant coup already doubles at the strike level.
+                // dormant coup already multiplies at the strike level.
                 if vulnerable && !was_dormant {
-                    damage *= 2;
+                    damage *= combat::VULNERABILITY_MULTIPLIER;
                 }
             }
             // A hex-ward soaks honest blows until it tears. The counter cuts

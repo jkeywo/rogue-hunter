@@ -57,6 +57,55 @@ fn autoplayer_wins_runs_for_every_hunter() {
     }
 }
 
+/// The estimate and the game it prices, held to each other. The viability
+/// heuristic was calibrated against autoplayer runs rather than theory
+/// (viability-model-calibration); this scan keeps that calibration honest.
+/// One-sided on purpose: the autoplayer winning more often than certified is
+/// fine, the estimate over-promising by a wide margin is the drift being
+/// caught.
+///
+/// The band is wide because the two numbers measure different journeys: the
+/// estimate prices the final fight under the route's loadout, while the scan
+/// drives the whole run — ambushes, events, and the bot's own imperfect play
+/// are deliberately unmodelled variance. First run measured the huntress at
+/// a ~300 permille gap (won 645, certified 946) and the occultist at ~530
+/// (won 354, certified 884): the occultist's extra distance is recorded
+/// calibration debt — her bot tactics or her estimate need work — and the
+/// band pins today's reality so any further drift trips it.
+#[test]
+#[ignore = "slow corpus scan: holds the win rate to the certified estimate; run with --ignored"]
+fn win_rate_tracks_certified_viability() {
+    for hunter in catalogue().hunters.keys() {
+        let mut wins = 0u32;
+        let mut runs = 0u32;
+        let mut promised: u64 = 0;
+        for seed in 0..48u64 {
+            let (mut session, _used) = RunSession::new_from_viable_seed(seed, catalogue(), hunter)
+                .unwrap_or_else(|error| panic!("{hunter} near seed {seed}: {error}"));
+            promised += u64::from(
+                session
+                    .sim
+                    .world
+                    .certified_routes
+                    .first()
+                    .map(|route| route.viability_permille)
+                    .unwrap_or(0),
+            );
+            runs += 1;
+            if autoplay::autoplay(&mut session) == Some(Outcome::Victory) {
+                wins += 1;
+            }
+        }
+        let won_permille = wins * 1000 / runs;
+        let promised_permille = (promised / u64::from(runs)) as u32;
+        assert!(
+            won_permille + 550 >= promised_permille,
+            "{hunter}: won {won_permille} permille of driven runs against a certified \
+             {promised_permille} permille - the estimate is over-promising"
+        );
+    }
+}
+
 #[test]
 fn autoplayer_wins_runs_for_every_archetype() {
     // Driven off the catalogue rather than a hardcoded pair: adding a villain
