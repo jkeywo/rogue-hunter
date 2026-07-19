@@ -538,11 +538,13 @@ fn the_case_report_marks_the_certified_routes_against_what_was_done() {
             for route in &report.routes {
                 // Every step line carries a mark saying whether it was done.
                 for line in route.lines().skip(1) {
-                    // Bracketed: the marks are placeholder copy like the rest.
+                    // The whole step line composes through the table now, so
+                    // its own placeholder brackets wrap the mark's: a line
+                    // reads "[[not done] t0: [Resolve: ...]]".
                     assert!(
-                        line.starts_with("[done]")
-                            || line.starts_with("[not done]")
-                            || line.starts_with("[--]"),
+                        line.starts_with("[[done]")
+                            || line.starts_with("[[not done]")
+                            || line.starts_with("[[--]"),
                         "unmarked route step: {line}"
                     );
                 }

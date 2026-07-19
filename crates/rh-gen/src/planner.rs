@@ -15,8 +15,8 @@ use std::collections::HashSet;
 use rh_content::{Catalogue, PoolKind};
 use rh_core::viability::{hunt_viability, HuntLoadout};
 use rh_core::world::{
-    CertifiedRoute, MapId, NpcId, OpportunityAnchor, OpportunityGrant, OpportunityId, RouteStep,
-    World,
+    CertifiedRoute, MapId, NpcId, OpportunityAnchor, OpportunityGrant, OpportunityId, RouteAction,
+    RouteStep, World,
 };
 
 /// Items the planner tracks through gathers and crafting.
@@ -361,7 +361,7 @@ fn minimise(ctx: &Ctx, base_cfg: &PlannerConfig, mut route: CertifiedRoute) -> C
         let used: Vec<usize> = route
             .steps
             .iter()
-            .filter_map(|step| step.opportunity)
+            .filter_map(|step| step.opportunity())
             .filter_map(|id| ctx.ops.iter().position(|op| op.id == id))
             .collect();
         let allowed: u64 = used.iter().fold(0u64, |mask, index| mask | (1 << index));
@@ -400,7 +400,7 @@ fn minimise(ctx: &Ctx, base_cfg: &PlannerConfig, mut route: CertifiedRoute) -> C
 fn route_penalty(ctx: &Ctx, route: &CertifiedRoute) -> u64 {
     let mut forbidden = 0u64;
     for step in &route.steps {
-        if let Some(op_id) = step.opportunity {
+        if let Some(op_id) = step.opportunity() {
             if let Some(index) = ctx.ops.iter().position(|op| op.id == op_id) {
                 if !ctx.ops[index].structural {
                     forbidden |= 1 << index;
@@ -760,7 +760,7 @@ fn flood_reaches(
 }
 
 struct RouteFound {
-    steps: Vec<(u8, String, Option<OpportunityId>)>,
+    steps: Vec<(u8, String, RouteAction)>,
     state: PState,
     viability: u16,
 }
@@ -853,7 +853,7 @@ fn search(ctx: &Ctx, cfg: &PlannerConfig) -> Result<CertifiedRoute, String> {
             label: cfg.label.clone(),
         };
         let mut memo: HashSet<MemoKey> = HashSet::new();
-        let mut path: Vec<(u8, String, Option<OpportunityId>)> = Vec::new();
+        let mut path: Vec<(u8, String, RouteAction)> = Vec::new();
         nodes = 0;
         if let Some(found) = dfs(
             ctx,
@@ -876,20 +876,22 @@ fn search(ctx: &Ctx, cfg: &PlannerConfig) -> Result<CertifiedRoute, String> {
             let mut steps: Vec<RouteStep> = found
                 .steps
                 .iter()
-                .map(|(turn, description, opportunity)| RouteStep {
+                .map(|(turn, description, action)| RouteStep {
                     turn: *turn,
+                    action: action.clone(),
                     description: description.clone(),
-                    opportunity: *opportunity,
                 })
                 .collect();
             steps.push(RouteStep {
                 turn: found.state.turn,
-                description: format!(
-                    "Initiate the hunt ({}\u{2030} viability at threat tier {})",
-                    found.viability,
-                    tier_at(ctx, found.state.turn)
+                action: RouteAction::InitiateHunt,
+                description: ctx.catalogue.strings.ui_fill(
+                    "ui.route.initiate-hunt",
+                    &[
+                        ("viability", &found.viability.to_string()),
+                        ("tier", &tier_at(ctx, found.state.turn).to_string()),
+                    ],
                 ),
-                opportunity: None,
             });
             Ok(CertifiedRoute {
                 label: cfg.label.clone(),
@@ -996,7 +998,7 @@ fn dfs(
     state: PState,
     memo: &mut HashSet<MemoKey>,
     nodes: &mut u32,
-    path: &mut Vec<(u8, String, Option<OpportunityId>)>,
+    path: &mut Vec<(u8, String, RouteAction)>,
 ) -> Option<RouteFound> {
     if *nodes >= NODE_BUDGET {
         return None;
@@ -1018,8 +1020,8 @@ fn dfs(
     }
 
     for action in candidate_actions(ctx, cfg, &state) {
-        let (next, description, opportunity) = apply_action(ctx, &state, &action);
-        path.push((state.turn, description, opportunity));
+        let (next, description, taken) = apply_action(ctx, &state, &action);
+        path.push((state.turn, description, taken));
         let result = dfs(ctx, cfg, next, memo, nodes, path);
         path.pop();
         if result.is_some() {
@@ -1151,11 +1153,7 @@ fn candidate_actions(ctx: &Ctx, cfg: &PlannerConfig, state: &PState) -> Vec<Acti
     actions
 }
 
-fn apply_action(
-    ctx: &Ctx,
-    state: &PState,
-    action: &Action,
-) -> (PState, String, Option<OpportunityId>) {
+fn apply_action(ctx: &Ctx, state: &PState, action: &Action) -> (PState, String, RouteAction) {
     let mut next = state.clone();
     match action {
         Action::Resolve(index) => {
@@ -1182,7 +1180,13 @@ fn apply_action(
                 }
                 _ => {}
             }
-            (next, format!("Resolve: {}", op.name), Some(op.id))
+            (
+                next,
+                ctx.catalogue
+                    .strings
+                    .ui_fill("ui.route.resolve", &[("what", &op.name)]),
+                RouteAction::Resolve(op.id),
+            )
         }
         Action::Craft(recipe_id) => {
             let recipe = &ctx.catalogue.recipes[recipe_id];
@@ -1199,8 +1203,13 @@ fn apply_action(
             }
             (
                 next,
-                format!("Craft: {}", ctx.catalogue.strings.get(&recipe.name)),
-                None,
+                ctx.catalogue.strings.ui_fill(
+                    "ui.route.craft",
+                    &[("recipe", ctx.catalogue.strings.get(&recipe.name))],
+                ),
+                RouteAction::Craft {
+                    recipe: recipe_id.clone(),
+                },
             )
         }
         Action::Consecrate => {
@@ -1211,8 +1220,8 @@ fn apply_action(
             next.physical = (next.physical + 1).min(caps.physical_cap);
             (
                 next,
-                "Perform the consecration rite (one day)".to_owned(),
-                None,
+                ctx.catalogue.strings.ui("ui.route.consecrate").to_owned(),
+                RouteAction::Consecrate,
             )
         }
         Action::Travel(destination) => {
@@ -1227,8 +1236,11 @@ fn apply_action(
             next.physical = (next.physical + 1).min(caps.physical_cap);
             (
                 next,
-                format!("Travel to {}", ctx.world.maps[*destination as usize].name),
-                None,
+                ctx.catalogue.strings.ui_fill(
+                    "ui.route.travel",
+                    &[("place", &ctx.world.maps[*destination as usize].name)],
+                ),
+                RouteAction::Travel(MapId(*destination)),
             )
         }
     }

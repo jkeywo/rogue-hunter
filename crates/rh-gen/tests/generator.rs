@@ -122,13 +122,13 @@ fn certified_routes_meet_the_generator_contract() {
         let early_ops: BTreeSet<_> = early
             .steps
             .iter()
-            .filter_map(|s| s.opportunity)
+            .filter_map(|s| s.opportunity())
             .filter(|id| !structural(id))
             .collect();
         let fallback_ops: BTreeSet<_> = fallback
             .steps
             .iter()
-            .filter_map(|s| s.opportunity)
+            .filter_map(|s| s.opportunity())
             .filter(|id| !structural(id))
             .collect();
         assert!(
@@ -272,7 +272,7 @@ fn every_run_opens_somewhere_and_banked_nodes_are_honest() {
                     !route
                         .steps
                         .iter()
-                        .any(|step| step.opportunity == Some(prior)),
+                        .any(|step| step.opportunity() == Some(prior)),
                     "{hunter} seed {seed}: the banked node still appears in route '{}'",
                     route.label
                 );

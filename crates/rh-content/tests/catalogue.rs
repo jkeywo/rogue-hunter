@@ -420,6 +420,9 @@ fn code_side_ids() -> std::collections::BTreeSet<String> {
                 // tests without needing to know where either lives.
                 if pattern.iter().any(|p| piece.starts_with(p))
                     && piece.split('.').count() >= 3
+                    // A trailing dot means a namespace prefix, not an id --
+                    // tests match on those to select a whole namespace.
+                    && !piece.ends_with('.')
                     && piece.chars().all(|c| {
                         c.is_ascii_lowercase() || c.is_ascii_digit() || c == '.' || c == '-'
                     })

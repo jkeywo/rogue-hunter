@@ -48,7 +48,7 @@ fn expire_wards(sim: &mut Sim) {
     if lapsed {
         sim.log(
             EventKind::Combat,
-            "The marks go quiet. The ground is only ground again.".to_owned(),
+            sim.catalogue.strings.ui("log.ward.expired").to_owned(),
         );
     }
 }
@@ -68,12 +68,18 @@ fn act(sim: &mut Sim, id: ActorId) {
             if risen {
                 sim.log(
                     EventKind::Telegraph,
-                    "The earth shifts. Whatever slept here sleeps no longer.".to_owned(),
+                    sim.catalogue
+                        .strings
+                        .ui("log.villain.grave-wakes")
+                        .to_owned(),
                 );
             } else {
                 sim.log(
                     EventKind::Telegraph,
-                    "The thing in the grave stirs.".to_owned(),
+                    sim.catalogue
+                        .strings
+                        .ui("log.villain.grave-stirs")
+                        .to_owned(),
                 );
                 return;
             }
@@ -95,7 +101,12 @@ fn act(sim: &mut Sim, id: ActorId) {
                 actor.awake = true;
             }
             let name = sim.actor_name(&kind);
-            sim.log(EventKind::Combat, format!("The {name} has your scent."));
+            sim.log(
+                EventKind::Combat,
+                sim.catalogue
+                    .strings
+                    .ui_fill("log.combat.has-scent", &[("name", &name)]),
+            );
         } else {
             return;
         }
@@ -110,7 +121,9 @@ fn act(sim: &mut Sim, id: ActorId) {
                 let name = sim.actor_name(&kind);
                 sim.log(
                     EventKind::Combat,
-                    format!("The {name} tears free of the snare."),
+                    sim.catalogue
+                        .strings
+                        .ui_fill("log.combat.snare-broken", &[("name", &name)]),
                 );
             }
         }
@@ -293,7 +306,8 @@ fn werewolf_act(sim: &mut Sim, id: ActorId, tier: u8, def: &rh_content::VillainD
                 if let Some(actor) = sim.state.actor_mut(id) {
                     actor.pounce_cooldown = cooldown_max;
                 }
-                sim.log(EventKind::Telegraph, "The beast leaps!".to_owned());
+                let text = sim.catalogue.strings.ui("log.combat.pounce").to_owned();
+                sim.log(EventKind::Telegraph, text);
                 let bonus = sim.catalogue.balance.combat.pounce_attack_bonus_percent;
                 let damage = def.melee_damage + tier_bonus_damage(def, tier);
                 attack_hunter_with(sim, id, damage, def.hit_percent.saturating_add(bonus));
@@ -302,7 +316,10 @@ fn werewolf_act(sim: &mut Sim, id: ActorId, tier: u8, def: &rh_content::VillainD
         }
         sim.log(
             EventKind::Telegraph,
-            "The beast checks its leap, lane broken.".to_owned(),
+            sim.catalogue
+                .strings
+                .ui("log.combat.pounce-blocked")
+                .to_owned(),
         );
         chase_or_attack(
             sim,
@@ -372,7 +389,10 @@ fn revenant_act(
         };
         sim.log(
             EventKind::Telegraph,
-            "The warded ground sears the revenant; grave-shadow boils away.".to_owned(),
+            sim.catalogue
+                .strings
+                .ui("log.ward.sears-revenant")
+                .to_owned(),
         );
         if dead {
             sim.state.villain.dead = true;
@@ -380,7 +400,9 @@ fn revenant_act(
             sim.state.outcome = Some(crate::state::Outcome::Victory);
             sim.log(
                 EventKind::System,
-                "On holy ground the revenant unravels into cold ash. The valley is delivered."
+                sim.catalogue
+                    .strings
+                    .ui("log.outcome.revenant-unravels")
                     .to_owned(),
             );
             return;
@@ -649,7 +671,9 @@ fn move_actor(sim: &mut Sim, id: ActorId, to: Point) {
             let name = sim.actor_name(&kind);
             sim.log(
                 EventKind::Combat,
-                format!("The snare snaps tight! The {name} is held fast."),
+                sim.catalogue
+                    .strings
+                    .ui_fill("log.signature.snare-catches", &[("name", &name)]),
             );
         }
     }
@@ -672,7 +696,9 @@ fn move_actor(sim: &mut Sim, id: ActorId, to: Point) {
                 let name = sim.actor_name(&kind);
                 sim.log(
                     EventKind::Combat,
-                    format!("The marks flare as the {name} crosses them, and it comes away torn."),
+                    sim.catalogue
+                        .strings
+                        .ui_fill("log.ward.crossed", &[("name", &name)]),
                 );
             }
             // The ward is drawn against the unnatural, not against a weakness,
@@ -716,10 +742,18 @@ fn ranged_attack_hunter(sim: &mut Sim, id: ActorId, damage: u16, hit_percent: u8
         sim.state.hunter.hp = sim.state.hunter.hp.saturating_sub(damage);
         sim.log(
             EventKind::Combat,
-            format!("The {name}'s shot tears into you for {damage}."),
+            sim.catalogue.strings.ui_fill(
+                "log.combat.enemy-ranged-hit",
+                &[("name", &name), ("damage", &damage.to_string())],
+            ),
         );
     } else {
-        sim.log(EventKind::Combat, format!("The {name}'s shot goes wide."));
+        sim.log(
+            EventKind::Combat,
+            sim.catalogue
+                .strings
+                .ui_fill("log.combat.enemy-ranged-miss", &[("name", &name)]),
+        );
     }
 }
 
@@ -733,10 +767,18 @@ fn attack_hunter_with(sim: &mut Sim, id: ActorId, damage: u16, hit_percent: u8) 
         sim.state.hunter.hp = sim.state.hunter.hp.saturating_sub(damage);
         sim.log(
             EventKind::Combat,
-            format!("The {name} strikes you for {damage}."),
+            sim.catalogue.strings.ui_fill(
+                "log.combat.enemy-melee-hit",
+                &[("name", &name), ("damage", &damage.to_string())],
+            ),
         );
     } else {
-        sim.log(EventKind::Combat, format!("The {name} lunges and misses."));
+        sim.log(
+            EventKind::Combat,
+            sim.catalogue
+                .strings
+                .ui_fill("log.combat.enemy-melee-miss", &[("name", &name)]),
+        );
     }
 }
 
@@ -807,7 +849,9 @@ fn npc_routines(sim: &mut Sim) {
                         let text = link.discovered_text.clone();
                         sim.log(
                             EventKind::Social,
-                            format!("You watch them together and understand: {text}"),
+                            sim.catalogue
+                                .strings
+                                .ui_fill("log.social.link-observed", &[("what", &text)]),
                         );
                     }
                 }

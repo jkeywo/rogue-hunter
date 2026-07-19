@@ -297,7 +297,7 @@ impl Sim {
         if self.exit_at(dest).is_some() {
             self.log(
                 EventKind::Travel,
-                "A route out. Travelling will spend a day.".to_owned(),
+                self.catalogue.strings.ui("log.travel.route-out").to_owned(),
             );
         }
         self.end_action();
@@ -418,9 +418,9 @@ impl Sim {
                 self.state.hunter.sure_shot = true;
                 self.log(
                     EventKind::Combat,
-                    format!(
-                        "You take a long breath and {}.",
-                        self.text(&def.name).to_lowercase()
+                    self.catalogue.strings.ui_fill(
+                        "log.manoeuvre.aim",
+                        &[("what", &self.text(&def.name).to_lowercase())],
                     ),
                 );
             }
@@ -577,10 +577,9 @@ impl Sim {
                     .unwrap_or_else(|| "the sign".to_owned());
                 self.log(
                     EventKind::Clue,
-                    format!(
-                        "You sit with it until it gives: {name} stops agreeing with your \
-                         suspicion and starts ruling out everything else."
-                    ),
+                    self.catalogue
+                        .strings
+                        .ui_fill("log.signature.read-the-sign", &[("sign", &name)]),
                 );
             }
             SignatureEffect::WardTheGround { turns, radius } => {
@@ -605,7 +604,9 @@ impl Sim {
                 });
                 self.log(
                     EventKind::Combat,
-                    "You draw the old marks into the earth. The air over them goes tight."
+                    self.catalogue
+                        .strings
+                        .ui("log.signature.ward-ground")
                         .to_owned(),
                 );
             }
@@ -654,7 +655,10 @@ impl Sim {
             }
             self.log(
                 EventKind::Item,
-                "The charm crumbles to dust. Whatever this thing is, grave-craft has no hold on it.".to_owned(),
+                self.catalogue
+                    .strings
+                    .ui("log.item.charm-no-hold")
+                    .to_owned(),
             );
             self.end_action();
             return Ok(());
@@ -667,7 +671,10 @@ impl Sim {
             }
             self.log(
                 EventKind::Item,
-                "The charm crumbles uselessly against mere flesh.".to_owned(),
+                self.catalogue
+                    .strings
+                    .ui("log.item.charm-wasted")
+                    .to_owned(),
             );
             self.end_action();
             return Ok(());
@@ -682,7 +689,9 @@ impl Sim {
         }
         self.log(
             EventKind::Telegraph,
-            "The charm flares against the revenant. Its shroud of shadow is stripped away!"
+            self.catalogue
+                .strings
+                .ui("log.item.charm-strips-shroud")
                 .to_owned(),
         );
         self.end_action();
@@ -769,15 +778,17 @@ impl Sim {
                     if have >= 2 && decisive {
                         self.log(
                             EventKind::Clue,
-                            "Two proofs corroborate, and one of them rules the alternatives out. \
-                             You could name your quarry now."
+                            self.catalogue
+                                .strings
+                                .ui("log.clue.can-name-quarry")
                                 .to_owned(),
                         );
                     } else if have >= 2 {
                         self.log(
                             EventKind::Clue,
-                            "The signs agree with each other — but they would agree with more \
-                             than one answer. You need something that rules an alternative out."
+                            self.catalogue
+                                .strings
+                                .ui("log.clue.not-decisive")
                                 .to_owned(),
                         );
                     }
@@ -858,7 +869,9 @@ impl Sim {
                     let name = self.world.npc(npc).name.clone();
                     self.log(
                         EventKind::Social,
-                        format!("{name} pales. They will cooperate — for silence."),
+                        self.catalogue
+                            .strings
+                            .ui_fill("log.social.blackmailed", &[("name", &name)]),
                     );
                 }
             }
@@ -924,12 +937,14 @@ impl Sim {
                     spec.name
                 )
             }
-            crate::world::Disposition::Wary => {
-                format!("{} answers you carefully, giving away little.", spec.name)
-            }
-            crate::world::Disposition::Hostile => {
-                format!("{} answers in single words, wishing you gone.", spec.name)
-            }
+            crate::world::Disposition::Wary => self
+                .catalogue
+                .strings
+                .ui_fill("log.social.wary-answer", &[("npc", &spec.name)]),
+            crate::world::Disposition::Hostile => self
+                .catalogue
+                .strings
+                .ui_fill("log.social.hostile-answer", &[("npc", &spec.name)]),
         };
         self.state.met_npcs.insert(npc);
         self.log(EventKind::Social, line);
@@ -951,7 +966,9 @@ impl Sim {
         self.state.hunter.add_item("flintlock-shot", 1);
         self.log(
             EventKind::Item,
-            format!("{} sells you powder and ball.", spec.name),
+            self.catalogue
+                .strings
+                .ui_fill("log.trade.ammunition", &[("npc", &spec.name)]),
         );
         self.end_action();
         Ok(())
@@ -1341,7 +1358,10 @@ impl Sim {
                 .unwrap_or_default();
             self.log(
                 EventKind::Social,
-                format!("You mark {}, the {}.", spec.name, archetype.to_lowercase()),
+                self.catalogue.strings.ui_fill(
+                    "log.social.mark-npc",
+                    &[("npc", &spec.name), ("role", &archetype.to_lowercase())],
+                ),
             );
         }
         // Discover opportunities whose anchor is now visible.
@@ -1677,7 +1697,9 @@ impl Sim {
                         let _ = regen;
                         self.log(
                             EventKind::Telegraph,
-                            "The silver bites to the curse's heart. The wound does not close."
+                            self.catalogue
+                                .strings
+                                .ui("log.combat.silver-bites")
                                 .to_owned(),
                         );
                     }
@@ -1693,8 +1715,7 @@ impl Sim {
             if is_villain {
                 self.log(
                     EventKind::Telegraph,
-                    "The thing's eyes open. It rises from the earth in one terrible motion."
-                        .to_owned(),
+                    self.catalogue.strings.ui("log.villain.rises").to_owned(),
                 );
             }
         }
@@ -1827,7 +1848,9 @@ impl Sim {
                 self.state.discovered.insert(id);
                 self.log(
                     EventKind::Clue,
-                    format!("Among its effects, a scrap that points somewhere: {name}."),
+                    self.catalogue
+                        .strings
+                        .ui_fill("log.clue.scrap", &[("what", &name)]),
                 );
             } else {
                 self.state.hunter.add_item("coin", 1);
@@ -1847,9 +1870,15 @@ impl Sim {
         let clock = self.state.clock;
         self.log(
             EventKind::Clock,
-            format!(
-                "The day turns. ({clock} of {} spent)",
-                self.catalogue.balance.clock.travel_turns
+            self.catalogue.strings.ui_fill(
+                "log.clock.day-turns",
+                &[
+                    ("spent", &clock.to_string()),
+                    (
+                        "total",
+                        &self.catalogue.balance.clock.travel_turns.to_string(),
+                    ),
+                ],
             ),
         );
 

@@ -966,7 +966,10 @@ impl<'a> Builder<'a> {
                 self.opportunities.push(OpportunitySpec {
                     id,
                     source: format!("disproof:{}", npc.name),
-                    name: format!("Check the records on {}", npc.name),
+                    name: self
+                        .catalogue
+                        .strings
+                        .ui_fill("gen.npc.disproof.name", &[("npc", &npc.name)]),
                     map: records_map,
                     anchor: OpportunityAnchor::Tile(records_at),
                     pool: Some(PoolKind::Lore),
@@ -993,7 +996,10 @@ impl<'a> Builder<'a> {
                 self.opportunities.push(OpportunitySpec {
                     id,
                     source: format!("expose:{}", npc.name),
-                    name: format!("Confront {} with their secret", npc.name),
+                    name: self
+                        .catalogue
+                        .strings
+                        .ui_fill("gen.npc.expose.name", &[("npc", &npc.name)]),
                     map,
                     anchor: OpportunityAnchor::Npc(npc.id),
                     pool: Some(PoolKind::Social),

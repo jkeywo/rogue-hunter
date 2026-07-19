@@ -326,9 +326,37 @@ pub struct CertifiedRoute {
 pub struct RouteStep {
     /// Global turn on which the step happens.
     pub turn: u8,
+    /// What the step actually is. The autoplayer reads this; `description` is
+    /// for the player and nothing may branch on it.
+    pub action: RouteAction,
     pub description: String,
-    /// Opportunity resolved by this step, if any.
-    pub opportunity: Option<OpportunityId>,
+}
+
+/// What a certified route step does.
+///
+/// The planner knows this exactly, so it says so rather than writing prose and
+/// leaving the autoplayer to parse it back out. Prose is display, and display
+/// gets rewritten and translated; a plan that is read by code has to be data.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum RouteAction {
+    Resolve(OpportunityId),
+    Craft {
+        recipe: String,
+    },
+    Consecrate,
+    Travel(MapId),
+    /// The synthetic final step: everything is ready, go and hunt.
+    InitiateHunt,
+}
+
+impl RouteStep {
+    /// The opportunity this step resolves, if it resolves one.
+    pub fn opportunity(&self) -> Option<OpportunityId> {
+        match self.action {
+            RouteAction::Resolve(id) => Some(id),
+            _ => None,
+        }
+    }
 }
 
 /// Normalised link key so `(a, b)` and `(b, a)` collide.

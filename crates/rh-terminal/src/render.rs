@@ -540,11 +540,11 @@ fn draw_case_report(frame: &mut Frame, report: &CaseReportView, labels: &PanelLa
         ),
         Line::raw(""),
         Line::styled(
-            format!("The villain: {}", report.villain),
+            labels.report_villain.replace("{what}", &report.villain),
             Style::default().fg(Color::LightRed),
         ),
-        Line::raw(format!("Origin — {}", report.origin)),
-        Line::raw(format!("Scheme — {}", report.scheme)),
+        Line::raw(labels.report_origin.replace("{what}", &report.origin)),
+        Line::raw(labels.report_scheme.replace("{what}", &report.scheme)),
         Line::styled(report.tier.clone(), Style::default().fg(Color::LightRed)),
         Line::raw(""),
     ];

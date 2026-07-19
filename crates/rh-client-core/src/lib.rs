@@ -1425,11 +1425,24 @@ impl ClientSession {
                 if pool == rh_content::PoolKind::Social && state.settlement_hostile {
                     cost += 1;
                 }
-                (state.hunter.pool(pool) < cost)
-                    .then(|| format!("Needs {cost} {pool:?} point(s); travel restores your pools."))
+                (state.hunter.pool(pool) < cost).then(|| {
+                    sim.catalogue.strings.ui_fill(
+                        "ui.blocked.needs-pool",
+                        &[
+                            ("cost", &cost.to_string()),
+                            ("pool", crate::view::pool_name(&sim.catalogue.strings, pool)),
+                        ],
+                    )
+                })
             });
             let cost_note = match opp.pool {
-                Some(pool) => format!(" [{} {pool:?}]", opp.cost),
+                Some(pool) => sim.catalogue.strings.ui_fill(
+                    "ui.action.cost-suffix",
+                    &[
+                        ("cost", &opp.cost.to_string()),
+                        ("pool", crate::view::pool_name(&sim.catalogue.strings, pool)),
+                    ],
+                ),
                 None => String::new(),
             };
             items.push(MenuItem {
@@ -1451,12 +1464,20 @@ impl ClientSession {
                                 .to_owned(),
                         )
                     } else if state.hunter.physical < 1 {
-                        Some("Needs 1 Physical point.".to_owned())
+                        Some(
+                            sim.catalogue
+                                .strings
+                                .ui("ui.blocked.needs-physical")
+                                .to_owned(),
+                        )
                     } else {
                         None
                     };
                     items.push(MenuItem {
-                        label: format!("Open {} [1 Physical]", feature.name),
+                        label: sim
+                            .catalogue
+                            .strings
+                            .ui_fill("ui.action.open-grave", &[("grave", &feature.name)]),
                         blocked,
                         action: MenuAction::Do(Command::OpenGrave(feature.id)),
                     });
@@ -1476,8 +1497,12 @@ impl ClientSession {
             if let Some(label) = label {
                 items.push(MenuItem {
                     label: label.to_owned(),
-                    blocked: (state.hunter.physical < 1)
-                        .then(|| "Needs 1 Physical point.".to_owned()),
+                    blocked: (state.hunter.physical < 1).then(|| {
+                        sim.catalogue
+                            .strings
+                            .ui("ui.blocked.needs-physical")
+                            .to_owned()
+                    }),
                     action: MenuAction::Do(Command::Force(dir)),
                 });
             }
@@ -1530,8 +1555,12 @@ impl ClientSession {
                             .unwrap_or_else(|| item.clone())
                     })
                     .collect();
-                let blocked =
-                    (!missing.is_empty()).then(|| format!("Missing: {}.", missing.join(", ")));
+                let blocked = (!missing.is_empty()).then(|| {
+                    sim.catalogue.strings.ui_fill(
+                        "ui.blocked.missing-items",
+                        &[("items", &missing.join(", "))],
+                    )
+                });
                 items.push(MenuItem {
                     label: sim.catalogue.strings.ui_fill(
                         "ui.action.craft",
@@ -1554,7 +1583,10 @@ impl ClientSession {
                 continue;
             }
             items.push(MenuItem {
-                label: format!("Talk with {}", spec.name),
+                label: sim
+                    .catalogue
+                    .strings
+                    .ui_fill("ui.action.talk", &[("npc", &spec.name)]),
                 blocked: npc_state.attacked.then(|| {
                     sim.catalogue
                         .strings
@@ -1572,7 +1604,10 @@ impl ClientSession {
                     None
                 };
                 items.push(MenuItem {
-                    label: format!("Buy powder and ball from {} [2 coin]", spec.name),
+                    label: sim
+                        .catalogue
+                        .strings
+                        .ui_fill("ui.action.buy-ammunition", &[("npc", &spec.name)]),
                     blocked,
                     action: MenuAction::Do(Command::BuyShot(spec.id)),
                 });
@@ -1721,7 +1756,14 @@ impl ClientSession {
         if visible {
             if let Some(actor) = state.actor_at(map, point) {
                 let name = sim.actor_name(&actor.kind);
-                let mut line = format!("{name} ({}/{} health)", actor.hp, actor.max_hp);
+                let mut line = sim.catalogue.strings.ui_fill(
+                    "ui.inspect.actor-health",
+                    &[
+                        ("name", &name),
+                        ("hp", &actor.hp.to_string()),
+                        ("max", &actor.max_hp.to_string()),
+                    ],
+                );
                 if actor.kind == ActorKind::Villain {
                     if actor.trapped > 0 {
                         line.push_str(", held fast");
@@ -1753,7 +1795,11 @@ impl ClientSession {
                         && !state.lost.contains(&opp.id)
                         && opp.anchor == OpportunityAnchor::Npc(npc_id)
                     {
-                        parts.push(format!("Lead: {}", opp.name));
+                        parts.push(
+                            sim.catalogue
+                                .strings
+                                .ui_fill("ui.inspect.lead", &[("what", &opp.name)]),
+                        );
                     }
                 }
             }
@@ -1788,7 +1834,11 @@ impl ClientSession {
                 && !state.lost.contains(&opp.id)
                 && opp.anchor == OpportunityAnchor::Tile(point)
             {
-                parts.push(format!("Lead: {}", opp.name));
+                parts.push(
+                    sim.catalogue
+                        .strings
+                        .ui_fill("ui.inspect.lead", &[("what", &opp.name)]),
+                );
             }
         }
         if let Some(exit) = sim
@@ -1798,7 +1848,10 @@ impl ClientSession {
             .iter()
             .find(|exit| exit.at == point)
         {
-            parts.push(format!("Road to {}", sim.world.map(exit.to_map).name));
+            parts.push(sim.catalogue.strings.ui_fill(
+                "ui.inspect.road",
+                &[("place", &sim.world.map(exit.to_map).name)],
+            ));
         }
         if state
             .snares

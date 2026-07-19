@@ -72,6 +72,10 @@ pub struct PanelLabels {
     pub direction_hint: String,
     /// Footer on list screens.
     pub list_hint: String,
+    /// Case report headings, each with a `{what}` slot.
+    pub report_villain: String,
+    pub report_origin: String,
+    pub report_scheme: String,
     /// Footer on the case report.
     pub case_report_footer: String,
 }
@@ -94,6 +98,9 @@ impl PanelLabels {
             look_hint: strings.ui("ui.hint.look").to_owned(),
             direction_hint: strings.ui("ui.hint.direction").to_owned(),
             list_hint: strings.ui("ui.hint.list-nav").to_owned(),
+            report_villain: strings.ui("ui.report.heading.villain").to_owned(),
+            report_origin: strings.ui("ui.report.heading.origin").to_owned(),
+            report_scheme: strings.ui("ui.report.heading.scheme").to_owned(),
             case_report_footer: strings.ui("ui.hint.case-report-footer").to_owned(),
         }
     }
@@ -189,6 +196,19 @@ pub fn terrain_glyph(terrain: Terrain) -> char {
         Terrain::Grass => ',',
         Terrain::Altar => 'A',
         Terrain::Workstation => 'W',
+    }
+}
+
+/// A pool's name as the player reads it.
+///
+/// These used to render through `{pool:?}`, which puts a Rust identifier in
+/// front of the player and cannot be translated.
+pub fn pool_name(strings: &StringTable, pool: rh_content::PoolKind) -> &str {
+    match pool {
+        rh_content::PoolKind::Lore => strings.ui("ui.pool.lore"),
+        rh_content::PoolKind::Social => strings.ui("ui.pool.social"),
+        rh_content::PoolKind::Mystic => strings.ui("ui.pool.mystic"),
+        rh_content::PoolKind::Physical => strings.ui("ui.pool.physical"),
     }
 }
 
@@ -887,7 +907,10 @@ pub(crate) fn dossier_entries(session: &ClientSession) -> Vec<(String, String)> 
             }
             line.push_str(&strings.ui_fill(
                 "ui.dossier.leads.cost",
-                &[("cost", &cost.to_string()), ("pool", &format!("{pool:?}"))],
+                &[
+                    ("cost", &cost.to_string()),
+                    ("pool", pool_name(strings, pool)),
+                ],
             ));
             if state.hunter.pool(pool) < cost {
                 line.push_str(strings.ui("ui.dossier.leads.unaffordable"));
@@ -1061,7 +1084,13 @@ pub(crate) fn region_entries(session: &ClientSession) -> Vec<(String, String)> {
             .map(|exit| {
                 let name = &sim.world.map(exit.to_map).name;
                 if exit.ambush_route {
-                    format!("{name} (ambush country, {}%)", sim.world.ambush_percent)
+                    sim.catalogue.strings.ui_fill(
+                        "ui.travel.ambush-route",
+                        &[
+                            ("place", name),
+                            ("percent", &sim.world.ambush_percent.to_string()),
+                        ],
+                    )
                 } else {
                     name.to_string()
                 }
@@ -1160,14 +1189,21 @@ fn build_case_report(session: &ClientSession) -> CaseReportView {
                 .steps
                 .iter()
                 .map(|step| {
-                    let mark = match step.opportunity {
+                    let mark = match step.opportunity() {
                         Some(id) if state.resolved.contains(&id) => {
                             strings.ui("ui.report.step-taken")
                         }
                         Some(_) => strings.ui("ui.report.step-missed"),
                         None => strings.ui("ui.report.step-neutral"),
                     };
-                    format!("{mark} t{}: {}", step.turn, step.description)
+                    strings.ui_fill(
+                        "ui.report.route-step",
+                        &[
+                            ("mark", mark),
+                            ("turn", &step.turn.to_string()),
+                            ("what", &step.description),
+                        ],
+                    )
                 })
                 .collect();
             format!(

@@ -12,7 +12,9 @@ use rh_core::command::{Command, Target};
 use rh_core::fov::is_walkable;
 use rh_core::geometry::{Direction, Point, MAP_HEIGHT, MAP_WIDTH};
 use rh_core::state::{ActorKind, Outcome};
-use rh_core::world::{FeatureKind, MapId, OpportunityAnchor, OpportunityId, RouteStep};
+use rh_core::world::{
+    FeatureKind, MapId, OpportunityAnchor, OpportunityId, RouteAction, RouteStep,
+};
 
 use crate::RunSession;
 
@@ -175,75 +177,39 @@ impl Bot {
 
     fn execute_step(&mut self, session: &mut RunSession) {
         let step = self.steps[self.step_index].clone();
-        // The final synthetic step is "initiate the hunt".
-        if step.opportunity.is_none() && step.description.starts_with("Initiate") {
-            self.step_index += 1;
-            return;
-        }
-        if let Some(opp_id) = step.opportunity {
-            if session.sim.state.resolved.contains(&opp_id) {
-                self.step_index += 1;
-                return;
+        match step.action {
+            // Everything is ready; the caller drives the hunt itself.
+            RouteAction::InitiateHunt => self.step_index += 1,
+            RouteAction::Resolve(opp_id) => {
+                if session.sim.state.resolved.contains(&opp_id) {
+                    self.step_index += 1;
+                } else {
+                    self.resolve_opportunity(session, opp_id);
+                }
             }
-            self.resolve_opportunity(session, opp_id);
-            return;
-        }
-        let description = step.description.as_str();
-        if let Some(map_name) = description.strip_prefix("Travel to ") {
-            let destination = session
-                .sim
-                .world
-                .maps
-                .iter()
-                .position(|map| map.name == map_name)
-                .map(|index| MapId(index as u8));
-            match destination {
-                Some(destination) if destination == session.sim.state.current_map => {
+            RouteAction::Travel(destination) => {
+                if destination == session.sim.state.current_map {
+                    self.step_index += 1;
+                } else {
+                    self.travel_toward(session, destination);
+                }
+            }
+            RouteAction::Craft { recipe } => {
+                if self.goto_feature(session, |kind| matches!(kind, FeatureKind::Workstation)) {
+                    // Either way the step is done with: a failure here means
+                    // the plan drifted and the ingredients are short, and
+                    // retrying would loop forever.
+                    let _ = session.apply(Command::Craft { recipe });
                     self.step_index += 1;
                 }
-                Some(destination) => self.travel_toward(session, destination),
-                None => self.step_index += 1,
             }
-            return;
-        }
-        if description.starts_with("Craft: ") {
-            let recipe = session
-                .sim
-                .catalogue
-                .recipes
-                .iter()
-                // The description carries the recipe's resolved name, so the
-                // match has to resolve too -- comparing against the id worked
-                // only while the planner was leaking ids into the text.
-                .find(|(_, def)| {
-                    description.ends_with(session.sim.catalogue.strings.get(&def.name))
-                })
-                .map(|(id, _)| id.clone());
-            match recipe {
-                Some(recipe) => {
-                    if self.goto_feature(session, |kind| matches!(kind, FeatureKind::Workstation)) {
-                        if session.apply(Command::Craft { recipe }).is_ok() {
-                            self.step_index += 1;
-                        } else {
-                            // Missing ingredients here means the plan drifted;
-                            // skip rather than loop forever.
-                            self.step_index += 1;
-                        }
-                    }
+            RouteAction::Consecrate => {
+                if self.goto_feature(session, |kind| matches!(kind, FeatureKind::Altar)) {
+                    let _ = session.apply(Command::Consecrate);
+                    self.step_index += 1;
                 }
-                None => self.step_index += 1,
             }
-            return;
         }
-        if description.starts_with("Perform the consecration") {
-            if self.goto_feature(session, |kind| matches!(kind, FeatureKind::Altar)) {
-                let _ = session.apply(Command::Consecrate);
-                self.step_index += 1;
-            }
-            return;
-        }
-        // Unknown step kinds are skipped.
-        self.step_index += 1;
     }
 
     fn resolve_opportunity(&mut self, session: &mut RunSession, opp_id: OpportunityId) {

@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 
 use rh_content::Catalogue;
 use rh_core::state::Outcome;
+use rh_core::world::RouteAction;
 use rh_replay::{autoplay, RunSession};
 
 fn catalogue() -> Catalogue {
@@ -129,6 +130,100 @@ fn no_run_ever_logs_an_unresolved_string() {
                 "seed {seed}: unsubstituted placeholder in the log: {:?}",
                 event.text
             );
+            // Every log line resolves through the table, and every row in the
+            // table is bracketed placeholder copy -- so a line that is not
+            // bracketed is prose still hardcoded in Rust. This is what catches
+            // the ones a grep for `format!` misses, like a bare `.to_owned()`.
+            assert!(
+                event.text.starts_with('[') && event.text.ends_with(']'),
+                "seed {seed}: log line is not from the string table: {:?}",
+                event.text
+            );
         }
+    }
+}
+
+#[test]
+fn translating_the_route_text_does_not_change_what_the_autoplayer_does() {
+    // The autoplayer used to recover each step by parsing its description --
+    // starts_with("Craft: "), strip_prefix("Travel to "). Translating the game
+    // would have silently stopped it crafting, and it fails soft, so the
+    // golden replays would have kept passing while the bot did less. Steps
+    // carry a typed action now, so rewriting every route string must leave the
+    // command log identical, not merely still winning.
+    let sources = rh_content::embedded_sources();
+    let translated_csv: String = rh_content::embedded_strings()
+        .lines()
+        .map(|line| {
+            if line.starts_with("ui.route.") {
+                // Keep the id and context, replace the English wholesale --
+                // no "Craft: " prefix, no recognisable word, placeholders gone.
+                let mut parts = line.splitn(3, ',');
+                let id = parts.next().unwrap_or_default();
+                format!("{id},Translated for the test,\"[???]\"")
+            } else {
+                line.to_owned()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\r\n");
+
+    let plain = rh_content::Catalogue::from_sources(sources).expect("embedded content");
+    let translated = rh_content::Catalogue::from_sources_with_strings(sources, &translated_csv)
+        .expect("a catalogue with translated route text loads");
+    assert_eq!(
+        translated.strings.try_get("ui.route.craft"),
+        Some("[???]"),
+        "the perturbation must actually replace the route copy"
+    );
+
+    let hunter = plain.hunter_id.clone();
+    let drive = |catalogue: Catalogue| {
+        let (mut session, _used) =
+            RunSession::new_from_viable_seed(7, catalogue, &hunter).expect("a viable run");
+        let outcome = autoplay::autoplay(&mut session);
+        (outcome, session.commands.clone(), session.state_digest())
+    };
+
+    let (plain_outcome, plain_commands, plain_digest) = drive(plain);
+    let (other_outcome, other_commands, other_digest) = drive(translated);
+
+    assert_eq!(plain_outcome, other_outcome, "the outcome changed");
+    assert_eq!(
+        plain_commands, other_commands,
+        "the autoplayer made different moves once the route text changed"
+    );
+    assert_eq!(plain_digest, other_digest, "the run diverged");
+    assert!(
+        !plain_commands.is_empty(),
+        "the run must actually do something for this to prove anything"
+    );
+    // And it must exercise the dispatch that used to be parsed out of prose,
+    // or the invariance above would be about a route with nothing in it.
+    let (mut probe, _used) =
+        RunSession::new_from_viable_seed(7, catalogue(), &hunter).expect("a viable run");
+    autoplay::autoplay(&mut probe);
+    let route = probe
+        .sim
+        .world
+        .certified_routes
+        .first()
+        .expect("the run is certified");
+    let kinds: Vec<&str> = route
+        .steps
+        .iter()
+        .map(|step| match step.action {
+            RouteAction::Resolve(_) => "resolve",
+            RouteAction::Craft { .. } => "craft",
+            RouteAction::Consecrate => "consecrate",
+            RouteAction::Travel(_) => "travel",
+            RouteAction::InitiateHunt => "initiate",
+        })
+        .collect();
+    for required in ["craft", "travel", "resolve"] {
+        assert!(
+            kinds.contains(&required),
+            "seed 7's route has no {required} step, so this proves nothing about it: {kinds:?}"
+        );
     }
 }
