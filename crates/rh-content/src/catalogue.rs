@@ -32,6 +32,8 @@ pub struct Catalogue {
     pub grimoire: Vec<GrimoireEntry>,
     /// How runs open: generic hooks, and prose for a banked node.
     pub openings: Vec<OpeningDef>,
+    /// What the valley is like on arrival; a run draws exactly one.
+    pub conditions: Vec<ConditionDef>,
     pub ui: UiText,
 }
 
@@ -113,6 +115,7 @@ impl Catalogue {
             gathers: parse("gathers.toml", text("gathers.toml")?)?,
             grimoire: grimoire_file.entries,
             openings: openings_file.openings,
+            conditions: openings_file.conditions,
             ui: parse("ui.toml", text("ui.toml")?)?,
         };
 

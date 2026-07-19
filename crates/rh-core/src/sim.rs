@@ -82,13 +82,34 @@ impl Sim {
                 OpportunityAnchor::Tile(_) => None,
             })
             .unwrap_or_default();
+        // One condition from every axis: exactly one bites, one helps, the
+        // rest are texture.
+        let conditions: Vec<rh_content::ConditionDef> = situation
+            .conditions
+            .iter()
+            .filter_map(|id| {
+                self.catalogue
+                    .conditions
+                    .iter()
+                    .find(|condition| condition.id == *id)
+                    .cloned()
+            })
+            .collect();
         let place = self.world.map(self.state.current_map).name.clone();
-        for line in body {
+        // The hook first — why she came — then the condition, which is what the
+        // valley is like as she gets there.
+        let prose = body
+            .into_iter()
+            .chain(conditions.iter().flat_map(|c| c.body.clone()));
+        for line in prose {
             let text = line
                 .replace("{npc}", &npc_name)
                 .replace("{clue}", &prior_name)
                 .replace("{place}", &place);
             self.log(EventKind::System, text);
+        }
+        for effect in conditions.iter().filter_map(|c| c.effect.clone()) {
+            self.apply_condition(&effect);
         }
 
         let Some(id) = situation.prior else {
@@ -104,6 +125,34 @@ impl Sim {
         self.log(EventKind::Clue, spec.reveal.clone());
         self.apply_grant(&spec);
         self.cascade_discovery(id);
+    }
+
+    /// The parts of a run's condition that live in the run state. The rest —
+    /// ambush chance, the extra things in the wood — were baked into the world
+    /// at generation, where certification could see them.
+    fn apply_condition(&mut self, effect: &rh_content::ConditionEffect) {
+        match effect {
+            rh_content::ConditionEffect::SocialSurcharge => {
+                // The existing mechanism: consequential Social work costs one
+                // more, and nobody will sell to her.
+                self.state.settlement_hostile = true;
+            }
+            rh_content::ConditionEffect::ShortSight { tiles } => {
+                self.state.sight_penalty = *tiles;
+            }
+            rh_content::ConditionEffect::LongSight { tiles } => {
+                self.state.sight_bonus = *tiles;
+            }
+            rh_content::ConditionEffect::WellSupplied { item } => {
+                self.state.hunter.add_item(item, 1);
+                let name = self.item_name(item);
+                self.log(EventKind::Item, format!("You came in carrying: {name}."));
+            }
+            // Baked into the world at generation, where certification saw them.
+            rh_content::ConditionEffect::Ambush { .. }
+            | rh_content::ConditionEffect::QuietRoads { .. }
+            | rh_content::ConditionEffect::Pressure { .. } => {}
+        }
     }
 
     /// Apply one semantic command. On success the event log grew by whatever
@@ -1172,7 +1221,14 @@ impl Sim {
     }
 
     pub(crate) fn refresh_senses(&mut self) {
-        let radius = self.catalogue.balance.vision.fov_radius;
+        let radius = self
+            .catalogue
+            .balance
+            .vision
+            .fov_radius
+            .saturating_add(self.state.sight_bonus)
+            .saturating_sub(self.state.sight_penalty)
+            .max(1);
         fov::refresh_visibility(&mut self.state, &self.world, radius);
         self.discovery_pass();
     }

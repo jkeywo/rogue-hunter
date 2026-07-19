@@ -359,3 +359,162 @@ fn a_banked_node_cannot_be_taken_again() {
     }
     panic!("no seed banked a node");
 }
+
+#[test]
+#[ignore = "diagnostic: prints the opening prose of a few runs; run with --ignored"]
+fn print_openings() {
+    let cat = catalogue();
+    for seed in [0u64, 3, 11] {
+        let Ok(generated) = rh_gen::generate(seed, &cat) else {
+            continue;
+        };
+        println!("--- seed {seed} ---");
+        let sim = Sim::new(cat.clone(), generated.world, generated.rng);
+        for event in sim.state.log.iter().take(6) {
+            println!("  [{:?}] {}", event.kind, event.text);
+        }
+    }
+}
+
+#[test]
+fn every_run_draws_one_per_axis_with_exactly_one_bane_and_one_boon() {
+    let cat = catalogue();
+    let mut bane_axes = std::collections::BTreeSet::new();
+    let mut boon_axes = std::collections::BTreeSet::new();
+
+    for seed in 0..80u64 {
+        let Ok(generated) = rh_gen::generate(seed, &cat) else {
+            continue;
+        };
+        let drawn: Vec<&rh_content::ConditionDef> = generated
+            .world
+            .opening
+            .conditions
+            .iter()
+            .map(|id| {
+                cat.conditions
+                    .iter()
+                    .find(|c| c.id == *id)
+                    .unwrap_or_else(|| panic!("seed {seed}: condition '{id}' is not authored"))
+            })
+            .collect();
+
+        // One from every axis, and no axis twice.
+        let axes: std::collections::BTreeSet<_> = drawn.iter().map(|c| c.axis).collect();
+        assert_eq!(
+            axes.len(),
+            rh_content::ConditionAxis::ORDER.len(),
+            "seed {seed}: expected one condition per axis, got {:?}",
+            generated.world.opening.conditions
+        );
+
+        // Exactly one bites and exactly one helps, never off the same axis.
+        let banes: Vec<_> = drawn.iter().filter(|c| c.is_bane()).collect();
+        let boons: Vec<_> = drawn.iter().filter(|c| c.is_boon()).collect();
+        assert_eq!(
+            banes.len(),
+            1,
+            "seed {seed}: {} conditions bite",
+            banes.len()
+        );
+        assert_eq!(
+            boons.len(),
+            1,
+            "seed {seed}: {} conditions help",
+            boons.len()
+        );
+        assert_ne!(
+            banes[0].axis, boons[0].axis,
+            "seed {seed}: the bane and the boon came off the same axis"
+        );
+        bane_axes.insert(banes[0].axis);
+        boon_axes.insert(boons[0].axis);
+
+        // The remaining two are texture.
+        assert_eq!(drawn.iter().filter(|c| c.is_cosmetic()).count(), 2);
+    }
+
+    // Which axis bites should itself move around run to run.
+    assert!(
+        bane_axes.len() > 1 && boon_axes.len() > 1,
+        "banes {bane_axes:?}, boons {boon_axes:?}"
+    );
+}
+
+#[test]
+fn the_drawn_conditions_land_on_the_run() {
+    let cat = catalogue();
+    for seed in 0..40u64 {
+        let Ok(generated) = rh_gen::generate(seed, &cat) else {
+            continue;
+        };
+        let drawn: Vec<rh_content::ConditionDef> = generated
+            .world
+            .opening
+            .conditions
+            .iter()
+            .filter_map(|id| cat.conditions.iter().find(|c| c.id == *id).cloned())
+            .collect();
+        let sim = Sim::new(cat.clone(), generated.world, generated.rng);
+        for condition in &drawn {
+            match &condition.effect {
+                None => {}
+                Some(rh_content::ConditionEffect::SocialSurcharge) => {
+                    assert!(sim.state.settlement_hostile, "seed {seed}");
+                }
+                Some(rh_content::ConditionEffect::ShortSight { tiles }) => {
+                    assert_eq!(sim.state.sight_penalty, *tiles, "seed {seed}");
+                }
+                Some(rh_content::ConditionEffect::LongSight { tiles }) => {
+                    assert_eq!(sim.state.sight_bonus, *tiles, "seed {seed}");
+                }
+                Some(rh_content::ConditionEffect::WellSupplied { item }) => {
+                    assert!(
+                        sim.state.hunter.item_count(item) > 0,
+                        "seed {seed}: no {item}"
+                    );
+                }
+                // Baked into the world before certification saw it.
+                Some(rh_content::ConditionEffect::Ambush { .. })
+                | Some(rh_content::ConditionEffect::QuietRoads { .. })
+                | Some(rh_content::ConditionEffect::Pressure { .. }) => {}
+            }
+        }
+    }
+}
+
+#[test]
+fn a_run_opens_with_its_hook_then_its_conditions() {
+    let cat = catalogue();
+    let generated = rh_gen::generate(0, &cat).expect("seed 0 generates");
+    let hook = cat
+        .openings
+        .iter()
+        .find(|o| o.id == generated.world.opening.opening)
+        .expect("hook is authored")
+        .clone();
+    let conditions: Vec<rh_content::ConditionDef> = generated
+        .world
+        .opening
+        .conditions
+        .iter()
+        .filter_map(|id| cat.conditions.iter().find(|c| c.id == *id).cloned())
+        .collect();
+    let sim = Sim::new(cat.clone(), generated.world, generated.rng);
+
+    let expected: Vec<String> = hook
+        .body
+        .iter()
+        .cloned()
+        .chain(conditions.iter().flat_map(|c| c.body.clone()))
+        .collect();
+    let actual: Vec<String> = sim
+        .state
+        .log
+        .iter()
+        .take(expected.len())
+        .map(|event| event.text.clone())
+        .collect();
+    // Why she came, then what she walked into, in axis order.
+    assert_eq!(actual, expected);
+}

@@ -11,7 +11,7 @@ mod cast;
 mod materialise;
 mod planner;
 
-use rh_content::Catalogue;
+use rh_content::{Catalogue, ConditionAxis, ConditionDef};
 use rh_core::rng::SimRng;
 use rh_core::world::World;
 
@@ -36,6 +36,7 @@ pub struct GenReport {
     pub templates: Vec<String>,
     /// The opening entry id, and the node banked before play if any.
     pub opening: String,
+    pub conditions: Vec<String>,
     pub banked_node: Option<String>,
     pub villain: String,
     pub origin: String,
@@ -105,13 +106,30 @@ pub fn generate(seed: u64, catalogue: &Catalogue) -> Result<Generated, GenError>
                 continue;
             }
         };
-        match planner::certify(catalogue, &world) {
+        // Conditions are drawn before certification, because the bane may be
+        // one that taxes Social work and the planner must certify against that
+        // rather than have it applied behind its back.
+        let mut conditions = draw_conditions(catalogue, &mut rng, None);
+        let mut certified = planner::certify(catalogue, &world, has_surcharge(&conditions));
+        if certified.is_err() && has_surcharge(&conditions) {
+            // The valley's mood would have made the case uncertifiable, so the
+            // bane moves to an axis that only costs the journey.
+            conditions = draw_conditions(catalogue, &mut rng, Some(ConditionAxis::Reception));
+            certified = planner::certify(catalogue, &world, has_surcharge(&conditions));
+        }
+        match certified {
             Ok(certification) => {
                 let prior = certification
                     .opening
                     .and_then(|index| planner::op_id_at(catalogue, &world, index));
                 world.certified_routes = certification.routes;
                 world.opening = pick_opening(catalogue, &world, prior, &mut rng);
+                world.opening.conditions = conditions.iter().map(|c| c.id.clone()).collect();
+                for condition in &conditions {
+                    if let Some(effect) = &condition.effect {
+                        apply_condition_to_world(&mut world, effect);
+                    }
+                }
                 if let Err(reason) = final_validation(catalogue, &world) {
                     attempts.push(AttemptReport {
                         attempt,
@@ -128,6 +146,7 @@ pub fn generate(seed: u64, catalogue: &Catalogue) -> Result<Generated, GenError>
                 let templates: Vec<String> =
                     world.maps.iter().map(|m| m.template.clone()).collect();
                 let opening_id = world.opening.opening.clone();
+                let condition_ids = world.opening.conditions.clone();
                 let banked_node = world
                     .opening
                     .prior
@@ -140,6 +159,7 @@ pub fn generate(seed: u64, catalogue: &Catalogue) -> Result<Generated, GenError>
                         hunter: catalogue.hunter_id.clone(),
                         templates,
                         opening: opening_id,
+                        conditions: condition_ids,
                         banked_node,
                         villain: combo.villain.clone(),
                         origin: combo.origin.clone(),
@@ -374,8 +394,123 @@ fn pick_opening(
     };
     OpeningSituation {
         opening: chosen.map(|o| o.id.clone()).unwrap_or_default(),
+        // Filled in by the caller, which drew them before certification.
+        conditions: Vec::new(),
         // Only bank the node if its kind is one the prose can narrate.
         prior: keyed.and(prior),
+    }
+}
+
+/// Draw this run's four conditions: one from every axis, shaped so that
+/// exactly one bites, exactly one helps, and the other two are texture.
+///
+/// `avoid_bane_on` forces the bane somewhere else — used when the valley's
+/// mood turned out to make the case uncertifiable.
+fn draw_conditions(
+    catalogue: &Catalogue,
+    rng: &mut SimRng,
+    avoid_bane_on: Option<ConditionAxis>,
+) -> Vec<ConditionDef> {
+    let axes: Vec<ConditionAxis> = ConditionAxis::ORDER
+        .iter()
+        .copied()
+        .filter(|axis| catalogue.conditions.iter().any(|c| c.axis == *axis))
+        .collect();
+    if axes.len() < 2 {
+        return Vec::new();
+    }
+
+    // Which axis bites, and which helps. Never the same one.
+    let bane_choices: Vec<ConditionAxis> = axes
+        .iter()
+        .copied()
+        .filter(|axis| Some(*axis) != avoid_bane_on)
+        .filter(|axis| {
+            catalogue
+                .conditions
+                .iter()
+                .any(|c| c.axis == *axis && c.is_bane())
+        })
+        .collect();
+    let bane_axis = bane_choices
+        .get(rng.index(bane_choices.len().max(1)))
+        .copied();
+    let boon_choices: Vec<ConditionAxis> = axes
+        .iter()
+        .copied()
+        .filter(|axis| Some(*axis) != bane_axis)
+        .filter(|axis| {
+            catalogue
+                .conditions
+                .iter()
+                .any(|c| c.axis == *axis && c.is_boon())
+        })
+        .collect();
+    let boon_axis = boon_choices
+        .get(rng.index(boon_choices.len().max(1)))
+        .copied();
+
+    let mut drawn = Vec::new();
+    for axis in axes {
+        let pool: Vec<&ConditionDef> = catalogue
+            .conditions
+            .iter()
+            .filter(|condition| {
+                condition.axis == axis
+                    && if Some(axis) == bane_axis {
+                        condition.is_bane()
+                    } else if Some(axis) == boon_axis {
+                        condition.is_boon()
+                    } else {
+                        condition.is_cosmetic()
+                    }
+            })
+            .collect();
+        if pool.is_empty() {
+            continue;
+        }
+        drawn.push(pool[rng.index(pool.len())].clone());
+    }
+    drawn
+}
+
+/// Whether the drawn set includes the one bane the planner has to know about.
+fn has_surcharge(conditions: &[ConditionDef]) -> bool {
+    conditions.iter().any(|condition| {
+        condition
+            .effect
+            .as_ref()
+            .is_some_and(|effect| effect.is_certification_visible())
+    })
+}
+
+/// Apply the parts of a condition that live in the world rather than the run
+/// state. Nothing here touches the final fight: certification promised the
+/// hunt is winnable and a condition may not take that back.
+fn apply_condition_to_world(world: &mut World, effect: &rh_content::ConditionEffect) {
+    use rh_content::ConditionEffect;
+    match effect {
+        ConditionEffect::Ambush { percent } => {
+            world.ambush_percent = world.ambush_percent.saturating_add(*percent).min(100);
+        }
+        ConditionEffect::QuietRoads { percent } => {
+            world.ambush_percent = world.ambush_percent.saturating_sub(*percent);
+        }
+        ConditionEffect::Pressure { extra } => {
+            // Away from the settlement only: the valley's own streets stay as
+            // safe as they ever were.
+            for map in world.maps.iter_mut().skip(1) {
+                let existing: Vec<_> = map.initial_enemies.clone();
+                for spawn in existing.iter().take(usize::from(*extra)) {
+                    map.initial_enemies.push(spawn.clone());
+                }
+            }
+        }
+        // Applied to the run state at construction, not to the world.
+        ConditionEffect::SocialSurcharge
+        | ConditionEffect::ShortSight { .. }
+        | ConditionEffect::LongSight { .. }
+        | ConditionEffect::WellSupplied { .. } => {}
     }
 }
 

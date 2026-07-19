@@ -359,3 +359,19 @@ entities:
       title: A banked node is a small gift of economy as well as position
       summary: A banked node costs the run nothing - no pool point, no effort, no obscurity, no turn - because it was not an action taken this run. That forgives its investigation cost as well as its position, which is a second and quieter gift than the one being asked for. Charging it was rejected - deducting from turn-zero pools contradicts the fiction of having already done the thing, and can underflow - so instead the candidate ordering breaks ties on cost, which keeps the gift small. Recorded as a known concession rather than left as a leak.
       references: [in-media-res-opening, investigation-pools]
+
+  - decision: one-bane-one-boon-two-neutral
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Every run draws one condition per axis, shaped one bad, one good, two neutral
+      summary: Openings gained a second dimension - what the valley is like as the hunter arrives - across four axes of season, reception, hour and provenance. Every run draws one condition from every axis, and the set is shaped rather than uniform - exactly one bites, exactly one helps, and the other two are texture, with the bane and the boon never off the same axis. Which axis supplies which is drawn per run, so an unwelcoming valley in one game is an open-handed one in the next. Winter is cosmetic; the deep of winter is not. Each axis therefore holds three neutral entries, exactly one bane and exactly one boon, and validation enforces that shape, because any axis may be asked to supply any of the three roles.
+      references: [in-media-res-opening, authored-content-catalogue]
+
+  - decision: conditions-may-not-touch-the-final-fight
+    core:
+      status: accepted
+      confidence: confirmed
+      title: A bane may make the journey worse, never the hunt unwinnable
+      summary: Route certification promises the hunt is winnable, so a bane is not allowed to quietly take that back. Boons are unconstrained in that respect - they can only ever make a certified route easier to walk, so they need no certification pass at all. Banes split by whether the planner must see them. An unwelcoming valley taxes consequential Social work, which changes what a route can afford, so it is drawn before certification and the planner certifies with the surcharge applied - and if the world cannot be certified under it, the run falls back to a cosmetic draw on the same seed rather than being refused. Ambush chance, sight, and extra ordinary enemies are applied freely, because journey pressure is already unmodelled variance by precedent - the seed has always rolled its own ambush chance between twenty and sixty percent. Nothing in the effect vocabulary touches final-fight viability, and nothing should be added that does.
+      references: [one-bane-one-boon-two-neutral, combat-viability-threshold, clue-graph-validator]

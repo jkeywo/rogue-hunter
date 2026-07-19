@@ -63,6 +63,7 @@ pub fn build_world(
         // whether a node must be banked.
         opening: rh_core::world::OpeningSituation {
             opening: String::new(),
+            conditions: Vec::new(),
             prior: None,
         },
     })

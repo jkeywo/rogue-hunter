@@ -48,6 +48,9 @@ pub struct World {
 pub struct OpeningSituation {
     /// Entry id in `openings.toml`.
     pub opening: String,
+    /// One condition drawn from every axis. The set is shaped rather than
+    /// uniform: exactly one bites, exactly one helps, the rest are texture.
+    pub conditions: Vec<String>,
     /// The node already resolved when play begins.
     pub prior: Option<OpportunityId>,
 }

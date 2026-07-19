@@ -136,3 +136,67 @@ fn a_half_keyed_opening_is_rejected() {
     let error = rh_content::Catalogue::from_sources(&borrowed);
     assert!(error.is_err(), "a half-keyed opening must not validate");
 }
+
+#[test]
+fn every_axis_is_worth_drawing_from_and_mostly_texture() {
+    let catalogue = rh_content::load_embedded().expect("embedded content");
+    use rh_content::ConditionAxis;
+
+    for axis in [
+        ConditionAxis::Season,
+        ConditionAxis::Reception,
+        ConditionAxis::Hour,
+        ConditionAxis::Provenance,
+    ] {
+        let on_axis: Vec<_> = catalogue
+            .conditions
+            .iter()
+            .filter(|c| c.axis == axis)
+            .collect();
+        assert!(
+            on_axis.len() >= 5,
+            "axis {axis:?} has only {}",
+            on_axis.len()
+        );
+        // Any axis may be the one that bites this run, or the one that helps,
+        // so each needs exactly one of each to draw from — and neutrals for
+        // the two axes that come up texture.
+        assert_eq!(
+            on_axis.iter().filter(|c| c.is_bane()).count(),
+            1,
+            "axis {axis:?}"
+        );
+        assert_eq!(
+            on_axis.iter().filter(|c| c.is_boon()).count(),
+            1,
+            "axis {axis:?}"
+        );
+        assert!(
+            on_axis.iter().filter(|c| c.is_cosmetic()).count() >= 3,
+            "axis {axis:?}"
+        );
+    }
+    assert!(catalogue.openings.iter().filter(|o| o.is_generic()).count() >= 6);
+}
+
+#[test]
+fn a_condition_may_not_name_a_clue_or_an_informant() {
+    // Conditions are drawn whether or not a node was banked, so those
+    // placeholders would resolve to nothing.
+    let mut sources: Vec<(&str, String)> = rh_content::embedded_sources()
+        .iter()
+        .map(|(name, text)| (*name, (*text).to_owned()))
+        .collect();
+    for (name, text) in sources.iter_mut() {
+        if *name == "openings.toml" {
+            text.push_str(
+                "\n[[conditions]]\nid = \"names-a-person\"\naxis = \"hour\"\nbody = [\"{npc} was waiting.\"]\n",
+            );
+        }
+    }
+    let borrowed: Vec<(&str, &str)> = sources
+        .iter()
+        .map(|(name, text)| (*name, text.as_str()))
+        .collect();
+    assert!(rh_content::Catalogue::from_sources(&borrowed).is_err());
+}

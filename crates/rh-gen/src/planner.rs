@@ -184,8 +184,12 @@ struct Ctx<'a> {
 /// safe for the same reason structural ops are exempt — the rule is not "no
 /// shared node" but "no shared *losable* node", and knowledge the hunter walked
 /// in with cannot be taken away by fallout.
-pub fn certify(catalogue: &Catalogue, world: &World) -> Result<Certification, String> {
-    let ctx = build_ctx(catalogue, world)?;
+pub fn certify(
+    catalogue: &Catalogue,
+    world: &World,
+    social_surcharge: bool,
+) -> Result<Certification, String> {
+    let ctx = build_ctx(catalogue, world, social_surcharge)?;
     let mut contested = 0u64;
     let strict = certify_pairing(&ctx, None, &mut contested);
     let strict_reason = match strict {
@@ -412,7 +416,7 @@ fn route_penalty(ctx: &Ctx, route: &CertifiedRoute) -> u64 {
 #[allow(dead_code)]
 pub(crate) fn debug_certify(catalogue: &Catalogue, world: &World) -> String {
     let mut out = String::new();
-    let ctx = match build_ctx(catalogue, world) {
+    let ctx = match build_ctx(catalogue, world, false) {
         Ok(ctx) => ctx,
         Err(reason) => return format!("build_ctx failed: {reason}"),
     };
@@ -478,7 +482,7 @@ pub(crate) fn debug_certify(catalogue: &Catalogue, world: &World) -> String {
 
 /// Inspector rows: every clue-graph node with its costs and gates.
 pub fn node_report(catalogue: &Catalogue, world: &World) -> Vec<crate::NodeReport> {
-    match build_ctx(catalogue, world) {
+    match build_ctx(catalogue, world, false) {
         Ok(ctx) => ctx
             .ops
             .iter()
@@ -548,7 +552,11 @@ fn relevant_item_slots(catalogue: &Catalogue, world: &World) -> Vec<usize> {
     slots
 }
 
-fn build_ctx<'a>(catalogue: &'a Catalogue, world: &'a World) -> Result<Ctx<'a>, String> {
+fn build_ctx<'a>(
+    catalogue: &'a Catalogue,
+    world: &'a World,
+    social_surcharge: bool,
+) -> Result<Ctx<'a>, String> {
     let origin_reagent = catalogue
         .origins
         .get(&world.villain.origin)
@@ -597,7 +605,13 @@ fn build_ctx<'a>(catalogue: &'a Catalogue, world: &'a World) -> Result<Ctx<'a>, 
             name: spec.name.clone(),
             map: spec.map.0,
             pool: spec.pool,
-            cost: spec.cost,
+            // An unwelcoming valley taxes consequential Social work, and the
+            // planner has to certify against that or it would promise routes
+            // the run cannot afford.
+            cost: spec.cost
+                + u8::from(
+                    social_surcharge && spec.pool == Some(PoolKind::Social) && spec.cost > 0,
+                ),
             obscurity: spec.obscurity,
             grants,
             revealed_by: None,
@@ -1220,7 +1234,7 @@ fn apply_action(
 /// on the world. The planner works in its own index space, which is narrower
 /// than the world's opportunity list.
 pub fn op_id_at(catalogue: &Catalogue, world: &World, index: usize) -> Option<OpportunityId> {
-    build_ctx(catalogue, world)
+    build_ctx(catalogue, world, false)
         .ok()
         .and_then(|ctx| ctx.ops.get(index).map(|op| op.id))
 }

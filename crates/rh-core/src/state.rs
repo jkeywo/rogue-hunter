@@ -62,6 +62,10 @@ pub struct RunState {
     pub visible: Vec<bool>,
     pub church_consecrated: bool,
     pub settlement_hostile: bool,
+    /// Tiles taken off the hunter's field of view by the run's condition.
+    pub sight_penalty: u8,
+    /// Tiles added to the hunter's field of view by the run's boon.
+    pub sight_bonus: u8,
     pub opened_graves: BTreeSet<FeatureId>,
     pub snares: Vec<Snare>,
     pub wards: Vec<GroundWard>,
@@ -326,6 +330,8 @@ impl RunState {
             ],
             church_consecrated: false,
             settlement_hostile: false,
+            sight_penalty: 0,
+            sight_bonus: 0,
             opened_graves: BTreeSet::new(),
             snares: Vec::new(),
             wards: Vec::new(),

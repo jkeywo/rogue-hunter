@@ -27,6 +27,7 @@ pub fn validate(cat: &Catalogue) -> Vec<String> {
     check_grimoire(cat, &mut issues);
     check_ui(cat, &mut issues);
     check_openings(cat, &mut issues);
+    check_conditions(cat, &mut issues);
     issues
 }
 
@@ -951,6 +952,88 @@ fn check_openings(cat: &Catalogue, issues: &mut Vec<String>) {
                      before play"
                 ));
             }
+        }
+    }
+}
+
+/// A run draws exactly one condition, so the rules here are about keeping any
+/// single draw sane: every axis worth drawing from, and no axis that is mostly
+/// teeth.
+fn check_conditions(cat: &Catalogue, issues: &mut Vec<String>) {
+    let mut ids: Vec<&str> = Vec::new();
+    for condition in &cat.conditions {
+        if condition.id.trim().is_empty() {
+            issues.push("conditions: an entry has an empty id".into());
+        }
+        ids.push(condition.id.as_str());
+        if condition.body.is_empty() {
+            issues.push(format!("conditions: '{}' has no prose", condition.id));
+        }
+        for line in &condition.body {
+            if line.trim().is_empty() {
+                issues.push(format!(
+                    "conditions: '{}' has an empty paragraph",
+                    condition.id
+                ));
+            }
+            // A condition is drawn whether or not a node was banked, so it has
+            // no clue and no informant to name.
+            for placeholder in ["{npc}", "{clue}"] {
+                if line.contains(placeholder) {
+                    issues.push(format!(
+                        "conditions: '{}' uses {placeholder}, but a condition is drawn                          independently of whether anything was banked",
+                        condition.id
+                    ));
+                }
+            }
+        }
+        if cat.openings.iter().any(|o| o.id == condition.id) {
+            issues.push(format!(
+                "conditions: '{}' shares an id with an opening",
+                condition.id
+            ));
+        }
+    }
+    ids.sort_unstable();
+    let unique = ids.len();
+    ids.dedup();
+    if ids.len() != unique {
+        issues.push("conditions: ids must be unique".into());
+    }
+
+    for axis in [
+        ConditionAxis::Season,
+        ConditionAxis::Reception,
+        ConditionAxis::Hour,
+        ConditionAxis::Provenance,
+    ] {
+        let on_axis: Vec<&ConditionDef> =
+            cat.conditions.iter().filter(|c| c.axis == axis).collect();
+        if on_axis.len() < 3 {
+            issues.push(format!(
+                "conditions: axis {axis:?} has only {} entries; an axis worth drawing from                  needs at least three",
+                on_axis.len()
+            ));
+        }
+        // Every run draws one condition per axis and shapes the set: one axis
+        // supplies the bane, another the boon, the rest texture. So an axis
+        // needs exactly one of each to draw from, whichever role it is given.
+        let banes = on_axis.iter().filter(|c| c.is_bane()).count();
+        let boons = on_axis.iter().filter(|c| c.is_boon()).count();
+        if banes != 1 {
+            issues.push(format!(
+                "conditions: axis {axis:?} has {banes} conditions that bite; it needs exactly                  one, since any axis may be the one that bites this run"
+            ));
+        }
+        if boons != 1 {
+            issues.push(format!(
+                "conditions: axis {axis:?} has {boons} conditions that help; it needs exactly                  one, since any axis may be the one that helps this run"
+            ));
+        }
+        if on_axis.iter().filter(|c| c.is_cosmetic()).count() < 3 {
+            issues.push(format!(
+                "conditions: axis {axis:?} needs at least three neutral entries; two axes are                  texture every run"
+            ));
         }
     }
 }

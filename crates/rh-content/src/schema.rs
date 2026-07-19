@@ -827,6 +827,107 @@ pub struct GrimoireEntry {
 #[serde(deny_unknown_fields)]
 pub struct OpeningsFile {
     pub openings: Vec<OpeningDef>,
+    pub conditions: Vec<ConditionDef>,
+}
+
+/// What the valley is like as the hunter comes into it.
+///
+/// A run draws exactly one, which is the whole design: most are texture, a few
+/// have teeth, and because only one is drawn no run ever carries two things
+/// that bite at once.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct ConditionDef {
+    pub id: String,
+    pub axis: ConditionAxis,
+    /// Absent means cosmetic.
+    #[serde(default)]
+    pub effect: Option<ConditionEffect>,
+    pub body: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ConditionAxis {
+    Season,
+    Reception,
+    Hour,
+    Provenance,
+}
+
+impl ConditionAxis {
+    /// Every axis, in the order a run's conditions are drawn and read.
+    pub const ORDER: [ConditionAxis; 4] = [
+        ConditionAxis::Season,
+        ConditionAxis::Reception,
+        ConditionAxis::Hour,
+        ConditionAxis::Provenance,
+    ];
+}
+
+/// What an effectful condition does.
+///
+/// Deliberately closed and small. Note what is absent from the banes: nothing
+/// touches the final fight. Route certification promises the hunt is winnable,
+/// and a bane is not allowed to quietly take that back. Boons are unconstrained
+/// in that respect — they can only ever make a certified route easier to walk.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
+pub enum ConditionEffect {
+    // -- Banes -------------------------------------------------------------
+    /// Consequential Social actions cost one more. The planner must certify
+    /// with this applied, since it changes what a route can afford.
+    SocialSurcharge,
+    /// Percentage points added to the wilderness ambush chance.
+    Ambush { percent: u8 },
+    /// Tiles taken off the hunter's field of view.
+    ShortSight { tiles: u8 },
+    /// Extra ordinary enemies away from the settlement.
+    Pressure { extra: u8 },
+
+    // -- Boons -------------------------------------------------------------
+    /// Percentage points taken off the wilderness ambush chance.
+    QuietRoads { percent: u8 },
+    /// Tiles added to the hunter's field of view.
+    LongSight { tiles: u8 },
+    /// One extra of an item in the pack at the start.
+    WellSupplied { item: String },
+}
+
+impl ConditionEffect {
+    /// Whether this makes the run worse. Every run draws exactly one bane and
+    /// exactly one boon, from different axes.
+    pub fn is_bane(&self) -> bool {
+        matches!(
+            self,
+            ConditionEffect::SocialSurcharge
+                | ConditionEffect::Ambush { .. }
+                | ConditionEffect::ShortSight { .. }
+                | ConditionEffect::Pressure { .. }
+        )
+    }
+
+    /// Whether route certification has to be run with this applied.
+    ///
+    /// Only a bane can force this. A boon relaxes what a route can afford, so
+    /// a route certified without it stays walkable with it.
+    pub fn is_certification_visible(&self) -> bool {
+        matches!(self, ConditionEffect::SocialSurcharge)
+    }
+}
+
+impl ConditionDef {
+    pub fn is_cosmetic(&self) -> bool {
+        self.effect.is_none()
+    }
+
+    pub fn is_bane(&self) -> bool {
+        self.effect.as_ref().is_some_and(|e| e.is_bane())
+    }
+
+    pub fn is_boon(&self) -> bool {
+        self.effect.as_ref().is_some_and(|e| !e.is_bane())
+    }
 }
 
 /// How a run opens. A generic hook frames the hunt and claims nothing about
