@@ -15,8 +15,21 @@ use rh_core::state::ActorKind;
 use rh_core::world::{FeatureKind, GraveContents, OpportunityAnchor};
 use rh_replay::RunSession;
 
-pub use input::Intent;
+pub use input::{InputMode, Intent, Key};
 pub use view::{Cell, CellColor, ViewModel};
+
+/// What a client should do with its persisted save right now. The policy
+/// lives here so the two clients cannot drift; they supply only the
+/// platform I/O (a save file, browser local storage).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SaveAction {
+    /// Write this share code as the active-run save.
+    Write(String),
+    /// Remove the save: the run ended or was abandoned.
+    Clear,
+    /// Leave whatever is stored alone.
+    Keep,
+}
 
 /// Which screen the client is on.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -209,6 +222,45 @@ impl ClientSession {
     /// The current share code, if a run is active (for saves and copy/paste).
     pub fn share_code(&self) -> Option<String> {
         self.run.as_ref().map(|run| run.share_code())
+    }
+
+    /// How the session is currently listening: text entry, list
+    /// navigation, or tactical movement.
+    pub fn input_mode(&self) -> InputMode {
+        if matches!(
+            self.screen,
+            Screen::SeedEntry { .. } | Screen::CodeEntry { .. }
+        ) {
+            InputMode::TextEntry
+        } else if self.modal.is_some() || !matches!(self.screen, Screen::Run) {
+            InputMode::ListNav
+        } else {
+            InputMode::Tactical
+        }
+    }
+
+    /// Translate a key press into the intent it means right now. Both
+    /// clients call this and neither owns a binding of its own, so they
+    /// cannot disagree about what a key does.
+    pub fn intent_for_key(&self, key: Key) -> Option<Intent> {
+        input::intent_for_key(self.input_mode(), key)
+    }
+
+    /// Whether the client sits idle on the splash menu — where the terminal
+    /// lets Esc quit the program rather than the screen.
+    pub fn on_splash(&self) -> bool {
+        matches!(self.screen, Screen::Splash { .. }) && self.modal.is_none()
+    }
+
+    /// What to do with the persisted save after this state change: write
+    /// the code while a run is live, clear it once the run ends or is
+    /// abandoned, and otherwise leave it be.
+    pub fn save_action(&self) -> SaveAction {
+        match (&self.screen, self.share_code()) {
+            (Screen::CaseReport, _) | (Screen::Splash { .. }, _) => SaveAction::Clear,
+            (_, Some(code)) => SaveAction::Write(code),
+            _ => SaveAction::Keep,
+        }
     }
 
     /// Restore a persisted run (native file / browser localStorage).
@@ -1103,32 +1155,42 @@ impl ClientSession {
         let strings = &run.sim.catalogue.strings;
         let mut actions: Vec<ActionEntry> = Vec::new();
 
-        let mut push =
-            |key: &str, label: &str, enabled: bool, note: Option<String>, intent: Intent| {
-                actions.push(ActionEntry {
-                    key: key.to_owned(),
-                    label: label.to_owned(),
-                    enabled,
-                    note,
-                    intent,
-                });
-            };
+        // The key hint is read off the binding table, so the panel can
+        // never print a key the translator does not honour. `Some` is for
+        // the one row that is not a key at all: the walk row's return
+        // glyph, which stands for Enter on the look cursor.
+        let mut push = |key: Option<&str>,
+                        label: &str,
+                        enabled: bool,
+                        note: Option<String>,
+                        intent: Intent| {
+            actions.push(ActionEntry {
+                key: key
+                    .map(str::to_owned)
+                    .or_else(|| input::key_label(&intent))
+                    .unwrap_or_default(),
+                label: label.to_owned(),
+                enabled,
+                note,
+                intent,
+            });
+        };
 
         push(
-            "e",
+            None,
             strings.ui("ui.action.interact"),
             true,
             None,
             Intent::Interact,
         );
         push(
-            ";",
+            None,
             strings.ui("ui.action.look"),
             true,
             None,
             Intent::ToggleLook,
         );
-        push(".", strings.ui("ui.action.wait"), true, None, Intent::Wait);
+        push(None, strings.ui("ui.action.wait"), true, None, Intent::Wait);
 
         // Walking: to whatever is pointed at, or back onto an interrupted
         // walk. One row, because they are the same act to the player.
@@ -1136,21 +1198,21 @@ impl ClientSession {
         let resume = self.travel_target.filter(|at| *at != hunter.pos);
         match (pointed, resume) {
             (Some(at), _) => push(
-                "\u{21b5}",
+                Some("\u{21b5}"),
                 strings.ui("ui.action.walk-to"),
                 true,
                 None,
                 Intent::TravelTo(at),
             ),
             (None, Some(at)) => push(
-                "\u{21b5}",
+                Some("\u{21b5}"),
                 strings.ui("ui.action.resume-walk"),
                 true,
                 None,
                 Intent::TravelTo(at),
             ),
             (None, None) => push(
-                "\u{21b5}",
+                Some("\u{21b5}"),
                 strings.ui("ui.action.walk-to"),
                 false,
                 Some(strings.ui("ui.blocked.no-walk-target").to_owned()),
@@ -1159,7 +1221,7 @@ impl ClientSession {
         }
         let sighted = !self.in_sight().is_empty();
         push(
-            "Tab",
+            None,
             strings.ui("ui.action.next-in-sight"),
             sighted,
             (!sighted).then(|| strings.ui("ui.blocked.nothing-in-sight").to_owned()),
@@ -1169,7 +1231,7 @@ impl ClientSession {
         let targets = !self.fire_targets().is_empty();
         let shots = hunter.item_count("flintlock-shot");
         push(
-            "f",
+            None,
             strings.ui("ui.action.fire-flintlock"),
             targets && shots > 0,
             if shots == 0 {
@@ -1183,7 +1245,7 @@ impl ClientSession {
         );
         if hunter.item_count("silver-bullet") > 0 {
             push(
-                "F",
+                None,
                 strings.ui("ui.action.fire-silver"),
                 targets,
                 (!targets).then(|| strings.ui("ui.blocked.nothing-in-sight").to_owned()),
@@ -1194,7 +1256,7 @@ impl ClientSession {
         let stamina = hunter.stamina;
         let aim_cost = self.manoeuvre_cost("aim");
         push(
-            "a",
+            None,
             strings.ui("ui.action.aim"),
             stamina >= aim_cost,
             (stamina < aim_cost).then(|| format!("{aim_cost} stamina")),
@@ -1202,7 +1264,7 @@ impl ClientSession {
         );
         let power_cost = self.manoeuvre_cost("power-attack");
         push(
-            "p",
+            None,
             strings.ui("ui.action.power-attack"),
             stamina >= power_cost,
             (stamina < power_cost).then(|| {
@@ -1212,7 +1274,7 @@ impl ClientSession {
         );
         let sprint_cost = self.manoeuvre_cost("sprint");
         push(
-            "s",
+            None,
             &strings.ui_fill(
                 "ui.action.sprint",
                 &[("tiles", &self.sprint_tiles().to_string())],
@@ -1224,7 +1286,7 @@ impl ClientSession {
 
         let physical = hunter.physical;
         push(
-            "x",
+            None,
             strings.ui("ui.action.set-snare"),
             physical >= 1,
             (physical < 1).then(|| strings.ui("ui.blocked.one-physical").to_owned()),
@@ -1232,7 +1294,7 @@ impl ClientSession {
         );
         let adjacent_foe = self.adjacent_hostile().is_some();
         push(
-            "K",
+            None,
             strings.ui("ui.action.killing-blow"),
             physical >= 1 && adjacent_foe,
             if physical < 1 {
@@ -1247,7 +1309,7 @@ impl ClientSession {
 
         if hunter.item_count("wound-draught") > 0 {
             push(
-                "q",
+                None,
                 strings.ui("ui.action.draught"),
                 true,
                 None,
@@ -1257,7 +1319,7 @@ impl ClientSession {
         if hunter.item_count("binding-charm") > 0 {
             let adjacent_villain = self.adjacent_villain();
             push(
-                "c",
+                None,
                 strings.ui("ui.action.binding-charm"),
                 adjacent_villain,
                 (!adjacent_villain)
@@ -1267,35 +1329,35 @@ impl ClientSession {
         }
 
         push(
-            "d",
+            None,
             strings.ui("ui.action.dossier"),
             true,
             None,
             Intent::Dossier,
         );
         push(
-            "g",
+            None,
             strings.ui("ui.action.grimoire"),
             true,
             None,
             Intent::Grimoire,
         );
         push(
-            "r",
+            None,
             strings.ui("ui.action.faces"),
             true,
             None,
             Intent::Relationships,
         );
         push(
-            "v",
+            None,
             strings.ui("ui.action.valley"),
             true,
             None,
             Intent::RegionMap,
         );
         push(
-            "L",
+            None,
             strings.ui("ui.action.record"),
             true,
             None,

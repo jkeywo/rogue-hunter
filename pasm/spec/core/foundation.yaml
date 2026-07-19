@@ -594,6 +594,33 @@ entities:
       summary: Applying a Travel command opens a two-row confirmation naming the destination and the day it will be, and saying so when that day carries a scheme event or begins the final hunt. The gate sits in the apply path rather than the interact menu, so the single-unblocked-action fast path cannot slip past it.
       references: [travel-clock, mouse-inspection-and-actions]
 
+  # Architecture deepening: client-seam modules, shared so neither client
+  # owns a binding, a mode rule, or a save rule of its own.
+
+  - component: selection-list
+    implementation:
+      status: confirmed
+      paths: [crates/rh-client-core/src/lib.rs]
+      tests: [cargo test -p rh-client-core]
+    core:
+      status: accepted
+      confidence: confirmed
+      title: One selection-list semantics
+      summary: Up and Down clamp to the list, a hover moves the highlight without choosing, a click chooses. Held once in list_move and inherited by the splash menu, hunter selection, the reference list screens, and every list-shaped modal, so keyboard and mouse cannot disagree about what is selected.
+      references: [mouse-inspection-and-actions, terminal-client, web-client]
+
+  - component: client-input-bindings
+    implementation:
+      status: confirmed
+      paths: [crates/rh-client-core/src/input.rs]
+      tests: [cargo test -p rh-client-core]
+    core:
+      status: accepted
+      confidence: confirmed
+      title: One key-binding table for both clients
+      summary: Clients map raw events onto a platform-neutral Key; what a key means is decided once, in intent_for_key, against the session's input mode - text entry, list navigation, or tactical. The action panel prints its key hints off the same table, and the persisted-save policy lives behind save_action, so the clients cannot drift apart at the keyboard or the save file.
+      references: [semantic-command-boundary, terminal-client, web-client, visible-opportunity-affordances]
+
   - component: first-time-hints
     implementation:
       status: confirmed

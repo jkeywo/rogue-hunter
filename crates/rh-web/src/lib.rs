@@ -9,9 +9,9 @@ use wasm_bindgen::prelude::*;
 use web_sys::{CanvasRenderingContext2d, Document, Element, HtmlCanvasElement};
 
 use rh_client_core::view::{CellColor, OverlayView, PanelLabels, RunView, ScreenView};
-use rh_client_core::{ClientSession, Intent, Screen};
+use rh_client_core::{ClientSession, Intent, Key, SaveAction};
 use rh_core::events::EventKind;
-use rh_core::geometry::{Direction, Point, MAP_HEIGHT, MAP_WIDTH};
+use rh_core::geometry::{Point, MAP_HEIGHT, MAP_WIDTH};
 
 const CELL_W: f64 = 16.0;
 const CELL_H: f64 = 24.0;
@@ -152,87 +152,50 @@ impl WebClient {
 
 impl WebClient {
     fn translate_key(&self, key: &str) -> Option<Intent> {
-        let text_entry = matches!(
-            self.session.screen,
-            Screen::SeedEntry { .. } | Screen::CodeEntry { .. }
-        );
-        if text_entry {
-            return match key {
-                "Enter" => Some(Intent::Confirm),
-                "Escape" => Some(Intent::Cancel),
-                "Backspace" => Some(Intent::Backspace),
-                k if k.chars().count() == 1 => k.chars().next().map(Intent::Char),
-                _ => None,
-            };
-        }
-        let in_menu = self.session.modal.is_some() || !matches!(self.session.screen, Screen::Run);
-        match key {
-            "Escape" => Some(Intent::Cancel),
-            "Enter" => Some(Intent::Confirm),
-            "ArrowUp" if in_menu => Some(Intent::Up),
-            "ArrowDown" if in_menu => Some(Intent::Down),
-            "ArrowUp" => Some(Intent::Move(Direction::North)),
-            "ArrowDown" => Some(Intent::Move(Direction::South)),
-            "ArrowLeft" => Some(Intent::Move(Direction::West)),
-            "ArrowRight" => Some(Intent::Move(Direction::East)),
-            "h" => Some(Intent::Move(Direction::West)),
-            "j" if !in_menu => Some(Intent::Move(Direction::South)),
-            "k" if !in_menu => Some(Intent::Move(Direction::North)),
-            "j" => Some(Intent::Down),
-            "k" => Some(Intent::Up),
-            "l" => Some(Intent::Move(Direction::East)),
-            "y" => Some(Intent::Move(Direction::NorthWest)),
-            "u" => Some(Intent::Move(Direction::NorthEast)),
-            "b" => Some(Intent::Move(Direction::SouthWest)),
-            "n" => Some(Intent::Move(Direction::SouthEast)),
-            "." | " " => Some(Intent::Wait),
-            "e" => Some(Intent::Interact),
-            "f" => Some(Intent::Fire),
-            "F" => Some(Intent::FireSilver),
-            "a" => Some(Intent::Aim),
-            "p" => Some(Intent::PowerAttack),
-            "s" => Some(Intent::Sprint),
-            "x" => Some(Intent::SetSnare),
-            "K" => Some(Intent::KillingBlow),
-            "q" => Some(Intent::Draught),
-            "c" => Some(Intent::Charm),
-            "d" => Some(Intent::Dossier),
-            "Tab" if !in_menu => Some(Intent::NextThreat),
-            "g" => Some(Intent::Grimoire),
-            "r" => Some(Intent::Relationships),
-            "v" => Some(Intent::RegionMap),
-            "L" => Some(Intent::EventLog),
-            ";" => Some(Intent::ToggleLook),
-            // Numpad movement (NumLock on gives digits; off gives nav keys).
-            "1" if !in_menu => Some(Intent::Move(Direction::SouthWest)),
-            "2" if !in_menu => Some(Intent::Move(Direction::South)),
-            "3" if !in_menu => Some(Intent::Move(Direction::SouthEast)),
-            "4" if !in_menu => Some(Intent::Move(Direction::West)),
-            "5" if !in_menu => Some(Intent::Wait),
-            "6" if !in_menu => Some(Intent::Move(Direction::East)),
-            "7" if !in_menu => Some(Intent::Move(Direction::NorthWest)),
-            "8" if !in_menu => Some(Intent::Move(Direction::North)),
-            "9" if !in_menu => Some(Intent::Move(Direction::NorthEast)),
-            "Home" if !in_menu => Some(Intent::Move(Direction::NorthWest)),
-            "PageUp" if !in_menu => Some(Intent::Move(Direction::NorthEast)),
-            "End" if !in_menu => Some(Intent::Move(Direction::SouthWest)),
-            "PageDown" if !in_menu => Some(Intent::Move(Direction::SouthEast)),
-            "Clear" if !in_menu => Some(Intent::Wait),
-            _ => None,
-        }
+        key_of(key).and_then(|key| self.session.intent_for_key(key))
     }
+}
 
+/// Map a browser `event.key` string onto the shared platform-neutral key.
+/// What the key *means* is the session's business, not this client's.
+fn key_of(key: &str) -> Option<Key> {
+    Some(match key {
+        "ArrowUp" => Key::Up,
+        "ArrowDown" => Key::Down,
+        "ArrowLeft" => Key::Left,
+        "ArrowRight" => Key::Right,
+        "Enter" => Key::Enter,
+        "Escape" => Key::Escape,
+        "Backspace" => Key::Backspace,
+        "Tab" => Key::Tab,
+        "Home" => Key::Home,
+        "End" => Key::End,
+        "PageUp" => Key::PageUp,
+        "PageDown" => Key::PageDown,
+        "Clear" => Key::Clear,
+        k => {
+            let mut chars = k.chars();
+            match (chars.next(), chars.next()) {
+                (Some(c), None) => Key::Char(c),
+                _ => return None,
+            }
+        }
+    })
+}
+
+impl WebClient {
     fn persist(&self) {
         let storage = web_sys::window().and_then(|window| window.local_storage().ok().flatten());
         let Some(storage) = storage else { return };
-        match (&self.session.screen, self.session.share_code()) {
-            (Screen::CaseReport, _) | (Screen::Splash { .. }, _) => {
-                let _ = storage.remove_item(SAVE_KEY);
-            }
-            (_, Some(code)) => {
+        // The policy lives in the session; this is only the storage I/O.
+        match self.session.save_action() {
+            SaveAction::Write(code) => {
                 let _ = storage.set_item(SAVE_KEY, &code);
             }
-            _ => {}
+            SaveAction::Clear => {
+                let _ = storage.remove_item(SAVE_KEY);
+            }
+            SaveAction::Keep => {}
         }
     }
 

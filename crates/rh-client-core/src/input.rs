@@ -77,3 +77,152 @@ pub enum Intent {
     /// Copy the current share code (client performs the clipboard part).
     CopyCode,
 }
+
+/// A platform-neutral key press. Each client maps its raw events (crossterm
+/// key codes, browser `event.key` strings) onto these; what a key *means* is
+/// decided once, in [`intent_for_key`], so the clients cannot disagree.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Key {
+    Char(char),
+    Up,
+    Down,
+    Left,
+    Right,
+    Enter,
+    Escape,
+    Backspace,
+    Tab,
+    Home,
+    End,
+    PageUp,
+    PageDown,
+    /// Numpad 5 with NumLock off.
+    Clear,
+}
+
+/// How the session is currently listening.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InputMode {
+    /// Seed or share-code entry: characters go to the field.
+    TextEntry,
+    /// A modal or a non-run screen: arrows and jk are list navigation.
+    ListNav,
+    /// The run screen proper: arrows and the roguelike keys move the hunter.
+    Tactical,
+}
+
+/// The run screen's character bindings: one table that the key translator
+/// and the action panel both read, so what is pressed and what is printed
+/// beside an action can never disagree. Movement characters (hjkl, yubn,
+/// the numpad) live in [`intent_for_key`] because their meaning depends on
+/// the input mode.
+const CHAR_BINDINGS: &[(char, Intent)] = &[
+    ('e', Intent::Interact),
+    (';', Intent::ToggleLook),
+    ('.', Intent::Wait),
+    (' ', Intent::Wait),
+    ('f', Intent::Fire),
+    ('F', Intent::FireSilver),
+    ('a', Intent::Aim),
+    ('p', Intent::PowerAttack),
+    ('s', Intent::Sprint),
+    ('x', Intent::SetSnare),
+    ('K', Intent::KillingBlow),
+    ('q', Intent::Draught),
+    ('c', Intent::Charm),
+    ('d', Intent::Dossier),
+    ('g', Intent::Grimoire),
+    ('r', Intent::Relationships),
+    ('v', Intent::RegionMap),
+    ('L', Intent::EventLog),
+];
+
+/// Translate a key press into the intent it means under the given mode.
+/// Pure and total over the binding tables; the session wraps it with the
+/// mode it is actually in.
+pub fn intent_for_key(mode: InputMode, key: Key) -> Option<Intent> {
+    if mode == InputMode::TextEntry {
+        return match key {
+            Key::Char(c) => Some(Intent::Char(c)),
+            Key::Backspace => Some(Intent::Backspace),
+            Key::Enter => Some(Intent::Confirm),
+            Key::Escape => Some(Intent::Cancel),
+            _ => None,
+        };
+    }
+    let in_menu = mode == InputMode::ListNav;
+    match key {
+        Key::Escape => Some(Intent::Cancel),
+        Key::Enter => Some(Intent::Confirm),
+        // Tab sweeps the look cursor over everything in sight.
+        Key::Tab if !in_menu => Some(Intent::NextThreat),
+        Key::Up if in_menu => Some(Intent::Up),
+        Key::Down if in_menu => Some(Intent::Down),
+        Key::Up => Some(Intent::Move(Direction::North)),
+        Key::Down => Some(Intent::Move(Direction::South)),
+        Key::Left => Some(Intent::Move(Direction::West)),
+        Key::Right => Some(Intent::Move(Direction::East)),
+        // Numpad diagonals (NumLock off sends these navigation keys).
+        Key::Home if !in_menu => Some(Intent::Move(Direction::NorthWest)),
+        Key::PageUp if !in_menu => Some(Intent::Move(Direction::NorthEast)),
+        Key::End if !in_menu => Some(Intent::Move(Direction::SouthWest)),
+        Key::PageDown if !in_menu => Some(Intent::Move(Direction::SouthEast)),
+        Key::Clear if !in_menu => Some(Intent::Wait),
+        Key::Char(c) => char_intent(c, in_menu),
+        _ => None,
+    }
+}
+
+fn char_intent(c: char, in_menu: bool) -> Option<Intent> {
+    // Numpad digits (NumLock on) are roguelike movement in the run screen.
+    if !in_menu {
+        if let Some(intent) = numpad_move(c) {
+            return Some(intent);
+        }
+    }
+    match c {
+        'j' if in_menu => return Some(Intent::Down),
+        'k' if in_menu => return Some(Intent::Up),
+        'j' => return Some(Intent::Move(Direction::South)),
+        'k' => return Some(Intent::Move(Direction::North)),
+        'h' => return Some(Intent::Move(Direction::West)),
+        'l' => return Some(Intent::Move(Direction::East)),
+        'y' => return Some(Intent::Move(Direction::NorthWest)),
+        'u' => return Some(Intent::Move(Direction::NorthEast)),
+        'b' => return Some(Intent::Move(Direction::SouthWest)),
+        'n' => return Some(Intent::Move(Direction::SouthEast)),
+        _ => {}
+    }
+    CHAR_BINDINGS
+        .iter()
+        .find(|(key, _)| *key == c)
+        .map(|(_, intent)| intent.clone())
+}
+
+/// Roguelike numpad movement: 1-9 laid out like the keypad, 5 waits.
+fn numpad_move(c: char) -> Option<Intent> {
+    Some(match c {
+        '1' => Intent::Move(Direction::SouthWest),
+        '2' => Intent::Move(Direction::South),
+        '3' => Intent::Move(Direction::SouthEast),
+        '4' => Intent::Move(Direction::West),
+        '5' => Intent::Wait,
+        '6' => Intent::Move(Direction::East),
+        '7' => Intent::Move(Direction::NorthWest),
+        '8' => Intent::Move(Direction::North),
+        '9' => Intent::Move(Direction::NorthEast),
+        _ => return None,
+    })
+}
+
+/// The key hint printed beside an action, read back off the same table
+/// that translates the press.
+pub(crate) fn key_label(intent: &Intent) -> Option<String> {
+    if matches!(intent, Intent::NextThreat) {
+        return Some("Tab".to_owned());
+    }
+    CHAR_BINDINGS
+        .iter()
+        .find(|(_, bound)| bound == intent)
+        .map(|(key, _)| key.to_string())
+}

@@ -756,3 +756,79 @@ fn an_opened_grave_reports_what_it_held_on_inspect() {
         "the inspect line must resolve every id: {after:?}"
     );
 }
+
+#[test]
+fn keys_mean_what_the_mode_says() {
+    use rh_client_core::{InputMode, Key};
+
+    // The splash is a menu: arrows navigate, and j/k follow them.
+    let mut client = session();
+    assert_eq!(client.input_mode(), InputMode::ListNav);
+    assert_eq!(client.intent_for_key(Key::Down), Some(Intent::Down));
+    assert_eq!(client.intent_for_key(Key::Char('j')), Some(Intent::Down));
+
+    // Seed entry takes characters, not bindings.
+    client.handle(Intent::Down);
+    client.handle(Intent::Confirm);
+    assert_eq!(client.input_mode(), InputMode::TextEntry);
+    assert_eq!(
+        client.intent_for_key(Key::Char('7')),
+        Some(Intent::Char('7'))
+    );
+
+    // The run screen is tactical: the same keys move the hunter.
+    let mut client = run_on_seed("11");
+    assert_eq!(client.input_mode(), InputMode::Tactical);
+    assert_eq!(
+        client.intent_for_key(Key::Down),
+        Some(Intent::Move(Direction::South))
+    );
+    assert_eq!(
+        client.intent_for_key(Key::Char('7')),
+        Some(Intent::Move(Direction::NorthWest))
+    );
+    assert_eq!(client.intent_for_key(Key::Tab), Some(Intent::NextThreat));
+
+    // A modal flips the run screen back to list navigation.
+    client.handle(Intent::Interact);
+    if client.modal.is_some() {
+        assert_eq!(client.input_mode(), InputMode::ListNav);
+        assert_eq!(client.intent_for_key(Key::Down), Some(Intent::Down));
+    }
+}
+
+#[test]
+fn the_action_panel_prints_the_key_the_translator_honours() {
+    let client = run_on_seed("11");
+    for entry in client.available_actions() {
+        let mut chars = entry.key.chars();
+        let (Some(c), None) = (chars.next(), chars.next()) else {
+            // "Tab" and the walk row's return glyph are not char bindings.
+            continue;
+        };
+        if c == '\u{21b5}' {
+            continue;
+        }
+        assert_eq!(
+            client.intent_for_key(rh_client_core::Key::Char(c)),
+            Some(entry.intent.clone()),
+            "panel key {c:?} must fire the intent its row promises"
+        );
+    }
+}
+
+#[test]
+fn the_save_follows_the_run_and_only_the_run() {
+    use rh_client_core::SaveAction;
+
+    // No run, on the splash: whatever is stored is stale and goes.
+    let client = session();
+    assert_eq!(client.save_action(), SaveAction::Clear);
+
+    // A live run is written wherever the player is looking.
+    let mut client = run_on_seed("11");
+    let code = client.share_code().expect("live run has a code");
+    assert_eq!(client.save_action(), SaveAction::Write(code.clone()));
+    client.handle(Intent::Grimoire);
+    assert_eq!(client.save_action(), SaveAction::Write(code));
+}
