@@ -1196,27 +1196,23 @@ impl Sim {
                     .ui_fill("log.travel.depart", &[("place", &destination)]),
             );
         }
-        self.advance_clock(ClockReason::Travel);
-        if self.state.outcome.is_some() {
-            return Ok(());
-        }
-        self.state.current_map = exit.to_map;
-        self.state.hunter.pos = exit.to_point;
-        self.clear_encounter_buffs();
-        self.log_fill(
-            EventKind::Travel,
-            "log.travel.arrive",
-            &[("place", &destination)],
-        );
-        if exit.ambush_route {
-            let chance = self.world.ambush_percent;
-            if self.state.rng.percent(chance) {
-                self.spawn_ambush(exit.to_point);
+        self.advance_clock_and_settle(ClockReason::Travel, |sim| {
+            sim.state.current_map = exit.to_map;
+            sim.state.hunter.pos = exit.to_point;
+            sim.clear_encounter_buffs();
+            sim.log_fill(
+                EventKind::Travel,
+                "log.travel.arrive",
+                &[("place", &destination)],
+            );
+            if exit.ambush_route {
+                let chance = sim.world.ambush_percent;
+                if sim.state.rng.percent(chance) {
+                    sim.spawn_ambush(exit.to_point);
+                }
             }
-        }
-        self.note_arrival();
-        self.maybe_begin_final_hunt();
-        self.refresh_senses();
+            sim.note_arrival();
+        });
         Ok(())
     }
 
@@ -1293,10 +1289,7 @@ impl Sim {
                 .ui("log.rite.consecration")
                 .to_owned(),
         );
-        self.advance_clock(ClockReason::CostlyAction);
-        self.note_arrival();
-        self.maybe_begin_final_hunt();
-        self.refresh_senses();
+        self.advance_clock_and_settle(ClockReason::CostlyAction, |sim| sim.note_arrival());
         Ok(())
     }
 
@@ -1643,13 +1636,18 @@ impl Sim {
         tiles
     }
 
-    fn expose_dormant_villain(&mut self, map: MapId, at: Point) {
+    /// Put the villain on the board: spawn its actor at tier-adjusted health
+    /// with its ward woven, and flip every fact that must move together —
+    /// active, actor id, uncovered, location known. Every reveal path goes
+    /// through here so none can half-materialise it. `dormant` is the coup
+    /// window a grave-opened villain wakes through; the other paths pass 0.
+    fn materialise_villain(&mut self, map: MapId, at: Point, dormant: u8) {
         let def = self.villain_def().clone();
         let tier_hp = def.health + def.tier_bonus_health * u16::from(self.state.villain.tier);
         let id = self.state.spawn_actor(ActorKind::Villain, map, at, tier_hp);
         let ward = self.villain_ward_charges();
         if let Some(actor) = self.state.actor_mut(id) {
-            actor.dormant = 3;
+            actor.dormant = dormant;
             actor.awake = true;
             actor.ward_charges = ward;
         }
@@ -1657,6 +1655,11 @@ impl Sim {
         self.state.villain.actor = Some(id);
         self.state.villain_uncovered = true;
         self.state.villain_location_known = true;
+    }
+
+    fn expose_dormant_villain(&mut self, map: MapId, at: Point) {
+        let def = self.villain_def().clone();
+        self.materialise_villain(map, at, 3);
         self.log(
             EventKind::Telegraph,
             self.catalogue.strings.ui_fill(
@@ -1706,19 +1709,7 @@ impl Sim {
         let name = self.world.npc(npc).name.clone();
         let def = self.villain_def().clone();
         self.state.npcs[npc.0 as usize].fled = true;
-        let tier_hp = def.health + def.tier_bonus_health * u16::from(self.state.villain.tier);
-        let id = self
-            .state
-            .spawn_actor(ActorKind::Villain, self.state.current_map, at, tier_hp);
-        let ward = self.villain_ward_charges();
-        if let Some(actor) = self.state.actor_mut(id) {
-            actor.awake = true;
-            actor.ward_charges = ward;
-        }
-        self.state.villain.active = true;
-        self.state.villain.actor = Some(id);
-        self.state.villain_uncovered = true;
-        self.state.villain_location_known = true;
+        self.materialise_villain(self.state.current_map, at, 0);
         self.log(
             EventKind::Telegraph,
             self.catalogue.strings.ui_fill(
@@ -2063,7 +2054,22 @@ impl Sim {
 
     // -- Clock --------------------------------------------------------------------
 
-    pub(crate) fn advance_clock(&mut self, reason: ClockReason) {
+    /// Advance the global clock, run the caller's arrival work once the
+    /// day's events have fired, then meet the clock's obligations: final-hunt
+    /// onset on the map the hunter actually occupies, and a senses refresh.
+    /// Every clock-advancing command goes through here, so none can forget
+    /// to start the hunt.
+    fn advance_clock_and_settle(&mut self, reason: ClockReason, settle: impl FnOnce(&mut Self)) {
+        self.advance_clock(reason);
+        if self.state.outcome.is_some() {
+            return;
+        }
+        settle(self);
+        self.maybe_begin_final_hunt();
+        self.refresh_senses();
+    }
+
+    fn advance_clock(&mut self, reason: ClockReason) {
         self.state.clock += 1;
         let clock = self.state.clock;
         self.log(
@@ -2097,9 +2103,9 @@ impl Sim {
         if clock == clock_balance.major_event_turn {
             self.fire_scheme_event(true);
         }
-        // Final-hunt onset is triggered by the caller once the hunter's
-        // position has settled (travel arrival, respawn, rite's end), so the
-        // villain appears on the map the hunter actually occupies.
+        // Final-hunt onset belongs to advance_clock_and_settle, after the
+        // caller's arrival work, so the villain appears on the map the
+        // hunter actually occupies.
     }
 
     fn fire_scheme_event(&mut self, major: bool) {
@@ -2178,7 +2184,7 @@ impl Sim {
         }
     }
 
-    pub(crate) fn maybe_begin_final_hunt(&mut self) {
+    fn maybe_begin_final_hunt(&mut self) {
         if self.state.final_hunt
             || self.state.villain.dead
             || self.state.clock < self.catalogue.balance.clock.travel_turns
@@ -2219,19 +2225,7 @@ impl Sim {
             }
         }
         let far = self.farthest_free_tile(map);
-        let tier_hp = def.health + def.tier_bonus_health * u16::from(self.state.villain.tier);
-        let id = self
-            .state
-            .spawn_actor(ActorKind::Villain, map, far, tier_hp);
-        let ward = self.villain_ward_charges();
-        if let Some(actor) = self.state.actor_mut(id) {
-            actor.awake = true;
-            actor.ward_charges = ward;
-        }
-        self.state.villain.active = true;
-        self.state.villain.actor = Some(id);
-        self.state.villain_uncovered = true;
-        self.state.villain_location_known = true;
+        self.materialise_villain(map, far, 0);
         // If the villain was hiding in an NPC, that mask is now gone.
         if let Some(host) = self.world.villain.host {
             self.state.npcs[host.0 as usize].fled = true;
@@ -2306,9 +2300,7 @@ impl Sim {
                 }
             }
         }
-        self.advance_clock(ClockReason::Death);
-        self.maybe_begin_final_hunt();
-        self.refresh_senses();
+        self.advance_clock_and_settle(ClockReason::Death, |_| {});
     }
 
     /// One world tick after a hunter action: enemies, NPCs, timers, senses.
