@@ -74,7 +74,8 @@ fn persist(client: &Client) {
         | (Screen::Grimoire { .. }, Some(code))
         | (Screen::Relationships { .. }, Some(code))
         | (Screen::RegionMap { .. }, Some(code))
-        | (Screen::EventLog { .. }, Some(code)) => {
+        | (Screen::EventLog { .. }, Some(code))
+        | (Screen::Dossier { .. }, Some(code)) => {
             let _ = std::fs::write(&client.save_path, code);
         }
         (Screen::CaseReport, _) | (Screen::Splash { .. }, _) => {
@@ -209,6 +210,8 @@ fn translate_key(session: &ClientSession, code: KeyCode) -> Option<Intent> {
     match code {
         KeyCode::Esc => Some(Intent::Cancel),
         KeyCode::Enter => Some(Intent::Confirm),
+        // Tab sweeps the look cursor over everything in sight.
+        KeyCode::Tab if !in_menu => Some(Intent::NextThreat),
         KeyCode::Up if in_menu => Some(Intent::Up),
         KeyCode::Down if in_menu => Some(Intent::Down),
         KeyCode::Up => Some(Intent::Move(Direction::North)),
@@ -254,6 +257,7 @@ fn translate_char(_session: &ClientSession, c: char, in_menu: bool) -> Option<In
         'K' => Some(Intent::KillingBlow),
         'q' => Some(Intent::Draught),
         'c' => Some(Intent::Charm),
+        'd' => Some(Intent::Dossier),
         'g' => Some(Intent::Grimoire),
         'r' => Some(Intent::Relationships),
         'v' => Some(Intent::RegionMap),

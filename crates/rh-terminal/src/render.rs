@@ -180,6 +180,29 @@ fn draw_run(frame: &mut Frame, run: &RunView, status: &str, labels: &PanelLabels
             Style::default().fg(Color::DarkGray),
         )),
     }
+    // What is in sight: the threat list, nearest first. Tab walks the cursor
+    // through it, so the panel and the cursor are the same list.
+    side.push(Line::raw(""));
+    side.push(Line::styled(
+        labels.in_sight.as_str(),
+        Style::default().add_modifier(Modifier::UNDERLINED),
+    ));
+    if run.in_sight.is_empty() {
+        side.push(Line::styled(
+            format!("  {}", labels.in_sight_empty),
+            Style::default().fg(Color::DarkGray),
+        ));
+    }
+    for entry in &run.in_sight {
+        side.push(Line::styled(
+            format!("  {} {} [{}]", entry.name, entry.detail, entry.distance),
+            Style::default().fg(if entry.hostile {
+                Color::LightRed
+            } else {
+                Color::Cyan
+            }),
+        ));
+    }
     side.push(Line::raw(""));
     side.push(Line::styled(
         labels.pack.as_str(),
@@ -249,6 +272,16 @@ fn draw_run(frame: &mut Frame, run: &RunView, status: &str, labels: &PanelLabels
             Style::default()
                 .fg(Color::LightYellow)
                 .add_modifier(Modifier::BOLD),
+        ));
+    }
+    // A first-time hint sits below the status, in its own voice, so it does
+    // not read as something that just happened in the fiction.
+    if let Some(hint) = &run.hint {
+        log_lines.push(Line::styled(
+            hint.clone(),
+            Style::default()
+                .fg(Color::LightCyan)
+                .add_modifier(Modifier::ITALIC),
         ));
     }
     let inner_height = vertical[1].height.saturating_sub(2) as usize;
@@ -512,8 +545,17 @@ fn draw_case_report(frame: &mut Frame, report: &CaseReportView, labels: &PanelLa
         ),
         Line::raw(format!("Origin — {}", report.origin)),
         Line::raw(format!("Scheme — {}", report.scheme)),
+        Line::styled(report.tier.clone(), Style::default().fg(Color::LightRed)),
         Line::raw(""),
     ];
+    lines.push(Line::styled(
+        labels.preparations.as_str(),
+        Style::default().add_modifier(Modifier::UNDERLINED),
+    ));
+    for note in &report.preparations {
+        lines.push(Line::raw(format!("  {note}")));
+    }
+    lines.push(Line::raw(""));
     if !report.hidden_clues.is_empty() {
         lines.push(Line::styled(
             "What you never found:",

@@ -269,6 +269,276 @@ fn cancelling_hunter_selection_returns_to_the_splash() {
     assert!(client.run.is_none());
 }
 
+/// Walk the hunter onto the first exit tile of the current map, the way a
+/// player does: point at it and walk, picking the walk up again whenever
+/// something interrupts it. Returns false if the ground could not be reached.
+fn walk_onto_an_exit(client: &mut ClientSession) -> bool {
+    let run = client.run.as_ref().expect("run");
+    let exit = run.sim.world.map(run.sim.state.current_map).exits[0].at;
+    for _ in 0..24 {
+        let before = client.run.as_ref().expect("run").sim.state.hunter.pos;
+        if before == exit {
+            return true;
+        }
+        client.handle(Intent::TravelTo(exit));
+        let after = client.run.as_ref().expect("run").sim.state.hunter.pos;
+        if after == before {
+            return false;
+        }
+    }
+    false
+}
+
+#[test]
+fn pointing_at_distant_ground_walks_the_whole_way_there() {
+    let mut client = run_on_seed("11");
+    let start = client.run.as_ref().expect("run").sim.state.hunter.pos;
+
+    // Find open ground several tiles off and walk to it in one intent.
+    let exit = {
+        let run = client.run.as_ref().expect("run");
+        run.sim.world.map(run.sim.state.current_map).exits[0].at
+    };
+    assert!(
+        start.distance(exit) > 1,
+        "the exit should be somewhere worth walking to"
+    );
+    client.handle(Intent::TravelTo(exit));
+
+    let after = client.run.as_ref().expect("run").sim.state.hunter.pos;
+    assert_ne!(after, start, "one walk intent should cover ground");
+    assert!(
+        start.distance(after) > 1 || after == exit,
+        "a walk should be more than the single step a click used to take"
+    );
+    // Arriving clears the target; being interrupted keeps it, so the walk can
+    // be picked up rather than re-aimed.
+    if after == exit {
+        assert_eq!(client.travel_target, None, "arrival clears the target");
+    } else {
+        assert_eq!(
+            client.travel_target,
+            Some(exit),
+            "an interrupted walk remembers where it was going"
+        );
+    }
+}
+
+#[test]
+fn an_interrupted_walk_is_offered_again_rather_than_re_aimed() {
+    let mut client = run_on_seed("11");
+    let exit = {
+        let run = client.run.as_ref().expect("run");
+        run.sim.world.map(run.sim.state.current_map).exits[0].at
+    };
+    client.handle(Intent::TravelTo(exit));
+    if client.travel_target.is_none() {
+        // It arrived first go; nothing to resume, which is the other branch.
+        return;
+    }
+    // With nothing under the cursor, the walk row offers to pick it up again.
+    let resume = client
+        .available_actions()
+        .into_iter()
+        .find(|action| action.intent == Intent::TravelTo(exit))
+        .expect("the interrupted walk should be offered again");
+    assert!(resume.enabled);
+}
+
+#[test]
+fn tab_walks_the_cursor_over_what_is_in_sight() {
+    // Find a seed that opens with something visible, so the assertion is
+    // about the cycling rather than about the seed.
+    let mut client = (1..40u32)
+        .map(|seed| run_on_seed(&seed.to_string()))
+        .find(|client| !client.in_sight().is_empty())
+        .expect("some opening has something in sight");
+
+    let sighted = client.in_sight();
+    client.handle(Intent::NextThreat);
+    assert_eq!(
+        client.look_point(),
+        Some(sighted[0].at),
+        "the first press lands on the nearest thing in sight"
+    );
+
+    // Pressing again moves on, wrapping back round to the start.
+    for step in 1..=sighted.len() {
+        client.handle(Intent::NextThreat);
+        assert_eq!(client.look_point(), Some(sighted[step % sighted.len()].at));
+    }
+}
+
+#[test]
+fn nothing_in_sight_says_so_rather_than_moving_the_cursor() {
+    let mut client = (1..40u32)
+        .map(|seed| run_on_seed(&seed.to_string()))
+        .find(|client| client.in_sight().is_empty())
+        .expect("some opening has nothing in sight");
+    client.handle(Intent::NextThreat);
+    assert_eq!(client.look_point(), None);
+    assert!(!client.status.is_empty(), "it should say why nothing moved");
+}
+
+#[test]
+fn travel_is_asked_for_before_it_spends_a_day() {
+    let mut client = run_on_seed("11");
+    assert!(
+        walk_onto_an_exit(&mut client),
+        "the exit should be walkable"
+    );
+    let day_before = client.run.as_ref().expect("run").sim.state.clock;
+
+    // The road out is offered by name; taking it opens a gate rather than
+    // spending the day on the spot.
+    client.handle(Intent::Interact);
+    if let Some(rh_client_core::Modal::Menu { items, .. }) = client.modal.clone() {
+        let travel = items
+            .iter()
+            .position(|item| {
+                matches!(
+                    item.action,
+                    rh_client_core::MenuAction::Do(rh_core::command::Command::Travel)
+                )
+            })
+            .expect("standing on an exit offers the road");
+        client.handle(Intent::Select(travel));
+    }
+    assert!(
+        matches!(client.modal, Some(rh_client_core::Modal::Confirm { .. })),
+        "travel should ask first, got {:?}",
+        client.modal
+    );
+    assert_eq!(
+        client.run.as_ref().expect("run").sim.state.clock,
+        day_before,
+        "asking must not have spent the day"
+    );
+
+    // Backing out leaves the clock alone.
+    client.handle(Intent::Cancel);
+    assert!(client.modal.is_none());
+    assert_eq!(
+        client.run.as_ref().expect("run").sim.state.clock,
+        day_before
+    );
+
+    // Going ahead spends it.
+    client.handle(Intent::Interact);
+    if matches!(client.modal, Some(rh_client_core::Modal::Menu { .. })) {
+        let items = match client.modal.clone() {
+            Some(rh_client_core::Modal::Menu { items, .. }) => items,
+            _ => unreachable!(),
+        };
+        let travel = items
+            .iter()
+            .position(|item| {
+                matches!(
+                    item.action,
+                    rh_client_core::MenuAction::Do(rh_core::command::Command::Travel)
+                )
+            })
+            .expect("the road is still offered");
+        client.handle(Intent::Select(travel));
+    }
+    client.handle(Intent::Confirm);
+    assert!(client.modal.is_none());
+    assert_eq!(
+        client.run.as_ref().expect("run").sim.state.clock,
+        day_before + 1,
+        "confirming should spend the day"
+    );
+}
+
+#[test]
+fn the_dossier_synthesises_what_is_known() {
+    let mut client = run_on_seed("11");
+    client.handle(Intent::Dossier);
+    assert!(matches!(client.screen, Screen::Dossier { .. }));
+
+    match client.view().screen {
+        rh_client_core::view::ScreenView::List { title, entries, .. } => {
+            // Bracketed: placeholder copy from the string table.
+            assert_eq!(title, "[The Case So Far]");
+            assert_eq!(entries.len(), 3, "the quarry, the leads, the preparations");
+            for (heading, body) in &entries {
+                assert!(heading.starts_with('['), "unbracketed heading: {heading}");
+                assert!(!body.is_empty(), "{heading} should say something");
+            }
+            // The quarry section is the one that carries the clock and the
+            // naming test, because that is what a player is asking about.
+            assert!(entries[0].1.contains("Day "));
+        }
+        other => panic!("expected the dossier list, got {other:?}"),
+    }
+
+    client.handle(Intent::Dossier);
+    assert!(
+        matches!(client.screen, Screen::Run),
+        "the key closes it too"
+    );
+}
+
+#[test]
+fn a_first_time_hint_fires_once_and_never_again() {
+    let mut client = run_on_seed("11");
+    let mut seen: Vec<String> = Vec::new();
+    // Waiting is enough: the hints are about state, not about what was done.
+    for _ in 0..40 {
+        client.handle(Intent::Wait);
+        if let Some(hint) = client.hint.clone() {
+            assert!(
+                !seen.contains(&hint),
+                "a first-time hint fired twice: {hint}"
+            );
+            seen.push(hint);
+        }
+        if client
+            .run
+            .as_ref()
+            .is_none_or(|run| run.outcome().is_some())
+        {
+            break;
+        }
+    }
+    assert!(!seen.is_empty(), "something should have been worth saying");
+    for hint in &seen {
+        assert!(hint.starts_with('['), "unbracketed hint: {hint}");
+    }
+}
+
+#[test]
+fn the_case_report_marks_the_certified_routes_against_what_was_done() {
+    let mut client = run_on_seed("11");
+    // The report is the same view whenever it is reached, so it can be read
+    // without playing a run to its end.
+    client.screen = Screen::CaseReport;
+
+    match client.view().screen {
+        rh_client_core::view::ScreenView::CaseReport(report) => {
+            assert!(!report.tier.is_empty(), "the report says how far it got");
+            assert!(
+                !report.preparations.is_empty(),
+                "a defeat should say what was short, not only that it went badly"
+            );
+            assert!(!report.routes.is_empty(), "the routes were certified");
+            for route in &report.routes {
+                // Every step line carries a mark saying whether it was done.
+                for line in route.lines().skip(1) {
+                    // Bracketed: the marks are placeholder copy like the rest.
+                    assert!(
+                        line.starts_with("[done]")
+                            || line.starts_with("[not done]")
+                            || line.starts_with("[--]"),
+                        "unmarked route step: {line}"
+                    );
+                }
+            }
+        }
+        other => panic!("expected the case report, got {other:?}"),
+    }
+}
+
 #[test]
 #[ignore = "diagnostic: prints the hunter selection screen; run with --ignored"]
 fn print_hunter_select_screen() {

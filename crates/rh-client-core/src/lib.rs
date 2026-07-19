@@ -52,6 +52,11 @@ pub enum Screen {
     EventLog {
         selected: usize,
     },
+    /// The case dossier: the synthesis of what is known, as against the
+    /// record's chronology of what happened.
+    Dossier {
+        selected: usize,
+    },
     CaseReport,
 }
 
@@ -68,6 +73,14 @@ pub enum Modal {
     Menu {
         title: String,
         items: Vec<MenuItem>,
+        selected: usize,
+    },
+    /// A yes/no gate in front of a command whose cost is not visible at the
+    /// moment of choosing it. Row 0 goes ahead; row 1 backs out.
+    Confirm {
+        prompt: String,
+        detail: Option<String>,
+        command: Command,
         selected: usize,
     },
 }
@@ -112,9 +125,55 @@ pub struct ClientSession {
     pub look_cursor: Option<Point>,
     /// One-line status: last rejection reason or notable event.
     pub status: String,
+    /// Where an interrupted walk was heading, so it can be picked up again
+    /// rather than re-aimed. Cleared on arrival and when the path is lost.
+    pub travel_target: Option<Point>,
+    /// A first-time teaching line, shown once and then never again.
+    pub hint: Option<String>,
+    /// Hint ids already spent this session.
+    hints_seen: std::collections::BTreeSet<&'static str>,
     /// Random-ish seed source for "New Run" (clients pass a clock value).
     seed_nonce: u64,
 }
+
+/// One thing the hunter can currently see, for the in-sight panel and for
+/// cursor cycling.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SightEntry {
+    pub name: String,
+    /// Health for a foe, role for a villager.
+    pub detail: String,
+    pub at: Point,
+    pub distance: i16,
+    pub hostile: bool,
+}
+
+/// What a walk compares between steps to decide whether to keep going.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct WalkWatch {
+    hp: u16,
+    pos: Point,
+    over: bool,
+    discovered: usize,
+    threats: Vec<rh_core::state::ActorId>,
+}
+
+impl Default for WalkWatch {
+    fn default() -> Self {
+        Self {
+            hp: 0,
+            pos: Point::new(0, 0),
+            over: true,
+            discovered: 0,
+            threats: Vec::new(),
+        }
+    }
+}
+
+/// How far one walk command may carry the hunter before it gives up. A map
+/// is 32x20, so anything reachable is well inside this; the cap exists so a
+/// pathological path cannot spin.
+const MAX_WALK_STEPS: usize = 64;
 
 impl ClientSession {
     pub fn new(catalogue: Catalogue, seed_nonce: u64) -> Self {
@@ -126,6 +185,9 @@ impl ClientSession {
             hover: None,
             look_cursor: None,
             status: String::new(),
+            travel_target: None,
+            hint: None,
+            hints_seen: std::collections::BTreeSet::new(),
             seed_nonce,
         }
     }
@@ -154,6 +216,7 @@ impl ClientSession {
     /// Feed one intent through the state machine.
     pub fn handle(&mut self, intent: Intent) {
         self.status.clear();
+        self.hint = None;
         match &self.screen {
             Screen::Splash { .. } => self.handle_splash(intent),
             Screen::SeedEntry { .. } => self.handle_seed_entry(intent),
@@ -164,6 +227,7 @@ impl ClientSession {
             Screen::Relationships { .. } => self.handle_list_screen(intent),
             Screen::RegionMap { .. } => self.handle_list_screen(intent),
             Screen::EventLog { .. } => self.handle_list_screen(intent),
+            Screen::Dossier { .. } => self.handle_list_screen(intent),
             Screen::CaseReport => self.handle_case_report(intent),
         }
     }
@@ -305,13 +369,15 @@ impl ClientSession {
             Screen::Relationships { .. } => Some(Intent::Relationships),
             Screen::RegionMap { .. } => Some(Intent::RegionMap),
             Screen::EventLog { .. } => Some(Intent::EventLog),
+            Screen::Dossier { .. } => Some(Intent::Dossier),
             _ => None,
         };
         match &mut self.screen {
             Screen::Grimoire { selected }
             | Screen::Relationships { selected }
             | Screen::RegionMap { selected }
-            | Screen::EventLog { selected } => match &intent {
+            | Screen::EventLog { selected }
+            | Screen::Dossier { selected } => match &intent {
                 Intent::Up => {
                     *selected = selected.saturating_sub(1);
                     return;
@@ -342,6 +408,7 @@ impl ClientSession {
             Screen::Relationships { .. } => view::relationship_entries(self).len(),
             Screen::RegionMap { .. } => view::region_entries(self).len(),
             Screen::EventLog { .. } => view::record_entries(self).len(),
+            Screen::Dossier { .. } => view::dossier_entries(self).len(),
             _ => 0,
         }
     }
@@ -422,6 +489,20 @@ impl ClientSession {
                     self.status = self.catalogue.strings.ui("ui.status.look-off").to_owned();
                     return;
                 }
+                // Enter on the cursor walks there: the keyboard gets the
+                // same click-to-destination the mouse already has.
+                Intent::Confirm => {
+                    let target = self.look_cursor;
+                    self.look_cursor = None;
+                    if let Some(target) = target {
+                        self.walk_to(target);
+                    }
+                    return;
+                }
+                Intent::NextThreat => {
+                    self.next_threat();
+                    return;
+                }
                 Intent::Hover(point) => {
                     self.hover = Some(*point);
                     return;
@@ -483,6 +564,9 @@ impl ClientSession {
             Intent::Fire => self.open_fire_menu(false),
             Intent::FireSilver => self.open_fire_menu(true),
             Intent::Interact => self.open_interact_menu(),
+            Intent::TravelTo(target) => self.walk_to(target),
+            Intent::NextThreat => self.next_threat(),
+            Intent::Dossier => self.screen = Screen::Dossier { selected: 0 },
             Intent::Grimoire => self.screen = Screen::Grimoire { selected: 0 },
             Intent::Relationships => self.screen = Screen::Relationships { selected: 0 },
             Intent::RegionMap => self.screen = Screen::RegionMap { selected: 0 },
@@ -625,6 +709,43 @@ impl ClientSession {
                 Intent::Cancel => self.modal = None,
                 _ => {}
             },
+            (
+                Modal::Confirm {
+                    prompt,
+                    detail,
+                    command,
+                    selected,
+                },
+                intent,
+            ) => {
+                let restore = |session: &mut Self, selected: usize| {
+                    session.modal = Some(Modal::Confirm {
+                        prompt: prompt.clone(),
+                        detail: detail.clone(),
+                        command: command.clone(),
+                        selected,
+                    });
+                };
+                match intent {
+                    Intent::Up => restore(self, selected.saturating_sub(1)),
+                    Intent::Down => restore(self, (selected + 1).min(1)),
+                    Intent::HoverRow(index) if index <= 1 => restore(self, index),
+                    Intent::Select(index) if index <= 1 => {
+                        self.modal = None;
+                        if index == 0 {
+                            self.apply_now(command);
+                        }
+                    }
+                    Intent::Confirm => {
+                        self.modal = None;
+                        if selected == 0 {
+                            self.apply_now(command);
+                        }
+                    }
+                    Intent::Cancel => self.modal = None,
+                    _ => restore(self, selected),
+                }
+            }
             (kept, Intent::Cancel) => {
                 let _ = kept;
                 self.modal = None;
@@ -634,12 +755,66 @@ impl ClientSession {
         self.check_run_over();
     }
 
-    /// Apply a semantic command; rejections become the status line.
+    /// Apply a semantic command, first putting a gate in front of it if its
+    /// cost is one the player cannot see at the moment of choosing.
     fn apply(&mut self, command: Command) {
+        if matches!(command, Command::Travel) {
+            self.open_travel_confirm(command);
+            return;
+        }
+        self.apply_now(command);
+    }
+
+    /// Apply a semantic command; rejections become the status line.
+    fn apply_now(&mut self, command: Command) {
         let Some(run) = &mut self.run else { return };
         if let Err(rejection) = run.apply(command) {
             self.status = rejection.to_string();
         }
+        self.check_hints();
+    }
+
+    /// Travel spends one of six days and can wake the quarry's next move, and
+    /// neither of those is legible from the exit tile the hunter is standing
+    /// on. So it is asked for rather than taken.
+    fn open_travel_confirm(&mut self, command: Command) {
+        let Some(run) = self.run.as_ref() else { return };
+        let sim = &run.sim;
+        let state = &sim.state;
+        let strings = &sim.catalogue.strings;
+        let clock = &sim.catalogue.balance.clock;
+        let next_day = state.clock.saturating_add(1);
+        let destination = sim
+            .world
+            .map(state.current_map)
+            .exits
+            .iter()
+            .find(|exit| exit.at == state.hunter.pos)
+            .map(|exit| sim.world.map(exit.to_map).name.clone())
+            .unwrap_or_default();
+        let prompt = strings.ui_fill(
+            "ui.confirm.travel",
+            &[
+                ("place", &destination),
+                ("day", &next_day.min(clock.travel_turns).to_string()),
+                ("total", &clock.travel_turns.to_string()),
+            ],
+        );
+        // Say so when the day being spent is one the villain's scheme has
+        // already claimed: that is the whole reason the choice matters.
+        let detail = if next_day >= clock.travel_turns {
+            Some(strings.ui("ui.confirm.travel-final").to_owned())
+        } else if next_day == clock.minor_event_turn || next_day == clock.major_event_turn {
+            Some(strings.ui("ui.confirm.travel-event").to_owned())
+        } else {
+            None
+        };
+        self.modal = Some(Modal::Confirm {
+            prompt,
+            detail,
+            command,
+            selected: 0,
+        });
     }
 
     /// Stamina cost of a manoeuvre by id, from the authored hunter profile.
@@ -665,6 +840,204 @@ impl ClientSession {
                 _ => None,
             })
             .unwrap_or(2)
+    }
+
+    // -- Walking, sighting, and teaching ---------------------------------------
+
+    /// Walk toward a tile, one recorded `Move` at a time, stopping the moment
+    /// something happens that deserves a decision.
+    ///
+    /// Every step is an ordinary command, so a walk is indistinguishable from
+    /// the same keys pressed by hand and the replay stays exact. What the
+    /// feature actually removes is the pressing, not the turns.
+    fn walk_to(&mut self, target: Point) {
+        let Some(run) = self.run.as_ref() else { return };
+        if !target.in_bounds() || run.sim.state.hunter.pos == target {
+            self.travel_target = None;
+            return;
+        }
+        self.travel_target = Some(target);
+        let strings = self.catalogue.strings.clone();
+        for _ in 0..MAX_WALK_STEPS {
+            let Some(direction) = self.path_step(target) else {
+                self.travel_target = None;
+                self.status = strings.ui("ui.status.walk-blocked").to_owned();
+                return;
+            };
+            let before = self.walk_watch();
+            self.apply_now(Command::Move(direction));
+            let after = self.walk_watch();
+            if after.over {
+                self.travel_target = None;
+                return;
+            }
+            if after.pos == before.pos {
+                // The move was refused; `apply_now` already said why.
+                self.travel_target = None;
+                return;
+            }
+            if after.pos == target {
+                self.travel_target = None;
+                self.status = strings.ui("ui.status.walk-arrived").to_owned();
+                return;
+            }
+            if after.hp < before.hp {
+                self.status = strings.ui("ui.status.walk-hurt").to_owned();
+                return;
+            }
+            if after.threats.iter().any(|id| !before.threats.contains(id)) {
+                self.status = strings.ui("ui.status.walk-sighted").to_owned();
+                return;
+            }
+            if after.discovered > before.discovered {
+                self.status = strings.ui("ui.status.walk-lead").to_owned();
+                return;
+            }
+        }
+        self.status = strings.ui("ui.status.walk-far").to_owned();
+    }
+
+    /// The handful of facts a walk watches between steps.
+    fn walk_watch(&self) -> WalkWatch {
+        let Some(run) = self.run.as_ref() else {
+            return WalkWatch::default();
+        };
+        let state = &run.sim.state;
+        WalkWatch {
+            hp: state.hunter.hp,
+            pos: state.hunter.pos,
+            over: state.outcome.is_some(),
+            discovered: state.discovered.len(),
+            threats: state
+                .actors
+                .iter()
+                .filter(|actor| {
+                    actor.map == state.current_map && actor.hp > 0 && state.is_visible(actor.pos)
+                })
+                .map(|actor| actor.id)
+                .collect(),
+        }
+    }
+
+    /// Everything in sight worth pointing at, nearest first: hostiles before
+    /// villagers, so the list reads as a threat list that also holds people.
+    pub fn in_sight(&self) -> Vec<SightEntry> {
+        let Some(run) = self.run.as_ref() else {
+            return Vec::new();
+        };
+        let sim = &run.sim;
+        let state = &sim.state;
+        let map = state.current_map;
+        let hunter = state.hunter.pos;
+        let strings = &sim.catalogue.strings;
+        let mut entries: Vec<SightEntry> = Vec::new();
+        for actor in &state.actors {
+            if actor.map != map || actor.hp == 0 || !state.is_visible(actor.pos) {
+                continue;
+            }
+            let mut detail = strings.ui_fill(
+                "ui.sight.health",
+                &[
+                    ("current", &actor.hp.to_string()),
+                    ("max", &actor.max_hp.to_string()),
+                ],
+            );
+            if actor.trapped > 0 {
+                detail.push_str(strings.ui("ui.sight.held"));
+            } else if actor.kind == ActorKind::Villain && sim.villain_is_vulnerable(actor.id) {
+                detail.push_str(strings.ui("ui.sight.vulnerable"));
+            }
+            entries.push(SightEntry {
+                name: sim.actor_name(&actor.kind),
+                detail,
+                at: actor.pos,
+                distance: hunter.distance(actor.pos),
+                hostile: true,
+            });
+        }
+        for (spec, npc_state) in sim.world.npcs.iter().zip(state.npcs.iter()) {
+            if spec.map != map || !npc_state.alive || npc_state.fled {
+                continue;
+            }
+            if !state.is_visible(npc_state.pos) {
+                continue;
+            }
+            let role = sim
+                .catalogue
+                .npcs
+                .archetypes
+                .get(&spec.archetype)
+                .map(|def| strings.get(&def.name))
+                .unwrap_or_default();
+            entries.push(SightEntry {
+                name: spec.name.clone(),
+                detail: role.to_owned(),
+                at: npc_state.pos,
+                distance: hunter.distance(npc_state.pos),
+                hostile: false,
+            });
+        }
+        entries.sort_by_key(|entry| (!entry.hostile, entry.distance, entry.at.y, entry.at.x));
+        entries
+    }
+
+    /// Put the look cursor on the next thing in sight, wrapping round. The
+    /// keyboard equivalent of sweeping the mouse over everything that moved.
+    fn next_threat(&mut self) {
+        let entries = self.in_sight();
+        if entries.is_empty() {
+            self.status = self
+                .catalogue
+                .strings
+                .ui("ui.blocked.nothing-in-sight")
+                .to_owned();
+            return;
+        }
+        let current = self.look_point();
+        let next = current
+            .and_then(|at| entries.iter().position(|entry| entry.at == at))
+            .map(|index| (index + 1) % entries.len())
+            .unwrap_or(0);
+        // The cursor is the answer, so a stale mouse hover must not outrank it.
+        self.hover = None;
+        self.look_cursor = Some(entries[next].at);
+    }
+
+    /// Say a thing once, the first time it is true and could bite.
+    ///
+    /// These are the moments a new player misreads: a cost they did not know
+    /// they were paying, a clock they did not know was running. Each fires at
+    /// most once, most urgent first, and only ever one per action so the line
+    /// is never a wall.
+    fn check_hints(&mut self) {
+        let Some(run) = self.run.as_ref() else { return };
+        let state = &run.sim.state;
+        let hunter = &state.hunter;
+        let has_lead = run.sim.world.opportunities.iter().any(|opp| {
+            state.discovered.contains(&opp.id)
+                && !state.resolved.contains(&opp.id)
+                && !state.lost.contains(&opp.id)
+        });
+        let candidates: [(&'static str, bool); 6] = [
+            ("ui.hint.first.final-hunt", state.final_hunt),
+            (
+                "ui.hint.first.wounded",
+                hunter.hp * 2 <= hunter.max_hp && hunter.hp > 0,
+            ),
+            ("ui.hint.first.villain-tier", state.villain.tier > 0),
+            ("ui.hint.first.day-passed", state.clock > 0),
+            ("ui.hint.first.stamina-empty", hunter.stamina == 0),
+            ("ui.hint.first.lead", has_lead),
+        ];
+        let Some(id) = candidates
+            .iter()
+            .find(|(id, live)| *live && !self.hints_seen.contains(id))
+            .map(|(id, _)| *id)
+        else {
+            return;
+        };
+        self.hints_seen.insert(id);
+        self.hint = Some(self.catalogue.strings.ui(id).to_owned());
     }
 
     // -- Look mode -------------------------------------------------------------
@@ -737,6 +1110,42 @@ impl ClientSession {
             Intent::ToggleLook,
         );
         push(".", strings.ui("ui.action.wait"), true, None, Intent::Wait);
+
+        // Walking: to whatever is pointed at, or back onto an interrupted
+        // walk. One row, because they are the same act to the player.
+        let pointed = self.look_point().filter(|at| *at != hunter.pos);
+        let resume = self.travel_target.filter(|at| *at != hunter.pos);
+        match (pointed, resume) {
+            (Some(at), _) => push(
+                "\u{21b5}",
+                strings.ui("ui.action.walk-to"),
+                true,
+                None,
+                Intent::TravelTo(at),
+            ),
+            (None, Some(at)) => push(
+                "\u{21b5}",
+                strings.ui("ui.action.resume-walk"),
+                true,
+                None,
+                Intent::TravelTo(at),
+            ),
+            (None, None) => push(
+                "\u{21b5}",
+                strings.ui("ui.action.walk-to"),
+                false,
+                Some(strings.ui("ui.blocked.no-walk-target").to_owned()),
+                Intent::Wait,
+            ),
+        }
+        let sighted = !self.in_sight().is_empty();
+        push(
+            "Tab",
+            strings.ui("ui.action.next-in-sight"),
+            sighted,
+            (!sighted).then(|| strings.ui("ui.blocked.nothing-in-sight").to_owned()),
+            Intent::NextThreat,
+        );
 
         let targets = !self.fire_targets().is_empty();
         let shots = hunter.item_count("flintlock-shot");
@@ -838,6 +1247,13 @@ impl ClientSession {
             );
         }
 
+        push(
+            "d",
+            strings.ui("ui.action.dossier"),
+            true,
+            None,
+            Intent::Dossier,
+        );
         push(
             "g",
             strings.ui("ui.action.grimoire"),
@@ -960,11 +1376,12 @@ impl ClientSession {
             .find(|exit| exit.at == hunter)
         {
             let name = sim.world.map(exit.to_map).name.clone();
+            let strings = &sim.catalogue.strings;
             items.push(MenuItem {
-                label: format!("Travel to {name} (spends a day)"),
+                label: strings.ui_fill("ui.action.travel", &[("place", &name)]),
                 blocked: state
                     .final_hunt
-                    .then(|| "The hunt is here; there is no time.".into()),
+                    .then(|| strings.ui("ui.blocked.no-time").to_owned()),
                 action: MenuAction::Do(Command::Travel),
             });
         }
@@ -1066,7 +1483,7 @@ impl ClientSession {
                         .to_owned(),
                 )
             } else if state.final_hunt {
-                Some("The hunt is here; there is no time.".to_owned())
+                Some(sim.catalogue.strings.ui("ui.blocked.no-time").to_owned())
             } else {
                 None
             };
@@ -1207,9 +1624,9 @@ impl ClientSession {
             }
             return;
         }
-        // Step along a path toward the clicked tile.
-        if let Some(dir) = self.path_step(point) {
-            self.apply(Command::Move(dir));
+        // Walk the whole path toward the clicked tile, not one step of it.
+        if self.path_step(point).is_some() {
+            self.walk_to(point);
         } else {
             self.status = self.catalogue.strings.ui("ui.status.no-path").to_owned();
         }

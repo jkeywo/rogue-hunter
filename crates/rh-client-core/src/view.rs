@@ -10,7 +10,7 @@ use rh_core::geometry::{Point, MAP_HEIGHT, MAP_WIDTH};
 use rh_core::state::ActorKind;
 use rh_core::world::OpportunityAnchor;
 
-use crate::{ActionEntry, ClientSession, Modal, Screen};
+use crate::{ActionEntry, ClientSession, Modal, Screen, SightEntry};
 
 /// Semantic cell colors; each client maps them to its palette.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -57,6 +57,11 @@ pub struct PanelLabels {
     pub detail: String,
     pub case_report: String,
     pub pack: String,
+    /// Heading and empty-state for the in-sight panel.
+    pub in_sight: String,
+    pub in_sight_empty: String,
+    /// Heading for the case report's what-you-carried section.
+    pub preparations: String,
     /// Heading for the look panel, by how the player is pointing.
     pub look_cursor: String,
     pub look_hover: String,
@@ -80,6 +85,9 @@ impl PanelLabels {
             detail: strings.ui("ui.panel.detail").to_owned(),
             case_report: strings.ui("ui.panel.case-report").to_owned(),
             pack: strings.ui("ui.panel.pack").to_owned(),
+            in_sight: strings.ui("ui.panel.in-sight").to_owned(),
+            in_sight_empty: strings.ui("ui.panel.in-sight-empty").to_owned(),
+            preparations: strings.ui("ui.report.preparations-title").to_owned(),
             look_cursor: strings.ui("ui.panel.look-cursor").to_owned(),
             look_hover: strings.ui("ui.panel.look-hover").to_owned(),
             look_plain: strings.ui("ui.panel.look").to_owned(),
@@ -126,6 +134,10 @@ pub struct RunView {
     pub pools_line: String,
     pub stamina_line: String,
     pub inventory: Vec<String>,
+    /// Everything currently in sight, nearest first, hostiles before people.
+    pub in_sight: Vec<SightEntry>,
+    /// A first-time teaching line for this frame, if one fired.
+    pub hint: Option<String>,
     /// The context-sensitive, clickable action panel.
     pub actions: Vec<ActionEntry>,
     pub log_tail: Vec<(EventKind, String)>,
@@ -154,6 +166,11 @@ pub struct CaseReportView {
     pub origin: String,
     pub scheme: String,
     pub hidden_clues: Vec<String>,
+    /// How far the quarry's scheme got, in tiers.
+    pub tier: String,
+    /// What the hunter actually held and knew when it ended.
+    pub preparations: Vec<String>,
+    /// The certified routes, each step marked against what was really done.
     pub routes: Vec<String>,
     pub share_code: String,
 }
@@ -348,6 +365,14 @@ pub fn build(session: &ClientSession) -> ViewModel {
                     .strings
                     .ui("ui.event-log.title")
                     .to_owned(),
+                selected: Some((*selected).min(entries.len().saturating_sub(1))),
+                entries,
+            }
+        }
+        Screen::Dossier { selected } => {
+            let entries = dossier_entries(session);
+            ScreenView::List {
+                title: session.catalogue.strings.ui("ui.dossier.title").to_owned(),
                 selected: Some((*selected).min(entries.len().saturating_sub(1))),
                 entries,
             }
@@ -611,6 +636,24 @@ fn build_run_view(session: &ClientSession) -> RunView {
                 .collect(),
             selected: *selected,
         },
+        // A confirmation is drawn as an ordinary two-row menu, so every
+        // renderer and every input path already knows how to work it.
+        Modal::Confirm {
+            prompt,
+            detail,
+            selected,
+            ..
+        } => OverlayView {
+            title: match detail {
+                Some(detail) => format!("{prompt} {detail}"),
+                None => prompt.clone(),
+            },
+            items: vec![
+                (strings.ui("ui.confirm.yes").to_owned(), None),
+                (strings.ui("ui.confirm.no").to_owned(), None),
+            ],
+            selected: *selected,
+        },
     });
 
     let final_hunt_note = if state.final_hunt {
@@ -668,6 +711,8 @@ fn build_run_view(session: &ClientSession) -> RunView {
             ],
         ),
         inventory,
+        in_sight: session.in_sight(),
+        hint: session.hint.clone(),
         actions: session.available_actions(),
         log_tail,
         cursor: session.look_point(),
@@ -694,6 +739,8 @@ fn empty_run_view() -> RunView {
         pools_line: String::new(),
         stamina_line: String::new(),
         inventory: Vec::new(),
+        in_sight: Vec::new(),
+        hint: None,
         actions: Vec::new(),
         log_tail: Vec::new(),
         cursor: None,
@@ -735,6 +782,187 @@ pub(crate) fn record_entries(session: &ClientSession) -> Vec<(String, String)> {
             _ => entries.push((heading, event.text.clone())),
         }
     }
+    entries
+}
+
+/// The case dossier: what is known, what is owed, and what is carried.
+///
+/// The record answers "what happened"; this answers "where am I". An
+/// investigation asks the second question far more often than the first, and
+/// before this the only way to answer it was to re-read the whole record.
+pub(crate) fn dossier_entries(session: &ClientSession) -> Vec<(String, String)> {
+    let Some(run) = session.run.as_ref() else {
+        return Vec::new();
+    };
+    let sim = &run.sim;
+    let state = &sim.state;
+    let strings = &sim.catalogue.strings;
+    let clock = &sim.catalogue.balance.clock;
+    let mut entries: Vec<(String, String)> = Vec::new();
+
+    // The quarry: every proof the naming actually turns on, said plainly.
+    let mut quarry: Vec<String> = vec![strings.ui_fill(
+        "ui.dossier.clock",
+        &[
+            ("day", &state.clock.min(clock.travel_turns).to_string()),
+            ("total", &clock.travel_turns.to_string()),
+            ("tier", &state.villain.tier.to_string()),
+        ],
+    )];
+    quarry.push(strings.ui_fill(
+        "ui.dossier.quarry.proofs",
+        &[("count", &state.identity_clues.len().to_string())],
+    ));
+    quarry.push(
+        strings
+            .ui(if state.discriminating_identity.is_empty() {
+                "ui.dossier.quarry.discriminating-no"
+            } else {
+                "ui.dossier.quarry.discriminating-yes"
+            })
+            .to_owned(),
+    );
+    quarry.push(
+        strings
+            .ui(if state.origin_identified {
+                "ui.dossier.quarry.origin-known"
+            } else {
+                "ui.dossier.quarry.origin-unknown"
+            })
+            .to_owned(),
+    );
+    quarry.push(
+        strings
+            .ui(if state.scheme_identified {
+                "ui.dossier.quarry.scheme-known"
+            } else {
+                "ui.dossier.quarry.scheme-unknown"
+            })
+            .to_owned(),
+    );
+    quarry.push(
+        strings
+            .ui(if state.villain_location_known {
+                "ui.dossier.quarry.location-known"
+            } else {
+                "ui.dossier.quarry.location-unknown"
+            })
+            .to_owned(),
+    );
+    quarry.push(
+        strings
+            .ui(if state.villain_uncovered {
+                "ui.dossier.quarry.named"
+            } else if state.identity_clues.len() >= 2 {
+                "ui.dossier.quarry.can-name"
+            } else {
+                "ui.dossier.quarry.cannot-name"
+            })
+            .to_owned(),
+    );
+    entries.push((
+        strings.ui("ui.dossier.quarry.title").to_owned(),
+        quarry.join("\n"),
+    ));
+
+    // Leads outstanding, wherever they are, with the price of each. A lead
+    // the hunter cannot currently pay for still shows, with why.
+    let mut leads: Vec<String> = Vec::new();
+    for opp in &sim.world.opportunities {
+        if !state.discovered.contains(&opp.id)
+            || state.resolved.contains(&opp.id)
+            || state.lost.contains(&opp.id)
+        {
+            continue;
+        }
+        let place = &sim.world.map(opp.map).name;
+        let mut line = strings.ui_fill(
+            "ui.dossier.leads.entry",
+            &[("name", &opp.name), ("place", place)],
+        );
+        if let Some(pool) = opp.pool {
+            let mut cost = opp.cost;
+            if pool == rh_content::PoolKind::Social && state.settlement_hostile {
+                cost += 1;
+            }
+            line.push_str(&strings.ui_fill(
+                "ui.dossier.leads.cost",
+                &[("cost", &cost.to_string()), ("pool", &format!("{pool:?}"))],
+            ));
+            if state.hunter.pool(pool) < cost {
+                line.push_str(strings.ui("ui.dossier.leads.unaffordable"));
+            }
+        }
+        leads.push(line);
+    }
+    if leads.is_empty() {
+        leads.push(strings.ui("ui.dossier.leads.empty").to_owned());
+    }
+    entries.push((
+        strings.ui("ui.dossier.leads.title").to_owned(),
+        leads.join("\n"),
+    ));
+
+    // Preparations: whether the counter can be quenched right, and what is
+    // actually in the pack that would bite.
+    let mut prep: Vec<String> = Vec::new();
+    let reagent = &sim.catalogue.origins[&sim.world.villain.origin].counter_reagent;
+    if state.origin_identified {
+        let reagent_name = sim
+            .catalogue
+            .items
+            .get(reagent)
+            .map(|def| strings.get(&def.name).to_owned())
+            .unwrap_or_else(|| reagent.clone());
+        prep.push(strings.ui_fill(
+            "ui.dossier.prep.reagent-known",
+            &[("reagent", &reagent_name)],
+        ));
+        prep.push(
+            strings
+                .ui(if state.hunter.item_count(reagent) > 0 {
+                    "ui.dossier.prep.reagent-held"
+                } else {
+                    "ui.dossier.prep.reagent-wanted"
+                })
+                .to_owned(),
+        );
+    } else {
+        prep.push(strings.ui("ui.dossier.prep.reagent-unknown").to_owned());
+    }
+    let counters: Vec<String> = ["silver-bullet", "cold-iron-pin", "binding-charm"]
+        .iter()
+        .filter(|item| state.hunter.item_count(item) > 0)
+        .map(|item| {
+            sim.catalogue
+                .items
+                .get(*item)
+                .map(|def| strings.get(&def.name).to_owned())
+                .unwrap_or_else(|| (*item).to_owned())
+        })
+        .collect();
+    prep.push(if counters.is_empty() {
+        strings.ui("ui.dossier.prep.nothing").to_owned()
+    } else {
+        strings.ui_fill(
+            "ui.dossier.prep.holding",
+            &[("items", &counters.join(", "))],
+        )
+    });
+    prep.push(
+        strings
+            .ui(if state.church_consecrated {
+                "ui.dossier.prep.consecrated"
+            } else {
+                "ui.dossier.prep.unconsecrated"
+            })
+            .to_owned(),
+    );
+    entries.push((
+        strings.ui("ui.dossier.prep.title").to_owned(),
+        prep.join("\n"),
+    ));
+
     entries
 }
 
@@ -877,6 +1105,8 @@ fn build_case_report(session: &ClientSession) -> CaseReportView {
             origin: String::new(),
             scheme: String::new(),
             hidden_clues: Vec::new(),
+            tier: String::new(),
+            preparations: Vec::new(),
             routes: Vec::new(),
             share_code: String::new(),
         };
@@ -917,6 +1147,10 @@ fn build_case_report(session: &ClientSession) -> CaseReportView {
         })
         .map(|opp| format!("{} — {}", opp.name, opp.reveal))
         .collect();
+    // The routes the generator certified before the world existed, marked
+    // step by step against what the hunter actually did. Nothing else in the
+    // genre can show the intended solution, because nothing else knows it.
+    let strings = &sim.catalogue.strings;
     let routes: Vec<String> = sim
         .world
         .certified_routes
@@ -925,7 +1159,16 @@ fn build_case_report(session: &ClientSession) -> CaseReportView {
             let steps: Vec<String> = route
                 .steps
                 .iter()
-                .map(|step| format!("t{}: {}", step.turn, step.description))
+                .map(|step| {
+                    let mark = match step.opportunity {
+                        Some(id) if state.resolved.contains(&id) => {
+                            strings.ui("ui.report.step-taken")
+                        }
+                        Some(_) => strings.ui("ui.report.step-missed"),
+                        None => strings.ui("ui.report.step-neutral"),
+                    };
+                    format!("{mark} t{}: {}", step.turn, step.description)
+                })
                 .collect();
             format!(
                 "{} (ready by day {}, {}\u{2030} viable)\n{}",
@@ -936,12 +1179,67 @@ fn build_case_report(session: &ClientSession) -> CaseReportView {
             )
         })
         .collect();
+    // What was carried into the ending, so a defeat says what was short
+    // rather than only that it went badly.
+    let mut preparations: Vec<String> = Vec::new();
+    let reagent = &origin.counter_reagent;
+    let reagent_name = sim
+        .catalogue
+        .items
+        .get(reagent)
+        .map(|def| strings.get(&def.name).to_owned())
+        .unwrap_or_else(|| reagent.clone());
+    preparations.push(strings.ui_fill("ui.report.reagent", &[("reagent", &reagent_name)]));
+    preparations.push(
+        strings
+            .ui(if state.origin_identified {
+                "ui.report.origin-known"
+            } else {
+                "ui.report.origin-unknown"
+            })
+            .to_owned(),
+    );
+    let weakness = &villain_def.weakness_item;
+    preparations.push(
+        strings
+            .ui_fill(
+                if state.hunter.item_count(weakness) > 0 {
+                    "ui.report.weakness-held"
+                } else {
+                    "ui.report.weakness-missing"
+                },
+                &[(
+                    "item",
+                    &sim.catalogue
+                        .items
+                        .get(weakness)
+                        .map(|def| strings.get(&def.name).to_owned())
+                        .unwrap_or_else(|| weakness.clone()),
+                )],
+            )
+            .to_owned(),
+    );
+    preparations.push(
+        strings
+            .ui(if state.church_consecrated {
+                "ui.report.consecrated"
+            } else {
+                "ui.report.unconsecrated"
+            })
+            .to_owned(),
+    );
+
     CaseReportView {
         outcome,
         villain: format!("{} — {}", villain_def.name, sim.world.villain.title),
         origin: format!("{}: {}", origin.name, origin.description),
         scheme: format!("{}: {}", scheme.name, scheme.description),
         hidden_clues,
+        tier: strings.ui_fill(
+            "ui.report.tier",
+            &[("tier", &state.villain.tier.to_string())],
+        ),
+        preparations,
         routes,
         share_code: run.share_code(),
     }

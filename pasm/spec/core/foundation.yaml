@@ -546,3 +546,61 @@ entities:
     game_design:
       claim: A player can form and revise a plausible hunt plan from visible opportunities and discovered facts without hidden UI gating.
       supports: [seeded-mystery-generator, investigation-pools, hidden-villain-facts]
+
+  # Playtest 3: quality-of-life surfaces. Each lives in rh-client-core, so the
+  # terminal and browser presentations get it at the same moment.
+
+  - component: path-walking
+    implementation:
+      status: confirmed
+      paths: [crates/rh-client-core/src/lib.rs]
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Walking to a marked tile
+      summary: Clicking distant ground, or pressing Enter on the look cursor, walks the whole BFS path as a run of ordinary Move commands, stopping on arrival, refusal, a wound, a newly visible hostile, or a newly noticed lead. An interrupted walk keeps its destination so the action panel can offer to pick it up again.
+      references: [mouse-inspection-and-actions, terminal-client, web-client]
+
+  - component: in-sight-panel
+    implementation:
+      status: confirmed
+      paths: [crates/rh-client-core/src/lib.rs, crates/rh-client-core/src/view.rs]
+    core:
+      status: accepted
+      confidence: confirmed
+      title: What is currently in sight
+      summary: Everything visible on the current map is listed nearest first, hostiles with health ahead of villagers with their role. Tab steps the look cursor through that same ordering, wrapping, so the panel and the keyboard cannot disagree about what is out there.
+      references: [mouse-inspection-and-actions, terminal-client, web-client]
+
+  - component: case-dossier
+    implementation:
+      status: confirmed
+      paths: [crates/rh-client-core/src/view.rs]
+    core:
+      status: accepted
+      confidence: confirmed
+      title: The case dossier
+      summary: A screen synthesising where the case stands, as against the record's chronology of what happened - the quarry and which proofs are in hand, the leads still outstanding with what each costs and whether it can be paid for, and the preparations including the reagent the counter must be quenched with once the origin is pinned. It restates run state and reveals nothing unearned.
+      references: [investigation-pools, hidden-villain-facts, terminal-client, web-client]
+
+  - component: travel-confirmation
+    implementation:
+      status: confirmed
+      paths: [crates/rh-client-core/src/lib.rs]
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Confirming a day spent on the road
+      summary: Applying a Travel command opens a two-row confirmation naming the destination and the day it will be, and saying so when that day carries a scheme event or begins the final hunt. The gate sits in the apply path rather than the interact menu, so the single-unblocked-action fast path cannot slip past it.
+      references: [travel-clock, mouse-inspection-and-actions]
+
+  - component: first-time-hints
+    implementation:
+      status: confirmed
+      paths: [crates/rh-client-core/src/lib.rs]
+    core:
+      status: accepted
+      confidence: confirmed
+      title: First-time teaching lines
+      summary: Six lines fire at most once each and at most one per action, checked against run state after every applied command - the final hunt beginning, half health, a threat tier gained, the first day spent, stamina exhausted, and the first lead standing open. They are client-side session memory, so they never reach the log, the state digest, or the share code.
+      references: [travel-clock, investigation-pools, terminal-client, web-client]

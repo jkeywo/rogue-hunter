@@ -31,6 +31,13 @@ pub enum Intent {
     Charm,
     /// Context interact: opportunities, travel, crafting, graves, NPCs.
     Interact,
+    /// Walk a path to a tile, stopping when anything worth a decision
+    /// happens. A click on distant ground, or Enter on the look cursor.
+    TravelTo(Point),
+    /// Put the look cursor on the next thing in sight.
+    NextThreat,
+    /// Open the case dossier: what the hunter knows, owes, and carries.
+    Dossier,
     /// Open the grimoire.
     Grimoire,
     /// Open the relationship map.

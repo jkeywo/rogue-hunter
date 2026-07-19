@@ -81,6 +81,14 @@ ul.actionlist .note { color: var(--dim); }
 .ev-system { color: #9e9e8e; }
 .inspect { color: #ffffff; font-style: italic; }
 .status { color: var(--accent); font-weight: bold; }
+/* A first-time hint speaks as the game, not as the fiction, so it is set
+   apart from the event lines above it. */
+.hint { color: #5fd7d7; font-style: italic; margin-top: 4px; }
+ul.sightlist { list-style: none; margin: 0; padding: 0; }
+ul.sightlist li { padding: 1px 0; }
+ul.sightlist .hostile { color: var(--danger); }
+ul.sightlist .villager { color: #5fd7d7; }
+.tier { color: var(--danger); }
 .hints { color: var(--dim); margin-top: 6px; }
 .dim { color: var(--dim); }
 

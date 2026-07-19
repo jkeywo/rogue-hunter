@@ -44,6 +44,14 @@ keys = "ui.keys.look.keys"
 action = "ui.keys.look"
 
 [[key_bindings]]
+keys = "ui.keys.walk.keys"
+action = "ui.keys.walk"
+
+[[key_bindings]]
+keys = "ui.keys.sight.keys"
+action = "ui.keys.sight"
+
+[[key_bindings]]
 keys = "ui.keys.wait.keys"
 action = "ui.keys.wait"
 

@@ -383,3 +383,56 @@ entities:
       title: Every player-facing string lives in one CSV, and nothing reads it back
       summary: All player-facing text - authored content prose, UI chrome, sim log lines, generator prompts - lives in content/strings.csv as an id, a context note for whoever writes or translates it, and the English. Content TOML and the clients hold ids; text is resolved at the point of display. The table is embedded at compile time like the rest of the content so native, WASM and CI still agree byte-for-byte, but it is deliberately outside SOURCES and so outside content_fingerprint - rewriting a line or translating it must not invalidate a share code in the wild. That exclusion is only sound while nothing reads the text back, which makes the rule - anything the RNG indexes, or that generation or the simulation branches on, stays in TOML. Slot ids, enum tags and cross-references stay for that reason. NPC name pools show the shape of the split - the pools stay in TOML because the RNG indexes them and pool order is a generation input, but they hold ids, so which villager is drawn is generation while what they are called is text and translates freely. Two violations existed when this landed and were fixed first - the church clue anchor sniffed a clue name for "candle", and minion placement searched feature names for "kill site" - both now authored fields. LogEvent.text is serde(skip) so log copy is outside the state digest for the same reason. All copy is currently agent-written placeholder and is wrapped in [square brackets] to say so; a test holds that gate until a human rewrites a row and removes them.
       references: [authored-content-catalogue, share-code-format, autoplayer-golden-replays]
+
+  # Playtest 3: making the valley easier to walk and the case easier to hold
+  # in the head. Six quality-of-life features drawn from what the genre has
+  # already converged on, all landing in rh-client-core so both clients get
+  # them at once.
+
+  - decision: a-walk-is-ordinary-moves-not-a-new-command
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Walking to a tile issues ordinary moves, one at a time
+      summary: Clicking distant ground, or pressing Enter on the look cursor, now walks the whole path rather than taking a single step. It is implemented as a loop that computes the next BFS step and applies an ordinary Move command, so a walk is byte-identical in the replay to the same keys pressed by hand - no new command, no new share-code version, nothing the autoplayer or the golden replays can tell apart. What the feature removes is the pressing, not the turns; enemies still act after every step, and the clock is untouched because local movement never advanced it. The loop is capped at sixty-four steps, which no reachable tile on a thirty-two by twenty map needs, so a pathological path stops rather than spinning.
+      references: [command-replay, mouse-inspection-and-actions]
+
+  - decision: a-walk-stops-on-anything-worth-a-decision
+    core:
+      status: accepted
+      confidence: confirmed
+      title: What interrupts a walk is the whole design of the feature
+      summary: A walk compares five facts either side of every step - health, position, whether the run ended, how many opportunities are discovered, and which hostile actor ids are visible - and stops on arrival, on refusal, on taking a wound, on a hostile coming into view that was not in view before, and on a lead being noticed. Stopping on newly visible hostiles rather than on any visible hostile is deliberate and follows Crawl - a walk that refuses to start while anything is on screen is useless in a settlement full of villagers and wolves, and the danger being warned about is the thing that just appeared. An interrupted walk keeps its destination, so the action panel offers to pick it up rather than making the player re-aim, which is the piece Cogmind found players actually missed.
+      references: [a-walk-is-ordinary-moves-not-a-new-command, mouse-inspection-and-actions]
+
+  - decision: the-dossier-answers-where-am-i
+    core:
+      status: accepted
+      confidence: confirmed
+      title: The record says what happened; the dossier says where the case stands
+      summary: The Record is chronological, and an investigation asks "where am I" far more often than "what happened" - answering it meant re-reading the whole record. The dossier is a third screen on the same list machinery, built fresh from state every frame in three sections - the quarry, holding the day, the threat tier, the count of identity proofs, whether one of them discriminates, and whether the origin, scheme and lair are pinned; the leads outstanding, each with where it is and what pool it wants, marked when the hunter cannot currently pay; and the preparations, naming the reagent the counter must be quenched with once the origin is known, what in the pack would actually bite, and whether the church ground is warded. It states only what the run state already records, so it can reveal nothing the player has not earned.
+      references: [investigation-pools, mouse-inspection-and-actions, text-is-data-and-never-branched-on]
+
+  - decision: what-is-in-sight-is-one-list
+    core:
+      status: accepted
+      confidence: confirmed
+      title: The threat panel and the cursor walk the same list
+      summary: Everything visible on the current map - hostiles with their health, villagers with their role - is sorted nearest first with hostiles ahead of people, and that one ordering serves both the In Sight panel and the Tab key that steps the look cursor through it. They cannot disagree, because there is nothing to keep in step - Tab finds the cursor's current position in the list and takes the next entry, wrapping. Tab also clears any stale mouse hover, because look_point prefers the hover and the cursor would otherwise be moved invisibly. Brogue's sidebar is the most-copied element in the genre for a reason, and the keyboard half of it is what makes it more than decoration.
+      references: [mouse-inspection-and-actions, a-walk-stops-on-anything-worth-a-decision]
+
+  - decision: travel-is-the-one-thing-worth-confirming
+    core:
+      status: accepted
+      confidence: confirmed
+      title: A cost the exit tile does not show gets asked for
+      summary: Travel spends one of six days and can wake the scheme's next move, and none of that is legible from the exit tile the hunter is standing on - it was the only action in the game whose real price was invisible at the moment of taking it. Applying Command::Travel now opens a two-row confirmation instead, naming the destination, the day it will be, and saying so when that day is the one the minor or major event falls on or the one that begins the final hunt. The gate lives in apply rather than in the interact menu, so the menu's single-unblocked-action fast path cannot slip past it. It is rendered as an ordinary two-item overlay, so every renderer and every input path already knows how to work it. Nothing else is gated, because confirmations that fire on actions whose cost is visible are the ones players learn to dismiss without reading.
+      references: [travel-clock, mouse-inspection-and-actions]
+
+  - decision: hints-fire-once-and-the-report-marks-the-routes
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Teaching happens at the moment it bites, and again at the end
+      summary: Six first-time lines fire at most once each and at most one per action, most urgent first - the final hunt beginning, dropping to half health, the quarry gaining a tier, the first day spent, stamina running out, and the first lead standing open. They are checked against state after every applied command rather than raised by the simulation, so the simulation knows nothing about them and they cannot reach the log, the state digest, or the share code. The consequence, accepted rather than fixed, is that restoring a share code shows them again - the seen set is session memory, and putting it in the code would invalidate every code in the wild for something that is not part of the run. The case report gains the other half - the threat tier reached, what was carried into the ending against what would actually have bitten, and every step of both certified routes marked done or not done against the resolved set. No other roguelike can show the intended solution, because no other one certifies routes before materialising the world - this is the payoff for having done that.
+      references: [route-certification-strategy, seeded-mystery-generator, text-is-data-and-never-branched-on]

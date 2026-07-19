@@ -196,6 +196,8 @@ impl WebClient {
             "K" => Some(Intent::KillingBlow),
             "q" => Some(Intent::Draught),
             "c" => Some(Intent::Charm),
+            "d" => Some(Intent::Dossier),
+            "Tab" if !in_menu => Some(Intent::NextThreat),
             "g" => Some(Intent::Grimoire),
             "r" => Some(Intent::Relationships),
             "v" => Some(Intent::RegionMap),
@@ -351,6 +353,27 @@ fn side_html(run: &RunView, labels: &PanelLabels) -> String {
             escape(&labels.look_hint)
         )),
     }
+    // What is in sight, nearest first: the same list Tab walks the cursor
+    // through, so the panel and the keyboard agree about what is out there.
+    html.push_str(&format!("<h3>{}</h3>", escape(&labels.in_sight)));
+    if run.in_sight.is_empty() {
+        html.push_str(&format!(
+            "<p class=\"dim\">{}</p>",
+            escape(&labels.in_sight_empty)
+        ));
+    } else {
+        html.push_str("<ul class=\"sightlist\">");
+        for entry in &run.in_sight {
+            html.push_str(&format!(
+                "<li class=\"{}\">{} {} <span class=\"note\">[{}]</span></li>",
+                if entry.hostile { "hostile" } else { "villager" },
+                escape(&entry.name),
+                escape(&entry.detail),
+                entry.distance
+            ));
+        }
+        html.push_str("</ul>");
+    }
     html.push_str(&format!("<h3>{}</h3><ul>", escape(&labels.pack)));
     for item in &run.inventory {
         html.push_str(&format!("<li>{}</li>", escape(item)));
@@ -393,6 +416,9 @@ fn log_html(run: &RunView, status: &str) -> String {
     }
     if !status.is_empty() {
         html.push_str(&format!("<div class=\"status\">{}</div>", escape(status)));
+    }
+    if let Some(hint) = &run.hint {
+        html.push_str(&format!("<div class=\"hint\">{}</div>", escape(hint)));
     }
     html.push_str("</div>");
     html
@@ -511,12 +537,18 @@ fn fullscreen_html(screen: &ScreenView, status: &str, labels: &PanelLabels) -> S
         }
         ScreenView::CaseReport(report) => {
             let mut html = format!(
-                "<h1>Case Report</h1><p class=\"outcome\">{}</p><p class=\"villain\">{}</p><p>{}</p><p>{}</p>",
+                "<h1>Case Report</h1><p class=\"outcome\">{}</p><p class=\"villain\">{}</p><p>{}</p><p>{}</p><p class=\"tier\">{}</p>",
                 escape(&report.outcome),
                 escape(&report.villain),
                 escape(&report.origin),
-                escape(&report.scheme)
+                escape(&report.scheme),
+                escape(&report.tier)
             );
+            html.push_str(&format!("<h3>{}</h3><ul>", escape(&labels.preparations)));
+            for note in &report.preparations {
+                html.push_str(&format!("<li>{}</li>", escape(note)));
+            }
+            html.push_str("</ul>");
             if !report.hidden_clues.is_empty() {
                 html.push_str("<h3>What you never found</h3><ul class=\"dimlist\">");
                 for clue in &report.hidden_clues {
