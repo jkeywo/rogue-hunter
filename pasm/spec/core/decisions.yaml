@@ -286,13 +286,21 @@ entities:
       summary: Certification refuses roughly one seed in eight for the Occultist, where the Huntress is refused none. A refusal is correct - it means that world cannot be solved two independent ways by that hunter - so a run starts at the first seed at or after the requested one that certifies, and records the seed it actually used. This is the same rejection the generator already performs when it retries candidate worlds, applied one level up, and it keeps the guarantee that every world a player receives is certified.
       references: [hunter-selection-and-certification, clue-graph-validator, certified-route-deadlines]
 
-  - decision: planner-cost-scales-with-mystic-pool
+  - decision: occultist-refusals-are-true-negatives
+    core:
+      status: accepted
+      confidence: confirmed
+      title: The Occultist's refused seeds have no second route to find
+      summary: This was recorded as planner performance - the search doing exponential work to prove a negative - and that was wrong. Raising the node budget to fifty million lets the search run to completion in about twelve seconds and report that it exhausted the space without a qualifying route, rather than that it ran out of budget. The refusals are therefore true negatives - in those worlds no second independent route exists for her - and no amount of goal-directed ordering or admissible pruning can conjure one, because such techniques make a search reach its answer sooner and do not change what the answer is. Raising the budget only converts an honest "I gave up" into an honest "there is none". More fallback alternatives were tried as well, sixteen instead of four, and changed nothing.
+      references: [seed-rejection-for-uncertifiable-worlds, dominance-pruning-did-not-help, clue-graph-validator, occultist-hunter]
+
+  - decision: two-independent-routes-is-the-binding-constraint
     core:
       status: provisional
       confidence: confirmed
-      title: Own-Mystic pools make certification expensive, and pool-state duplication is not why
-      summary: The Occultist's refusals were isolated by experiment. They are insensitive to her health, her denial credit, her Physical cap, and to a fourfold node budget, and they vanish entirely when her Mystic cap drops to zero - at any Mystic above zero the refusal rate is the same twelve percent. Pools refresh every turn, so a hunter with her own Mystic can afford a Mystic action every turn rather than the single one the favour grants, which multiplies the branching factor in the search that has to prove no second independent route exists. A first attempt at a fix was measured and reverted - see [[dominance-pruning-did-not-help]] - so this remains open. Seed rejection keeps it harmless in play.
-      references: [seed-rejection-for-uncertifiable-worlds, clue-graph-validator, investigation-pools, occultist-hunter, dominance-pruning-did-not-help]
+      title: What actually binds is disjoint supply, not search
+      summary: Certification demands two routes sharing no nodes, so a case needs roughly twice the usable supply of everything a route consumes - identity clues, the counter's ingredients, the reagent. A hunter whose viability requires a richer loadout consumes more per route, and the Occultist crosses the point where the graph cannot furnish two disjoint sets about one seed in eight. The remaining levers are content, not code - place more identity clues or ingredient sources per case, or relax independence from whole-route disjointness to something weaker - and both change what every run looks like, so neither should be taken without deciding what independence is actually protecting against.
+      references: [occultist-refusals-are-true-negatives, route-certification-strategy, seed-rejection-for-uncertifiable-worlds]
 
   - decision: dominance-pruning-did-not-help
     core:
@@ -300,7 +308,7 @@ entities:
       confidence: confirmed
       title: Pool dominance pruning was sound, and changed nothing
       summary: Investigation points are only ever spent, never required to be absent, so a state holding more of every pool dominates one holding fewer - if the richer state cannot reach the goal, the poorer one cannot either. Dropping pools from the memo key and instead recording the maximal failed pool vectors per position is therefore sound, and collapses what looked like the offending dimension. It was implemented, together with an admissible bound on remaining travel legs, and then measured - the Occultist's refusal rate was identical at fourteen seeds in a hundred and twenty, with and without. Both were reverted rather than kept on the theory that they ought to help. The lesson for the next attempt is that duplicated pool states are not the bottleneck, so the cost is in the breadth of genuinely distinct states - which points at goal-directed ordering or a real admissible heuristic, not at better deduplication.
-      references: [planner-cost-scales-with-mystic-pool, clue-graph-validator]
+      references: [occultist-refusals-are-true-negatives, clue-graph-validator]
 
   # Milestone 2, stage 3: paired regional templates.
 
