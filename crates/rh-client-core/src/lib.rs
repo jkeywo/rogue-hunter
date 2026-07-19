@@ -227,7 +227,14 @@ impl ClientSession {
                         seed: Some(seed),
                     }
                 }
-                Err(_) => *error = Some("Enter a number.".to_owned()),
+                Err(_) => {
+                    *error = Some(
+                        self.catalogue
+                            .strings
+                            .ui("ui.error.enter-number")
+                            .to_owned(),
+                    )
+                }
             },
             _ => {}
         }
@@ -387,7 +394,10 @@ impl ClientSession {
             Err(error) => {
                 self.screen = Screen::SeedEntry {
                     input: seed.to_string(),
-                    error: Some(format!("Generation failed: {error}")),
+                    error: Some(self.catalogue.strings.ui_fill(
+                        "ui.error.generation-failed",
+                        &[("error", &error.to_string())],
+                    )),
                 };
             }
         }
@@ -409,7 +419,7 @@ impl ClientSession {
                 }
                 Intent::ToggleLook | Intent::Cancel => {
                     self.look_cursor = None;
-                    self.status = "Look mode off.".into();
+                    self.status = self.catalogue.strings.ui("ui.status.look-off").to_owned();
                     return;
                 }
                 Intent::Hover(point) => {
@@ -451,12 +461,24 @@ impl ClientSession {
                     dir: None,
                     target: Some(target),
                 }),
-                None => self.status = "No adjacent quarry for a killing blow.".into(),
+                None => {
+                    self.status = self
+                        .catalogue
+                        .strings
+                        .ui("ui.status.no-killing-blow-target")
+                        .to_owned()
+                }
             },
             Intent::Draught => self.apply(Command::UseDraught),
             Intent::Charm => match self.adjacent_hostile() {
                 Some(target) => self.apply(Command::UseBindingCharm { target }),
-                None => self.status = "Nothing adjacent to press the charm against.".into(),
+                None => {
+                    self.status = self
+                        .catalogue
+                        .strings
+                        .ui("ui.status.no-charm-target")
+                        .to_owned()
+                }
             },
             Intent::Fire => self.open_fire_menu(false),
             Intent::FireSilver => self.open_fire_menu(true),
@@ -540,7 +562,11 @@ impl ClientSession {
                                 silver,
                             });
                         } else {
-                            self.status = "No target there.".into();
+                            self.status = self
+                                .catalogue
+                                .strings
+                                .ui("ui.status.no-target-there")
+                                .to_owned();
                         }
                     }
                     Intent::Cancel => self.modal = None,
@@ -647,7 +673,7 @@ impl ClientSession {
         let start = self.run.as_ref().map(|run| run.sim.state.hunter.pos);
         if let Some(start) = start {
             self.look_cursor = Some(self.hover.unwrap_or(start));
-            self.status = "Look mode: move the cursor, Esc to leave.".into();
+            self.status = self.catalogue.strings.ui("ui.status.look-on").to_owned();
         }
     }
 
@@ -682,6 +708,7 @@ impl ClientSession {
         };
         let state = &run.sim.state;
         let hunter = &state.hunter;
+        let strings = &run.sim.catalogue.strings;
         let mut actions: Vec<ActionEntry> = Vec::new();
 
         let mut push =
@@ -695,20 +722,32 @@ impl ClientSession {
                 });
             };
 
-        push("e", "Interact", true, None, Intent::Interact);
-        push(";", "Look around", true, None, Intent::ToggleLook);
-        push(".", "Wait", true, None, Intent::Wait);
+        push(
+            "e",
+            strings.ui("ui.action.interact"),
+            true,
+            None,
+            Intent::Interact,
+        );
+        push(
+            ";",
+            strings.ui("ui.action.look"),
+            true,
+            None,
+            Intent::ToggleLook,
+        );
+        push(".", strings.ui("ui.action.wait"), true, None, Intent::Wait);
 
         let targets = !self.fire_targets().is_empty();
         let shots = hunter.item_count("flintlock-shot");
         push(
             "f",
-            "Fire flintlock",
+            strings.ui("ui.action.fire-flintlock"),
             targets && shots > 0,
             if shots == 0 {
-                Some("out of shot".into())
+                Some(strings.ui("ui.blocked.out-of-shot").to_owned())
             } else if !targets {
-                Some("nothing in sight".into())
+                Some(strings.ui("ui.blocked.nothing-in-sight").to_owned())
             } else {
                 None
             },
@@ -717,9 +756,9 @@ impl ClientSession {
         if hunter.item_count("silver-bullet") > 0 {
             push(
                 "F",
-                "Fire silver bullet",
+                strings.ui("ui.action.fire-silver"),
                 targets,
-                (!targets).then(|| "nothing in sight".into()),
+                (!targets).then(|| strings.ui("ui.blocked.nothing-in-sight").to_owned()),
                 Intent::FireSilver,
             );
         }
@@ -728,7 +767,7 @@ impl ClientSession {
         let aim_cost = self.manoeuvre_cost("aim");
         push(
             "a",
-            "Aim (sure next shot)",
+            strings.ui("ui.action.aim"),
             stamina >= aim_cost,
             (stamina < aim_cost).then(|| format!("{aim_cost} stamina")),
             Intent::Aim,
@@ -736,15 +775,20 @@ impl ClientSession {
         let power_cost = self.manoeuvre_cost("power-attack");
         push(
             "p",
-            "Power Attack",
+            strings.ui("ui.action.power-attack"),
             stamina >= power_cost,
-            (stamina < power_cost).then(|| format!("{power_cost} stamina")),
+            (stamina < power_cost).then(|| {
+                strings.ui_fill("ui.blocked.stamina", &[("cost", &power_cost.to_string())])
+            }),
             Intent::PowerAttack,
         );
         let sprint_cost = self.manoeuvre_cost("sprint");
         push(
             "s",
-            &format!("Sprint (move {})", self.sprint_tiles()),
+            &strings.ui_fill(
+                "ui.action.sprint",
+                &[("tiles", &self.sprint_tiles().to_string())],
+            ),
             stamina >= sprint_cost,
             (stamina < sprint_cost).then(|| format!("{sprint_cost} stamina")),
             Intent::Sprint,
@@ -753,20 +797,20 @@ impl ClientSession {
         let physical = hunter.physical;
         push(
             "x",
-            "Set Snare",
+            strings.ui("ui.action.set-snare"),
             physical >= 1,
-            (physical < 1).then(|| "1 Physical".into()),
+            (physical < 1).then(|| strings.ui("ui.blocked.one-physical").to_owned()),
             Intent::SetSnare,
         );
         let adjacent_foe = self.adjacent_hostile().is_some();
         push(
             "K",
-            "Killing Blow",
+            strings.ui("ui.action.killing-blow"),
             physical >= 1 && adjacent_foe,
             if physical < 1 {
                 Some("1 Physical".into())
             } else if !adjacent_foe {
-                Some("no foe adjacent".into())
+                Some(strings.ui("ui.blocked.no-foe-adjacent").to_owned())
             } else {
                 None
             },
@@ -774,23 +818,54 @@ impl ClientSession {
         );
 
         if hunter.item_count("wound-draught") > 0 {
-            push("q", "Drink Wound Draught", true, None, Intent::Draught);
+            push(
+                "q",
+                strings.ui("ui.action.draught"),
+                true,
+                None,
+                Intent::Draught,
+            );
         }
         if hunter.item_count("binding-charm") > 0 {
             let adjacent_villain = self.adjacent_villain();
             push(
                 "c",
-                "Press Binding Charm",
+                strings.ui("ui.action.binding-charm"),
                 adjacent_villain,
-                (!adjacent_villain).then(|| "no revenant adjacent".into()),
+                (!adjacent_villain)
+                    .then(|| strings.ui("ui.blocked.no-revenant-adjacent").to_owned()),
                 Intent::Charm,
             );
         }
 
-        push("g", "Grimoire", true, None, Intent::Grimoire);
-        push("r", "Faces & ties", true, None, Intent::Relationships);
-        push("v", "The Valley (map)", true, None, Intent::RegionMap);
-        push("L", "The Record (log)", true, None, Intent::EventLog);
+        push(
+            "g",
+            strings.ui("ui.action.grimoire"),
+            true,
+            None,
+            Intent::Grimoire,
+        );
+        push(
+            "r",
+            strings.ui("ui.action.faces"),
+            true,
+            None,
+            Intent::Relationships,
+        );
+        push(
+            "v",
+            strings.ui("ui.action.valley"),
+            true,
+            None,
+            Intent::RegionMap,
+        );
+        push(
+            "L",
+            strings.ui("ui.action.record"),
+            true,
+            None,
+            Intent::EventLog,
+        );
 
         actions
     }
@@ -853,7 +928,11 @@ impl ClientSession {
     fn open_fire_menu(&mut self, silver: bool) {
         let targets = self.fire_targets();
         if targets.is_empty() {
-            self.status = "Nothing in sight to shoot.".into();
+            self.status = self
+                .catalogue
+                .strings
+                .ui("ui.status.nothing-to-shoot")
+                .to_owned();
             return;
         }
         self.modal = Some(Modal::FireTarget {
@@ -934,7 +1013,12 @@ impl ClientSession {
                 let _ = contents;
                 if hunter == feature.at || hunter.is_adjacent(feature.at) {
                     let blocked = if state.opened_graves.contains(&feature.id) {
-                        Some("Already opened.".to_owned())
+                        Some(
+                            sim.catalogue
+                                .strings
+                                .ui("ui.blocked.already-opened")
+                                .to_owned(),
+                        )
                     } else if state.hunter.physical < 1 {
                         Some("Needs 1 Physical point.".to_owned())
                     } else {
@@ -975,14 +1059,19 @@ impl ClientSession {
         });
         if at_altar {
             let blocked = if state.church_consecrated {
-                Some("This ground is already warded.".to_owned())
+                Some(
+                    sim.catalogue
+                        .strings
+                        .ui("ui.blocked.already-warded")
+                        .to_owned(),
+                )
             } else if state.final_hunt {
                 Some("The hunt is here; there is no time.".to_owned())
             } else {
                 None
             };
             items.push(MenuItem {
-                label: "Perform the consecration rite (spends a day)".to_owned(),
+                label: sim.catalogue.strings.ui("ui.action.consecrate").to_owned(),
                 blocked,
                 action: MenuAction::Do(Command::Consecrate),
             });
@@ -1032,16 +1121,19 @@ impl ClientSession {
             }
             items.push(MenuItem {
                 label: format!("Talk with {}", spec.name),
-                blocked: npc_state
-                    .attacked
-                    .then(|| "They want nothing to do with you.".to_owned()),
+                blocked: npc_state.attacked.then(|| {
+                    sim.catalogue
+                        .strings
+                        .ui("ui.blocked.npc-refuses")
+                        .to_owned()
+                }),
                 action: MenuAction::Do(Command::Talk(spec.id)),
             });
             if spec.trades {
                 let blocked = if state.settlement_hostile || npc_state.attacked {
-                    Some("No one here will trade with you now.".to_owned())
+                    Some(sim.catalogue.strings.ui("ui.blocked.no-trade").to_owned())
                 } else if state.hunter.item_count("coin") < 2 {
-                    Some("Costs 2 coin.".to_owned())
+                    Some(sim.catalogue.strings.ui("ui.blocked.costs-coin").to_owned())
                 } else {
                     None
                 };
@@ -1056,14 +1148,18 @@ impl ClientSession {
         // Naming the villain once the proofs agree.
         if state.identity_clues.len() >= 2 && !state.villain_uncovered {
             items.push(MenuItem {
-                label: "Name your quarry (combine the proofs)".to_owned(),
+                label: sim.catalogue.strings.ui("ui.action.name-quarry").to_owned(),
                 blocked: None,
                 action: MenuAction::Do(Command::UncoverVillain),
             });
         }
 
         if items.is_empty() {
-            self.status = "Nothing here calls for attention.".into();
+            self.status = self
+                .catalogue
+                .strings
+                .ui("ui.status.nothing-here")
+                .to_owned();
             return;
         }
         // A single unblocked action fires immediately.
@@ -1075,7 +1171,7 @@ impl ClientSession {
             return;
         }
         self.modal = Some(Modal::Menu {
-            title: "Actions".to_owned(),
+            title: self.catalogue.strings.ui("ui.panel.actions").to_owned(),
             items,
             selected: 0,
         });
@@ -1115,7 +1211,7 @@ impl ClientSession {
         if let Some(dir) = self.path_step(point) {
             self.apply(Command::Move(dir));
         } else {
-            self.status = "No clear way there.".into();
+            self.status = self.catalogue.strings.ui("ui.status.no-path").to_owned();
         }
     }
 
@@ -1176,7 +1272,7 @@ impl ClientSession {
         let seen = state.is_seen(map, point);
         let visible = state.is_visible(point);
         if !seen {
-            return Some("Unexplored darkness.".to_owned());
+            return Some(sim.catalogue.strings.ui("ui.inspect.unexplored").to_owned());
         }
         let mut parts: Vec<String> = Vec::new();
         if point == state.hunter.pos {
@@ -1245,10 +1341,10 @@ impl ClientSession {
             .iter()
             .any(|snare| snare.map == map && snare.at == point)
         {
-            parts.push("Your snare, set and waiting".to_owned());
+            parts.push(sim.catalogue.strings.ui("ui.inspect.snare").to_owned());
         }
         let terrain = state.terrain(&sim.world, map, point);
-        parts.push(view::terrain_name(terrain).to_owned());
+        parts.push(view::terrain_name(&sim.catalogue.strings, terrain).to_owned());
         Some(parts.join(" — "))
     }
 
@@ -1259,10 +1355,10 @@ impl ClientSession {
 }
 
 /// A grave's contents are secret until opened; used by the case report.
-pub fn grave_contents_name(contents: GraveContents) -> &'static str {
+pub fn grave_contents_name(strings: &rh_content::StringTable, contents: GraveContents) -> &str {
     match contents {
-        GraveContents::Empty => "an empty grave",
-        GraveContents::Mundane => "an honest burial",
-        GraveContents::Villain => "the villain's resting place",
+        GraveContents::Empty => strings.ui("ui.grave.empty"),
+        GraveContents::Mundane => strings.ui("ui.grave.mundane"),
+        GraveContents::Villain => strings.ui("ui.grave.villain"),
     }
 }

@@ -123,6 +123,24 @@ impl StringTable {
         self.rows.get(id).map(|row| row.english.as_str())
     }
 
+    /// Resolve a literal id, for UI and log strings held in code rather than
+    /// in content. Same loud-sentinel behaviour as `get`.
+    pub fn ui(&self, id: &str) -> &str {
+        self.try_get(id).unwrap_or_else(|| {
+            debug_assert!(false, "missing string id '{id}'");
+            "[!missing]"
+        })
+    }
+
+    /// `ui` with `{name}`-style placeholders filled.
+    pub fn ui_fill(&self, id: &str, args: &[(&str, &str)]) -> String {
+        let mut text = self.ui(id).to_owned();
+        for (key, value) in args {
+            text = text.replace(&format!("{{{key}}}"), value);
+        }
+        text
+    }
+
     pub fn row(&self, id: &str) -> Option<&StringRow> {
         self.rows.get(id)
     }

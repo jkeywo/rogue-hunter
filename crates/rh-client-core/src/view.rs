@@ -4,7 +4,7 @@
 //! colors, side-panel lines, menus, and overlays — so terminal and browser
 //! presentations cannot drift apart in behaviour.
 
-use rh_content::Terrain;
+use rh_content::{StringTable, Terrain};
 use rh_core::events::EventKind;
 use rh_core::geometry::{Point, MAP_HEIGHT, MAP_WIDTH};
 use rh_core::state::ActorKind;
@@ -40,6 +40,52 @@ pub struct ViewModel {
     pub screen: ScreenView,
     /// One-line status (rejection reasons, hints).
     pub status: String,
+    /// Panel chrome, resolved here so neither renderer holds prose of its own.
+    pub labels: PanelLabels,
+}
+
+/// The fixed furniture around the frame: panel titles and idle hints.
+///
+/// These live on the viewmodel rather than in each renderer so the terminal
+/// and the browser cannot drift, and so every word the player reads resolves
+/// through one string table.
+#[derive(Debug, Clone)]
+pub struct PanelLabels {
+    pub hunter: String,
+    pub actions: String,
+    pub record: String,
+    pub detail: String,
+    pub case_report: String,
+    pub pack: String,
+    /// Heading for the look panel, by how the player is pointing.
+    pub look_cursor: String,
+    pub look_hover: String,
+    pub look_plain: String,
+    /// Shown in the look panel when nothing is targeted.
+    pub look_hint: String,
+    /// Shown while a direction is awaited.
+    pub direction_hint: String,
+    /// Footer on the case report.
+    pub case_report_footer: String,
+}
+
+impl PanelLabels {
+    fn build(strings: &StringTable) -> Self {
+        Self {
+            hunter: strings.ui("ui.panel.hunter").to_owned(),
+            actions: strings.ui("ui.panel.actions").to_owned(),
+            record: strings.ui("ui.panel.record").to_owned(),
+            detail: strings.ui("ui.panel.detail").to_owned(),
+            case_report: strings.ui("ui.panel.case-report").to_owned(),
+            pack: strings.ui("ui.panel.pack").to_owned(),
+            look_cursor: strings.ui("ui.panel.look-cursor").to_owned(),
+            look_hover: strings.ui("ui.panel.look-hover").to_owned(),
+            look_plain: strings.ui("ui.panel.look").to_owned(),
+            look_hint: strings.ui("ui.hint.look").to_owned(),
+            direction_hint: strings.ui("ui.hint.direction").to_owned(),
+            case_report_footer: strings.ui("ui.hint.case-report-footer").to_owned(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -126,20 +172,20 @@ pub fn terrain_glyph(terrain: Terrain) -> char {
     }
 }
 
-pub fn terrain_name(terrain: Terrain) -> &'static str {
+pub fn terrain_name(strings: &StringTable, terrain: Terrain) -> &str {
     match terrain {
-        Terrain::Floor => "flagstones",
-        Terrain::Wall => "a wall",
-        Terrain::Tree => "dense growth",
-        Terrain::Water => "water",
-        Terrain::Grave => "a grave",
-        Terrain::Door => "a door",
-        Terrain::BarredDoor => "a barred door",
-        Terrain::Rubble => "fallen rubble",
-        Terrain::Road => "the road",
-        Terrain::Grass => "open ground",
-        Terrain::Altar => "the altar",
-        Terrain::Workstation => "the workbench",
+        Terrain::Floor => strings.ui("ui.terrain.floor"),
+        Terrain::Wall => strings.ui("ui.terrain.wall"),
+        Terrain::Tree => strings.ui("ui.terrain.tree"),
+        Terrain::Water => strings.ui("ui.terrain.water"),
+        Terrain::Grave => strings.ui("ui.terrain.grave"),
+        Terrain::Door => strings.ui("ui.terrain.door"),
+        Terrain::BarredDoor => strings.ui("ui.terrain.barred-door"),
+        Terrain::Rubble => strings.ui("ui.terrain.rubble"),
+        Terrain::Road => strings.ui("ui.terrain.road"),
+        Terrain::Grass => strings.ui("ui.terrain.grass"),
+        Terrain::Altar => strings.ui("ui.terrain.altar"),
+        Terrain::Workstation => strings.ui("ui.terrain.workstation"),
     }
 }
 
@@ -166,15 +212,31 @@ pub fn build(session: &ClientSession) -> ViewModel {
                     })
                     .collect(),
                 options: vec![
-                    "New Run".to_owned(),
-                    "Enter Seed".to_owned(),
-                    "Paste Replay Code".to_owned(),
+                    session
+                        .catalogue
+                        .strings
+                        .ui("ui.splash.option.new-run")
+                        .to_owned(),
+                    session
+                        .catalogue
+                        .strings
+                        .ui("ui.splash.option.enter-seed")
+                        .to_owned(),
+                    session
+                        .catalogue
+                        .strings
+                        .ui("ui.splash.option.paste-code")
+                        .to_owned(),
                 ],
                 selected: *selected,
             }
         }
         Screen::HunterSelect { selected, .. } => ScreenView::List {
-            title: "Who Takes the Case".to_owned(),
+            title: session
+                .catalogue
+                .strings
+                .ui("ui.hunter-select.title")
+                .to_owned(),
             entries: session
                 .catalogue
                 .hunter_roster()
@@ -182,13 +244,15 @@ pub fn build(session: &ClientSession) -> ViewModel {
                     // Lead with what actually differs between them, so the
                     // choice reads as two approaches rather than two stat
                     // blocks: pools first, then what only she can do.
-                    let pools = format!(
-                        "Health {}  Lore {}  Social {}  Mystic {}  Physical {}",
-                        hunter.health,
-                        hunter.lore_cap,
-                        hunter.social_cap,
-                        hunter.mystic_cap,
-                        hunter.physical_cap
+                    let pools = session.catalogue.strings.ui_fill(
+                        "ui.hunter-select.pools",
+                        &[
+                            ("health", &hunter.health.to_string()),
+                            ("lore", &hunter.lore_cap.to_string()),
+                            ("social", &hunter.social_cap.to_string()),
+                            ("mystic", &hunter.mystic_cap.to_string()),
+                            ("physical", &hunter.physical_cap.to_string()),
+                        ],
                     );
                     let strings = &session.catalogue.strings;
                     let signatures = hunter
@@ -206,20 +270,36 @@ pub fn build(session: &ClientSession) -> ViewModel {
             selected: Some(*selected),
         },
         Screen::SeedEntry { input, error } => ScreenView::TextEntry {
-            title: "Enter Seed".to_owned(),
-            prompt: "Type a number, then confirm.".to_owned(),
+            title: session
+                .catalogue
+                .strings
+                .ui("ui.seed-entry.title")
+                .to_owned(),
+            prompt: session
+                .catalogue
+                .strings
+                .ui("ui.seed-entry.prompt")
+                .to_owned(),
             input: input.clone(),
             error: error.clone(),
         },
         Screen::CodeEntry { input, error } => ScreenView::TextEntry {
-            title: "Paste Replay Code".to_owned(),
-            prompt: "Paste an RH1- share code, then confirm.".to_owned(),
+            title: session
+                .catalogue
+                .strings
+                .ui("ui.replay-entry.title")
+                .to_owned(),
+            prompt: session
+                .catalogue
+                .strings
+                .ui("ui.replay-entry.prompt")
+                .to_owned(),
             input: input.clone(),
             error: error.clone(),
         },
         Screen::Run => ScreenView::Run(Box::new(build_run_view(session))),
         Screen::Grimoire { selected } => ScreenView::List {
-            title: "The Grimoire".to_owned(),
+            title: session.catalogue.strings.ui("ui.grimoire.title").to_owned(),
             entries: session
                 .catalogue
                 .grimoire
@@ -236,7 +316,11 @@ pub fn build(session: &ClientSession) -> ViewModel {
         Screen::Relationships { selected } => {
             let entries = relationship_entries(session);
             ScreenView::List {
-                title: "Faces and Entanglements".to_owned(),
+                title: session
+                    .catalogue
+                    .strings
+                    .ui("ui.relationships.title")
+                    .to_owned(),
                 selected: Some((*selected).min(entries.len().saturating_sub(1))),
                 entries,
             }
@@ -244,7 +328,11 @@ pub fn build(session: &ClientSession) -> ViewModel {
         Screen::RegionMap { selected } => {
             let entries = region_entries(session);
             ScreenView::List {
-                title: "The Valley".to_owned(),
+                title: session
+                    .catalogue
+                    .strings
+                    .ui("ui.region-map.title")
+                    .to_owned(),
                 selected: Some((*selected).min(entries.len().saturating_sub(1))),
                 entries,
             }
@@ -252,7 +340,11 @@ pub fn build(session: &ClientSession) -> ViewModel {
         Screen::EventLog { selected } => {
             let entries = record_entries(session);
             ScreenView::List {
-                title: "The Record".to_owned(),
+                title: session
+                    .catalogue
+                    .strings
+                    .ui("ui.event-log.title")
+                    .to_owned(),
                 selected: Some((*selected).min(entries.len().saturating_sub(1))),
                 entries,
             }
@@ -262,6 +354,7 @@ pub fn build(session: &ClientSession) -> ViewModel {
     ViewModel {
         screen,
         status: session.status.clone(),
+        labels: PanelLabels::build(&session.catalogue.strings),
     }
 }
 
@@ -417,6 +510,7 @@ fn build_run_view(session: &ClientSession) -> RunView {
     let hunter = &state.hunter;
     let clock = &sim.catalogue.balance.clock;
     let hunter_def = &sim.catalogue.hunter;
+    let strings = &sim.catalogue.strings;
     let inventory: Vec<String> = hunter
         .inventory
         .iter()
@@ -469,21 +563,33 @@ fn build_run_view(session: &ClientSession) -> RunView {
                 .collect();
             OverlayView {
                 title: if *silver {
-                    "Silver shot at...".to_owned()
+                    session
+                        .catalogue
+                        .strings
+                        .ui("ui.target.silver-shot")
+                        .to_owned()
                 } else {
-                    "Fire at...".to_owned()
+                    session.catalogue.strings.ui("ui.target.fire").to_owned()
                 },
                 items,
                 selected: *selected,
             }
         }
         Modal::SprintDirection => OverlayView {
-            title: "Sprint: which direction?".to_owned(),
+            title: session
+                .catalogue
+                .strings
+                .ui("ui.direction.sprint")
+                .to_owned(),
             items: Vec::new(),
             selected: 0,
         },
         Modal::SnareDirection => OverlayView {
-            title: "Set snare: which direction?".to_owned(),
+            title: session
+                .catalogue
+                .strings
+                .ui("ui.direction.snare")
+                .to_owned(),
             items: Vec::new(),
             selected: 0,
         },
@@ -508,29 +614,53 @@ fn build_run_view(session: &ClientSession) -> RunView {
     };
     RunView {
         cells,
-        header: format!("{}  (seed {})", world_map.name, run.seed),
+        header: strings.ui_fill(
+            "ui.status.header",
+            &[("place", &world_map.name), ("seed", &run.seed.to_string())],
+        ),
         clock_line: format!(
-            "Day {} of {}{final_hunt_note}",
-            state.clock.min(clock.travel_turns),
-            clock.travel_turns
+            "{}{final_hunt_note}",
+            strings.ui_fill(
+                "ui.clock.day",
+                &[
+                    ("day", &state.clock.min(clock.travel_turns).to_string()),
+                    ("total", &clock.travel_turns.to_string()),
+                ],
+            )
         ),
-        health_line: format!("Health {}/{}", hunter.hp, hunter.max_hp),
-        pools_line: format!(
-            "Lore {}/{}  Social {}/{}  Mystic {}{}  Physical {}/{}",
-            hunter.lore,
-            hunter_def.lore_cap,
-            hunter.social,
-            hunter_def.social_cap,
-            hunter.mystic,
-            if hunter.mystic_bonus > 0 {
-                format!("+{}", hunter.mystic_bonus)
-            } else {
-                String::new()
-            },
-            hunter.physical,
-            hunter_def.physical_cap,
+        health_line: strings.ui_fill(
+            "ui.status.health",
+            &[
+                ("current", &hunter.hp.to_string()),
+                ("max", &hunter.max_hp.to_string()),
+            ],
         ),
-        stamina_line: format!("Stamina {}/{}", hunter.stamina, hunter_def.stamina_cap),
+        pools_line: strings.ui_fill(
+            "ui.status.pools",
+            &[
+                ("lore", &hunter.lore.to_string()),
+                ("lore_cap", &hunter_def.lore_cap.to_string()),
+                ("social", &hunter.social.to_string()),
+                ("social_cap", &hunter_def.social_cap.to_string()),
+                (
+                    "mystic",
+                    &if hunter.mystic_bonus > 0 {
+                        format!("{}+{}", hunter.mystic, hunter.mystic_bonus)
+                    } else {
+                        hunter.mystic.to_string()
+                    },
+                ),
+                ("physical", &hunter.physical.to_string()),
+                ("physical_cap", &hunter_def.physical_cap.to_string()),
+            ],
+        ),
+        stamina_line: strings.ui_fill(
+            "ui.status.stamina",
+            &[
+                ("current", &hunter.stamina.to_string()),
+                ("max", &hunter_def.stamina_cap.to_string()),
+            ],
+        ),
         inventory,
         actions: session.available_actions(),
         log_tail,
@@ -577,9 +707,19 @@ pub(crate) fn record_entries(session: &ClientSession) -> Vec<(String, String)> {
     for event in &run.sim.state.log {
         let day = event.global_turn;
         let heading = if day >= travel_turns {
-            "The final night".to_owned()
+            run.sim
+                .catalogue
+                .strings
+                .ui("ui.clock.final-night")
+                .to_owned()
         } else {
-            format!("Day {} of {}", day, travel_turns)
+            run.sim.catalogue.strings.ui_fill(
+                "ui.clock.day",
+                &[
+                    ("day", &day.to_string()),
+                    ("total", &travel_turns.to_string()),
+                ],
+            )
         };
         match entries.last_mut() {
             Some((last_heading, body)) if *last_heading == heading => {
@@ -605,11 +745,20 @@ pub(crate) fn relationship_entries(session: &ClientSession) -> Vec<(String, Stri
         }
         let npc_state = &state.npcs[spec.id.0 as usize];
         let mut lines = Vec::new();
-        lines.push(format!("Disposition: {:?}", spec.disposition));
+        lines.push(session.catalogue.strings.ui_fill(
+            "ui.npc.disposition",
+            &[("disposition", &format!("{:?}", spec.disposition))],
+        ));
         if !npc_state.alive {
-            lines.push("Dead by your hand.".to_owned());
+            lines.push(
+                session
+                    .catalogue
+                    .strings
+                    .ui("ui.npc.dead-by-your-hand")
+                    .to_owned(),
+            );
         } else if npc_state.fled {
-            lines.push("Fled.".to_owned());
+            lines.push(session.catalogue.strings.ui("ui.npc.fled").to_owned());
         }
         if state.known_secrets.contains(&spec.id) {
             let disproved = state.disproved_secrets.contains(&spec.id);
@@ -636,8 +785,16 @@ pub(crate) fn relationship_entries(session: &ClientSession) -> Vec<(String, Stri
     }
     if entries.is_empty() {
         entries.push((
-            "No faces yet".to_owned(),
-            "Meet the villagers; their entanglements are a deduction tool.".to_owned(),
+            session
+                .catalogue
+                .strings
+                .ui("ui.relationships.empty.title")
+                .to_owned(),
+            session
+                .catalogue
+                .strings
+                .ui("ui.relationships.empty.body")
+                .to_owned(),
         ));
     }
     entries
@@ -670,24 +827,26 @@ pub(crate) fn region_entries(session: &ClientSession) -> Vec<(String, String)> {
                 map.name,
                 if here { "  <- you are here" } else { "" }
             ),
-            format!("{}\nRoads: {}", map.role_line(), connections.join(", ")),
+            format!(
+                "{}\nRoads: {}",
+                map.role_line(&session.catalogue.strings),
+                connections.join(", ")
+            ),
         ));
     }
     entries
 }
 
 trait RoleLine {
-    fn role_line(&self) -> String;
+    fn role_line(&self, strings: &StringTable) -> String;
 }
 
 impl RoleLine for rh_core::world::WorldMap {
-    fn role_line(&self) -> String {
+    fn role_line(&self, strings: &StringTable) -> String {
         match self.role {
-            rh_content::MapRole::Settlement => "Hearth and rumour. Safe by daylight.".to_owned(),
-            rh_content::MapRole::Wilderness => {
-                "The deep wood. The shortcut runs through it.".to_owned()
-            }
-            rh_content::MapRole::OutlyingSite => "The forsaken manor and its crypt.".to_owned(),
+            rh_content::MapRole::Settlement => strings.ui("ui.region.settlement").to_owned(),
+            rh_content::MapRole::Wilderness => strings.ui("ui.region.wilderness").to_owned(),
+            rh_content::MapRole::OutlyingSite => strings.ui("ui.region.outlying").to_owned(),
         }
     }
 }
@@ -707,13 +866,19 @@ fn build_case_report(session: &ClientSession) -> CaseReportView {
     let sim = &run.sim;
     let state = &sim.state;
     let outcome = match run.outcome() {
-        Some(rh_core::state::Outcome::Victory) => {
-            "THE VALLEY IS DELIVERED. The villain is destroyed.".to_owned()
-        }
+        Some(rh_core::state::Outcome::Victory) => session
+            .catalogue
+            .strings
+            .ui("ui.outcome.victory")
+            .to_owned(),
         Some(rh_core::state::Outcome::Defeat) => {
-            "THE DARK KEEPS THE VALLEY. The hunter fell on the final night.".to_owned()
+            session.catalogue.strings.ui("ui.outcome.defeat").to_owned()
         }
-        None => "The run continues...".to_owned(),
+        None => session
+            .catalogue
+            .strings
+            .ui("ui.outcome.ongoing")
+            .to_owned(),
     };
     let villain_def = sim.villain_def();
     let origin = &sim.catalogue.origins[&sim.world.villain.origin];

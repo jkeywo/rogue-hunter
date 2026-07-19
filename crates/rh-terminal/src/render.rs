@@ -6,7 +6,7 @@ use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap};
 use ratatui::Frame;
 use rh_client_core::view::{
-    CaseReportView, Cell, CellColor, OverlayView, RunView, ScreenView, ViewModel,
+    CaseReportView, Cell, CellColor, OverlayView, PanelLabels, RunView, ScreenView, ViewModel,
 };
 use rh_core::events::EventKind;
 use rh_core::geometry::{MAP_HEIGHT, MAP_WIDTH};
@@ -48,20 +48,20 @@ pub fn draw(frame: &mut Frame, view: &ViewModel) -> RunAreas {
             draw_text_entry(frame, title, prompt, input, error.as_deref(), &view.status);
             RunAreas::default()
         }
-        ScreenView::Run(run) => draw_run(frame, run, &view.status),
+        ScreenView::Run(run) => draw_run(frame, run, &view.status, &view.labels),
         ScreenView::List {
             title,
             entries,
             selected,
         } => {
-            let menu = draw_list(frame, title, entries, *selected);
+            let menu = draw_list(frame, title, entries, *selected, &view.labels);
             RunAreas {
                 menu,
                 ..Default::default()
             }
         }
         ScreenView::CaseReport(report) => {
-            draw_case_report(frame, report);
+            draw_case_report(frame, report, &view.labels);
             RunAreas::default()
         }
     }
@@ -106,7 +106,7 @@ fn event_style(kind: EventKind) -> Style {
     Style::default().fg(color)
 }
 
-fn draw_run(frame: &mut Frame, run: &RunView, status: &str) -> RunAreas {
+fn draw_run(frame: &mut Frame, run: &RunView, status: &str, labels: &PanelLabels) -> RunAreas {
     let vertical = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -163,9 +163,9 @@ fn draw_run(frame: &mut Frame, run: &RunView, status: &str) -> RunAreas {
         Line::raw(""),
         Line::styled(
             if run.looking {
-                "Look (cursor)"
+                labels.look_cursor.as_str()
             } else {
-                "Look (hover)"
+                labels.look_hover.as_str()
             },
             Style::default().add_modifier(Modifier::UNDERLINED),
         ),
@@ -182,7 +182,7 @@ fn draw_run(frame: &mut Frame, run: &RunView, status: &str) -> RunAreas {
     }
     side.push(Line::raw(""));
     side.push(Line::styled(
-        "Pack",
+        labels.pack.as_str(),
         Style::default().add_modifier(Modifier::UNDERLINED),
     ));
     for item in &run.inventory {
@@ -191,12 +191,18 @@ fn draw_run(frame: &mut Frame, run: &RunView, status: &str) -> RunAreas {
     frame.render_widget(
         Paragraph::new(Text::from(side))
             .wrap(Wrap { trim: false })
-            .block(Block::default().borders(Borders::ALL).title("The Hunter")),
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(labels.hunter.as_str()),
+            ),
         top[1],
     );
 
     // The clickable action list.
-    let actions_block = Block::default().borders(Borders::ALL).title("Actions");
+    let actions_block = Block::default()
+        .borders(Borders::ALL)
+        .title(labels.actions.as_str());
     let actions_inner = actions_block.inner(top[2]);
     let action_lines: Vec<Line> = run
         .actions
@@ -252,8 +258,11 @@ fn draw_run(frame: &mut Frame, run: &RunView, status: &str) -> RunAreas {
     // No wrapping here: one event per row, so the row budget is exact and the
     // newest lines always land inside the panel.
     frame.render_widget(
-        Paragraph::new(Text::from(log_lines))
-            .block(Block::default().borders(Borders::ALL).title("The Record")),
+        Paragraph::new(Text::from(log_lines)).block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(labels.record.as_str()),
+        ),
         vertical[1],
     );
 
@@ -438,6 +447,7 @@ fn draw_list(
     title: &str,
     entries: &[(String, String)],
     selected: Option<usize>,
+    labels: &PanelLabels,
 ) -> Rect {
     let area = frame.area();
     let columns = Layout::default()
@@ -472,9 +482,11 @@ fn draw_list(
         .map(|(_, body)| body.clone())
         .unwrap_or_default();
     frame.render_widget(
-        Paragraph::new(body)
-            .wrap(Wrap { trim: false })
-            .block(Block::default().borders(Borders::ALL).title("Detail")),
+        Paragraph::new(body).wrap(Wrap { trim: false }).block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(labels.detail.as_str()),
+        ),
         columns[1],
     );
     // Inside the border: row N of this rectangle is entry N.
@@ -484,7 +496,7 @@ fn draw_list(
     })
 }
 
-fn draw_case_report(frame: &mut Frame, report: &CaseReportView) {
+fn draw_case_report(frame: &mut Frame, report: &CaseReportView, labels: &PanelLabels) {
     let area = frame.area();
     let mut lines: Vec<Line> = vec![
         Line::styled(
@@ -538,13 +550,17 @@ fn draw_case_report(frame: &mut Frame, report: &CaseReportView) {
     ));
     lines.push(Line::raw(""));
     lines.push(Line::styled(
-        "Enter to return to the fireside.",
+        labels.case_report_footer.as_str(),
         Style::default().fg(Color::DarkGray),
     ));
     frame.render_widget(
         Paragraph::new(Text::from(lines))
             .wrap(Wrap { trim: false })
-            .block(Block::default().borders(Borders::ALL).title("Case Report")),
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(labels.case_report.as_str()),
+            ),
         area,
     );
 }

@@ -153,13 +153,15 @@ fn record_groups_events_into_one_multiline_entry_per_day() {
             entries,
             selected,
         } => {
-            assert_eq!(title, "The Record");
+            // Bracketed: the title is placeholder copy from the string table.
+            assert_eq!(title, "[The Record]");
             assert!(!entries.is_empty());
             // Every heading names a day (or the final night); the body holds
             // that day's events, one per line.
             for (heading, body) in &entries {
+                // Bracketed: still placeholder copy from the string table.
                 assert!(
-                    heading.starts_with("Day ") || heading == "The final night",
+                    heading.starts_with("[Day ") || heading == "[The final night]",
                     "unexpected record heading: {heading}"
                 );
                 assert!(!body.is_empty());

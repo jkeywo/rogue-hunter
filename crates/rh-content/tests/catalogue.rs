@@ -348,9 +348,13 @@ fn every_string_in_the_table_is_referenced_by_content() {
             .into_iter()
             .map(|(_, id)| id.as_str())
             .collect();
+    // `ui.*` ids are named by the clients rather than by content, so the
+    // catalogue walker cannot see them; `ui_string_ids_match_the_code` is
+    // what holds that namespace to the same standard.
     let orphans: Vec<&str> = catalogue
         .strings
         .ids()
+        .filter(|id| !id.starts_with("ui."))
         .filter(|id| !referenced.contains(id))
         .collect();
     assert!(orphans.is_empty(), "unreferenced string rows: {orphans:?}");
@@ -377,4 +381,87 @@ fn a_typo_in_any_content_string_id_is_refused() {
         rh_content::Catalogue::from_sources(&borrowed).is_err(),
         "a mistyped clue string id must not validate"
     );
+}
+
+/// Every `ui.*` id named in client code, found by scanning the sources.
+///
+/// The catalogue cannot reach these -- the clients name them as literals --
+/// so they are checked against the source text instead. Crude, but it is the
+/// only thing standing between a renamed row and a `[!missing]` on screen.
+fn ui_ids_named_in_code() -> std::collections::BTreeSet<String> {
+    let mut found = std::collections::BTreeSet::new();
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .expect("crates dir");
+    let mut stack = vec![root.to_path_buf()];
+    while let Some(dir) = stack.pop() {
+        for entry in std::fs::read_dir(&dir).expect("readable crate dir") {
+            let path = entry.expect("dir entry").path();
+            if path.is_dir() {
+                if path.file_name().is_some_and(|n| n == "target") {
+                    continue;
+                }
+                stack.push(path);
+                continue;
+            }
+            if path.extension().is_none_or(|e| e != "rs") {
+                continue;
+            }
+            let text = std::fs::read_to_string(&path).expect("readable source");
+            // Matches the `"ui.…"` literal inside `.ui("…")` / `.ui_fill("…"`.
+            for (index, _) in text.match_indices(".ui") {
+                let rest = &text[index..];
+                let Some(open) = rest.find('"') else { continue };
+                // Only `_fill`, the paren, and layout may sit between `.ui`
+                // and the literal -- rustfmt often wraps the argument onto
+                // its own line.
+                let between = &rest[3..open];
+                if !between
+                    .chars()
+                    .all(|c| c.is_whitespace() || c == '(' || c == '_' || c.is_alphabetic())
+                {
+                    continue;
+                }
+                let after = &rest[open + 1..];
+                let Some(close) = after.find('"') else {
+                    continue;
+                };
+                let id = &after[..close];
+                if id.starts_with("ui.") {
+                    found.insert(id.to_owned());
+                }
+            }
+        }
+    }
+    found
+}
+
+#[test]
+fn ui_string_ids_match_the_code() {
+    let catalogue = rh_content::load_embedded().expect("embedded content");
+    let in_code = ui_ids_named_in_code();
+    assert!(
+        !in_code.is_empty(),
+        "the scanner found no ui.* ids at all, so it is not testing anything"
+    );
+
+    let missing: Vec<&String> = in_code
+        .iter()
+        .filter(|id| catalogue.strings.try_get(id).is_none())
+        .collect();
+    assert!(
+        missing.is_empty(),
+        "code names string ids that are not in the table: {missing:?}"
+    );
+
+    let orphans: Vec<&str> = catalogue
+        .strings
+        .ids()
+        .filter(|id| id.starts_with("ui."))
+        // ui.toml holds these, so content references them, not code.
+        .filter(|id| !id.starts_with("ui.keys.") && !id.starts_with("ui.splash.intro"))
+        .filter(|id| *id != "ui.splash.title")
+        .filter(|id| !in_code.contains(*id))
+        .collect();
+    assert!(orphans.is_empty(), "ui rows no code reaches: {orphans:?}");
 }

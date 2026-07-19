@@ -8,7 +8,7 @@
 use wasm_bindgen::prelude::*;
 use web_sys::{CanvasRenderingContext2d, Document, Element, HtmlCanvasElement};
 
-use rh_client_core::view::{CellColor, OverlayView, RunView, ScreenView};
+use rh_client_core::view::{CellColor, OverlayView, PanelLabels, RunView, ScreenView};
 use rh_client_core::{ClientSession, Intent, Screen};
 use rh_core::events::EventKind;
 use rh_core::geometry::{Direction, Point, MAP_HEIGHT, MAP_WIDTH};
@@ -124,13 +124,13 @@ impl WebClient {
                 show(&document, "game", true)?;
                 show(&document, "fullscreen", false)?;
                 self.draw_map(&document, run)?;
-                set_html(&document, "side", &side_html(run))?;
-                set_html(&document, "actions", &actions_html(run))?;
+                set_html(&document, "side", &side_html(run, &view.labels))?;
+                set_html(&document, "actions", &actions_html(run, &view.labels))?;
                 set_html(&document, "log", &log_html(run, &view.status))?;
                 match &run.overlay {
                     Some(overlay) => {
                         show(&document, "overlay", true)?;
-                        set_html(&document, "overlay", &overlay_html(overlay))?;
+                        set_html(&document, "overlay", &overlay_html(overlay, &view.labels))?;
                     }
                     None => show(&document, "overlay", false)?,
                 }
@@ -325,7 +325,7 @@ fn escape(text: &str) -> String {
         .replace('>', "&gt;")
 }
 
-fn side_html(run: &RunView) -> String {
+fn side_html(run: &RunView, labels: &PanelLabels) -> String {
     let mut html = String::new();
     html.push_str(&format!("<h2>{}</h2>", escape(&run.header)));
     html.push_str(&format!(
@@ -338,13 +338,20 @@ fn side_html(run: &RunView) -> String {
         escape(&run.stamina_line)
     ));
     html.push_str(&format!("<p>{}</p>", escape(&run.pools_line)));
-    let look_title = if run.looking { "Look (cursor)" } else { "Look" };
+    let look_title = if run.looking {
+        labels.look_cursor.as_str()
+    } else {
+        labels.look_plain.as_str()
+    };
     html.push_str(&format!("<h3>{look_title}</h3>"));
     match &run.inspect {
         Some(text) => html.push_str(&format!("<p class=\"look\">{}</p>", escape(text))),
-        None => html.push_str("<p class=\"dim\">Hover a tile, or press ; to look around.</p>"),
+        None => html.push_str(&format!(
+            "<p class=\"dim\">{}</p>",
+            escape(&labels.look_hint)
+        )),
     }
-    html.push_str("<h3>Pack</h3><ul>");
+    html.push_str(&format!("<h3>{}</h3><ul>", escape(&labels.pack)));
     for item in &run.inventory {
         html.push_str(&format!("<li>{}</li>", escape(item)));
     }
@@ -352,8 +359,11 @@ fn side_html(run: &RunView) -> String {
     html
 }
 
-fn actions_html(run: &RunView) -> String {
-    let mut html = String::from("<h3>Actions</h3><ul class=\"actionlist\">");
+fn actions_html(run: &RunView, labels: &PanelLabels) -> String {
+    let mut html = format!(
+        "<h3>{}</h3><ul class=\"actionlist\">",
+        escape(&labels.actions)
+    );
     for (index, action) in run.actions.iter().enumerate() {
         let disabled = if action.enabled { "" } else { " disabled" };
         let note = match &action.note {
@@ -388,10 +398,13 @@ fn log_html(run: &RunView, status: &str) -> String {
     html
 }
 
-fn overlay_html(overlay: &OverlayView) -> String {
+fn overlay_html(overlay: &OverlayView, labels: &PanelLabels) -> String {
     let mut html = format!("<h3>{}</h3>", escape(&overlay.title));
     if overlay.items.is_empty() {
-        html.push_str("<p class=\"dim\">press a direction key</p>");
+        html.push_str(&format!(
+            "<p class=\"dim\">{}</p>",
+            escape(&labels.direction_hint)
+        ));
         return html;
     }
     html.push_str("<ul class=\"menu\">");
