@@ -480,3 +480,11 @@ entities:
       title: No opportunity may name a pool and cost nothing
       summary: Content validation refuses a gather that names a pool with a cost of zero and a scheme pre-emption that costs nothing; clue templates and generated NPC actions have their cost fixed at one by materialisation. This closes a real divergence at the settlement-hostility surcharge - the planner only surcharges Social actions already costing a point, while the sim surcharges unconditionally, so a free Social opportunity would have certified as free and then charged a point in play. Rather than pick which guard was right, the case is made unrepresentable - consequential work spends a point, per the original Social contract, and a free interaction does not name a pool at all.
       references: [social-action-costs, innocent-fallout-model, conditions-may-not-touch-the-final-fight]
+
+  - decision: search-moves-and-route-steps-stay-two-types
+    core:
+      status: accepted
+      confidence: confirmed
+      title: A search move is index-space; a route step is world-space
+      summary: An architecture pass proposed collapsing the planner's internal Action enum into the serialized RouteAction so the planner emits exactly what the autoplayer consumes. Declined on inspection - the two are different representations doing different work. Action::Resolve carries the op index the search's bitmask bookkeeping runs on; RouteAction::Resolve carries the OpportunityId the world and the autoplayer speak. Collapsing them means either id-to-index lookups inside the search's hot loop or a route type that leaks search internals to everything that reads a route. They meet at exactly one translation site, in apply_action, which is a boundary earning its keep rather than duplication. The defects that motivated the proposal were real but lay elsewhere - the autoplayer branching on route prose, and action costs written twice - and are fixed on their own.
+      references: [route-certification-strategy, text-is-data-and-never-branched-on, clue-graph-validator]
