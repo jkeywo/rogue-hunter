@@ -164,6 +164,10 @@ pub enum FeatureKind {
     Grave {
         contents: GraveContents,
     },
+    /// Where the killing that opened the case happened. The scheme's minions
+    /// gather here, so this is structure rather than dressing and must be
+    /// identified by kind -- never by matching the landmark's display name.
+    KillSite,
     /// Landmark with no intrinsic interaction (den, stones, well, camp).
     Landmark,
 }

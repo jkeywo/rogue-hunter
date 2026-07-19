@@ -151,7 +151,7 @@ impl Sim {
             rh_content::ConditionEffect::WellSupplied { item } => {
                 self.state.hunter.add_item(item, 1);
                 let name = self.item_name(item);
-                self.log(EventKind::Item, format!("You came in carrying: {name}."));
+                self.log_fill(EventKind::Item, "log.item.carried-in", &[("item", &name)]);
             }
             // Baked into the world at generation, where certification saw them.
             rh_content::ConditionEffect::Ambush { .. }
@@ -169,7 +169,7 @@ impl Sim {
         match command {
             Command::Move(dir) => self.cmd_move(*dir),
             Command::Wait => {
-                self.log(EventKind::System, "You wait, watching.".to_owned());
+                self.log_ui(EventKind::System, "log.turn.wait");
                 self.end_action();
                 Ok(())
             }
@@ -197,11 +197,8 @@ impl Sim {
         let map = self.state.current_map;
         let terrain = self.state.terrain(&self.world, map, at);
         let (cleared, text) = match terrain {
-            Terrain::BarredDoor => (Terrain::Door, "The bar splinters and the door swings free."),
-            Terrain::Rubble => (
-                Terrain::Floor,
-                "Stone by stone, you heave the rubble aside until there is a way through.",
-            ),
+            Terrain::BarredDoor => (Terrain::Door, "log.force.barred-door"),
+            Terrain::Rubble => (Terrain::Floor, "log.force.rubble"),
             _ => return Err(Rejection::NothingToForce),
         };
         if self.state.hunter.physical < 1 {
@@ -212,7 +209,7 @@ impl Sim {
         }
         self.state.hunter.physical -= 1;
         self.state.terrain_overrides.insert((map, at), cleared);
-        self.log(EventKind::Clue, text.to_owned());
+        self.log_ui(EventKind::Clue, text);
         self.end_action();
         Ok(())
     }
@@ -231,6 +228,18 @@ impl Sim {
     /// Log a line of authored content, resolved through the string table.
     pub(crate) fn log_id(&mut self, kind: EventKind, id: &StringId) {
         let text = self.catalogue.strings.get(id).to_owned();
+        self.log(kind, text);
+    }
+
+    /// Log a code-side line, resolved through the string table.
+    pub(crate) fn log_ui(&mut self, kind: EventKind, id: &str) {
+        let text = self.catalogue.strings.ui(id).to_owned();
+        self.log(kind, text);
+    }
+
+    /// Log a code-side line with its `{name}`-style placeholders filled.
+    pub(crate) fn log_fill(&mut self, kind: EventKind, id: &str, args: &[(&str, &str)]) {
+        let text = self.catalogue.strings.ui_fill(id, args);
         self.log(kind, text);
     }
 
@@ -419,7 +428,10 @@ impl Sim {
                 self.state.hunter.melee_multiplier = Some(numerator);
                 self.log(
                     EventKind::Combat,
-                    "You set your weight for a heavy blow.".to_owned(),
+                    self.catalogue
+                        .strings
+                        .ui("log.manoeuvre.power-attack")
+                        .to_owned(),
                 );
             }
             ManoeuvreEffect::Dash { tiles } => {
@@ -451,7 +463,7 @@ impl Sim {
                 }
                 self.state.hunter.stamina -= def.stamina_cost;
                 self.state.hunter.pos = probe;
-                self.log(EventKind::Combat, "You sprint.".to_owned());
+                self.log_ui(EventKind::Combat, "log.manoeuvre.sprint");
             }
         }
         self.end_action();
@@ -502,7 +514,7 @@ impl Sim {
                 self.state.snares.push(Snare { map, at });
                 self.log(
                     EventKind::Combat,
-                    "You rig a snare, quick and quiet.".to_owned(),
+                    self.catalogue.strings.ui("log.signature.snare").to_owned(),
                 );
             }
             SignatureEffect::KillingBlow => {
@@ -531,7 +543,10 @@ impl Sim {
                 let damage = self.melee_damage() * u16::from(multiplier) / 2 * 2;
                 self.log(
                     EventKind::Combat,
-                    "You measure the killing blow.".to_owned(),
+                    self.catalogue
+                        .strings
+                        .ui("log.signature.killing-blow")
+                        .to_owned(),
                 );
                 self.hunter_strike(actor_id, damage, dormant, false);
             }
@@ -608,7 +623,7 @@ impl Sim {
         self.state.hunter.hp = (self.state.hunter.hp + heal).min(self.state.hunter.max_hp);
         self.log(
             EventKind::Item,
-            "You drink the bitter draught; torn flesh knits.".to_owned(),
+            self.catalogue.strings.ui("log.item.draught").to_owned(),
         );
         self.end_action();
         Ok(())
@@ -800,7 +815,10 @@ impl Sim {
                 self.state.villain_location_known = true;
                 self.log(
                     EventKind::Clue,
-                    "You know where the thing rests.".to_owned(),
+                    self.catalogue
+                        .strings
+                        .ui("log.clue.resting-place")
+                        .to_owned(),
                 );
             }
             OpportunityGrant::Lead => {}
@@ -808,7 +826,7 @@ impl Sim {
                 for item in items {
                     self.state.hunter.add_item(item, 1);
                     let name = self.item_name(item);
-                    self.log(EventKind::Item, format!("Gained: {name}."));
+                    self.log_fill(EventKind::Item, "log.item.gained", &[("item", &name)]);
                 }
             }
             OpportunityGrant::MysticFavour => {
@@ -816,7 +834,7 @@ impl Sim {
                 self.state.hunter.favour_used = true;
                 self.log(
                     EventKind::Social,
-                    "A favour granted: for a while, the other world will answer you.".to_owned(),
+                    self.catalogue.strings.ui("log.social.favour").to_owned(),
                 );
             }
             OpportunityGrant::RelationshipInfo => {
@@ -862,7 +880,10 @@ impl Sim {
         }
         self.log(
             EventKind::Social,
-            "Nothing new: you already know their entanglements.".to_owned(),
+            self.catalogue
+                .strings
+                .ui("log.social.nothing-new")
+                .to_owned(),
         );
     }
 
@@ -882,7 +903,7 @@ impl Sim {
             .collect();
         for (id, name) in unlocked {
             self.state.discovered.insert(id);
-            self.log(EventKind::Clue, format!("New lead: {name}."));
+            self.log_fill(EventKind::Clue, "log.clue.new-lead", &[("lead", &name)]);
         }
     }
 
@@ -947,12 +968,16 @@ impl Sim {
         if fleeing {
             self.log(
                 EventKind::Travel,
-                format!("You break away and flee toward {destination}."),
+                self.catalogue
+                    .strings
+                    .ui_fill("log.travel.flee", &[("place", &destination)]),
             );
         } else {
             self.log(
                 EventKind::Travel,
-                format!("You take the road toward {destination}."),
+                self.catalogue
+                    .strings
+                    .ui_fill("log.travel.depart", &[("place", &destination)]),
             );
         }
         self.advance_clock(ClockReason::Travel);
@@ -962,7 +987,11 @@ impl Sim {
         self.state.current_map = exit.to_map;
         self.state.hunter.pos = exit.to_point;
         self.clear_encounter_buffs();
-        self.log(EventKind::Travel, format!("You arrive at {destination}."));
+        self.log_fill(
+            EventKind::Travel,
+            "log.travel.arrive",
+            &[("place", &destination)],
+        );
         if exit.ambush_route {
             let chance = self.world.ambush_percent;
             if self.state.rng.percent(chance) {
@@ -1013,7 +1042,7 @@ impl Sim {
         }
         self.state.hunter.add_item(&recipe.output, 1);
         let output = self.item_name(&recipe.output);
-        self.log(EventKind::Item, format!("You craft: {output}."));
+        self.log_fill(EventKind::Item, "log.craft.done", &[("item", &output)]);
         if recipe.requires_origin_reagent {
             let flavour = self.catalogue.origins[&self.world.villain.origin]
                 .counter_flavour
@@ -1042,7 +1071,10 @@ impl Sim {
         self.state.church_consecrated = true;
         self.log(
             EventKind::Clock,
-            "You spend the evening at the rite. By its end the church ground is warded against the risen dead.".to_owned(),
+            self.catalogue
+                .strings
+                .ui("log.rite.consecration")
+                .to_owned(),
         );
         self.advance_clock(ClockReason::CostlyAction);
         self.maybe_begin_final_hunt();
@@ -1074,17 +1106,19 @@ impl Sim {
         self.state.opened_graves.insert(feature_id);
         self.log(
             EventKind::Clue,
-            format!("You put your back into it and open {}.", feature.name),
+            self.catalogue
+                .strings
+                .ui_fill("log.grave.open", &[("grave", &feature.name)]),
         );
         match contents {
             GraveContents::Villain => self.expose_dormant_villain(map, feature.at),
             GraveContents::Mundane => self.log(
                 EventKind::Clue,
-                "Old bones, folded hands: an honest death, honestly buried.".to_owned(),
+                self.catalogue.strings.ui("log.grave.mundane").to_owned(),
             ),
             GraveContents::Empty => self.log(
                 EventKind::Clue,
-                "Empty. The earth here never held a coffin at all.".to_owned(),
+                self.catalogue.strings.ui("log.grave.empty").to_owned(),
             ),
         }
         self.end_action();
@@ -1109,7 +1143,9 @@ impl Sim {
         let title = self.world.villain.title.clone();
         self.log(
             EventKind::Clue,
-            format!("The proofs agree. Your quarry is {title}. Now you may hunt."),
+            self.catalogue
+                .strings
+                .ui_fill("log.accusation.correct", &[("quarry", &title)]),
         );
         // Uncovering is a realisation, not an action: no world tick.
         Ok(())
@@ -1317,7 +1353,9 @@ impl Sim {
             self.state.discovered.insert(id);
             self.log(
                 EventKind::Clue,
-                format!("Something worth a closer look: {name}."),
+                self.catalogue
+                    .strings
+                    .ui_fill("log.discovery.opportunity", &[("what", &name)]),
             );
         }
     }
@@ -1328,7 +1366,7 @@ impl Sim {
         let hp = self.catalogue.enemies[&enemy].health;
         self.log(
             EventKind::Travel,
-            "The undergrowth erupts — an ambush on the road!".to_owned(),
+            self.catalogue.strings.ui("log.travel.ambush").to_owned(),
         );
         let map = self.state.current_map;
         let spots = self.free_tiles_near(map, near, 3);
@@ -1469,12 +1507,16 @@ impl Sim {
         if killed {
             self.log(
                 EventKind::Combat,
-                format!("{name} falls. No curse leaves the body. You have murdered a villager."),
+                self.catalogue
+                    .strings
+                    .ui_fill("log.social.murdered", &[("npc", &name)]),
             );
         } else {
             self.log(
                 EventKind::Combat,
-                format!("{name} screams and flees, bleeding. There was no monster in them."),
+                self.catalogue
+                    .strings
+                    .ui_fill("log.social.wounded-innocent", &[("npc", &name)]),
             );
         }
         self.apply_innocent_fallout(npc);
@@ -1496,7 +1538,10 @@ impl Sim {
         }
         self.log(
             EventKind::Social,
-            "Doors bar as you pass. The settlement has turned against you; whatever that villager knew or held is beyond reach now.".to_owned(),
+            self.catalogue
+                .strings
+                .ui("log.social.settlement-turns")
+                .to_owned(),
         );
     }
 
@@ -1507,7 +1552,7 @@ impl Sim {
         let combat = self.catalogue.balance.combat.clone();
         let hit = coup || self.state.rng.percent(combat.melee_hit_percent);
         if !hit {
-            self.log(EventKind::Combat, "Your blow goes wide.".to_owned());
+            self.log_ui(EventKind::Combat, "log.combat.melee-miss");
             return;
         }
         // A coup de grace on a sleeping thing lands with terrible weight.
@@ -1533,7 +1578,10 @@ impl Sim {
         if !hit {
             self.log(
                 EventKind::Combat,
-                "The shot cracks past its head.".to_owned(),
+                self.catalogue
+                    .strings
+                    .ui("log.combat.ranged-miss")
+                    .to_owned(),
             );
             return;
         }
@@ -1635,7 +1683,10 @@ impl Sim {
         let name = self.actor_name(&kind);
         self.log(
             EventKind::Combat,
-            format!("You strike the {name} for {damage}."),
+            self.catalogue.strings.ui_fill(
+                "log.combat.strike",
+                &[("target", &name), ("damage", &damage.to_string())],
+            ),
         );
         if killed {
             self.handle_actor_death(id, kind, pos);
@@ -1692,15 +1743,16 @@ impl Sim {
                 self.state.villain.dead = true;
                 self.state.villain.active = false;
                 self.state.outcome = Some(Outcome::Victory);
-                let name = self.villain_def().name.clone();
-                self.log(
+                let name = self.text(&self.villain_def().name).to_owned();
+                self.log_fill(
                     EventKind::System,
-                    format!("The {name} comes apart into cold ash. The valley is delivered."),
+                    "log.combat.villain-destroyed",
+                    &[("villain", &name)],
                 );
             }
             ActorKind::Enemy(_) => {
                 let name = self.actor_name(&kind);
-                self.log(EventKind::Combat, format!("The {name} is slain."));
+                self.log_fill(EventKind::Combat, "log.combat.slain", &[("target", &name)]);
                 let chance = self.catalogue.balance.loot.drop_percent;
                 if self.state.rng.percent(chance) {
                     self.drop_loot(pos);
@@ -1752,12 +1804,12 @@ impl Sim {
                 );
             } else {
                 self.state.hunter.add_item("coin", 1);
-                self.log(EventKind::Item, "It carried a little coin.".to_owned());
+                self.log_ui(EventKind::Item, "log.loot.coin");
             }
         } else {
             self.state.hunter.add_item(pick, 1);
             let name = self.item_name(pick);
-            self.log(EventKind::Item, format!("It dropped: {name}."));
+            self.log_fill(EventKind::Item, "log.loot.dropped", &[("item", &name)]);
         }
     }
 
@@ -1843,7 +1895,7 @@ impl Sim {
             let kill_site = world_map
                 .features
                 .iter()
-                .find(|feature| feature.name.contains("kill site"))
+                .find(|feature| feature.kind == FeatureKind::KillSite)
                 .map(|feature| feature.at);
             let anchor = kill_site.unwrap_or_else(|| {
                 let entry = world_map.entry;
@@ -1969,14 +2021,19 @@ impl Sim {
             self.state.outcome = Some(Outcome::Defeat);
             self.log(
                 EventKind::System,
-                "You fall, and this time there is no morning. The valley belongs to the dark now."
+                self.catalogue
+                    .strings
+                    .ui("log.outcome.final-death")
                     .to_owned(),
             );
             return;
         }
         self.log(
             EventKind::System,
-            "Darkness takes you... but not for good. You wake in the settlement, a day poorer, your effects intact.".to_owned(),
+            self.catalogue
+                .strings
+                .ui("log.outcome.death-costs-a-day")
+                .to_owned(),
         );
         let settlement = self.world.map_by_role(rh_content::MapRole::Settlement);
         self.state.current_map = settlement;

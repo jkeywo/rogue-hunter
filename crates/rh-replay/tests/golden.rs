@@ -109,3 +109,26 @@ fn autoplayer_wins_runs_for_every_archetype() {
         outcomes.join("\n")
     );
 }
+
+#[test]
+fn no_run_ever_logs_an_unresolved_string() {
+    // The string table resolves missing ids to a visible sentinel rather than
+    // panicking, so this is what stops one reaching a player: play real runs
+    // and read every line the log produced.
+    for seed in 0..12u64 {
+        let mut session = RunSession::new(seed, catalogue()).expect("run generates");
+        autoplay::autoplay(&mut session);
+        for event in &session.sim.state.log {
+            assert!(
+                !event.text.contains("!missing"),
+                "seed {seed}: unresolved string id in the log: {:?}",
+                event.text
+            );
+            assert!(
+                !event.text.contains('{'),
+                "seed {seed}: unsubstituted placeholder in the log: {:?}",
+                event.text
+            );
+        }
+    }
+}

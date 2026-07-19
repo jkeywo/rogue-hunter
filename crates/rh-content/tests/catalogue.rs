@@ -354,7 +354,7 @@ fn every_string_in_the_table_is_referenced_by_content() {
     let orphans: Vec<&str> = catalogue
         .strings
         .ids()
-        .filter(|id| !id.starts_with("ui."))
+        .filter(|id| !id.starts_with("ui.") && !id.starts_with("log.") && !id.starts_with("gen."))
         .filter(|id| !referenced.contains(id))
         .collect();
     assert!(orphans.is_empty(), "unreferenced string rows: {orphans:?}");
@@ -383,12 +383,13 @@ fn a_typo_in_any_content_string_id_is_refused() {
     );
 }
 
-/// Every `ui.*` id named in client code, found by scanning the sources.
+/// Every code-side string id (`ui.*`, `log.*`, `gen.*`) named in the crates.
 ///
-/// The catalogue cannot reach these -- the clients name them as literals --
-/// so they are checked against the source text instead. Crude, but it is the
-/// only thing standing between a renamed row and a `[!missing]` on screen.
-fn ui_ids_named_in_code() -> std::collections::BTreeSet<String> {
+/// The catalogue cannot reach these -- code names them as literals -- so they
+/// are checked against the source text instead. Matching the literal rather
+/// than the call syntax keeps this honest as new helpers appear.
+fn code_side_ids() -> std::collections::BTreeSet<String> {
+    let pattern = ["ui.", "log.", "gen."];
     let mut found = std::collections::BTreeSet::new();
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
@@ -407,28 +408,23 @@ fn ui_ids_named_in_code() -> std::collections::BTreeSet<String> {
             if path.extension().is_none_or(|e| e != "rs") {
                 continue;
             }
+            // This test file names ids in prose and in filters; counting them
+            // would let it satisfy itself.
+            if path.ends_with("tests/catalogue.rs") || path.ends_with("catalogue.rs") {
+                continue;
+            }
             let text = std::fs::read_to_string(&path).expect("readable source");
-            // Matches the `"ui.…"` literal inside `.ui("…")` / `.ui_fill("…"`.
-            for (index, _) in text.match_indices(".ui") {
-                let rest = &text[index..];
-                let Some(open) = rest.find('"') else { continue };
-                // Only `_fill`, the paren, and layout may sit between `.ui`
-                // and the literal -- rustfmt often wraps the argument onto
-                // its own line.
-                let between = &rest[3..open];
-                if !between
-                    .chars()
-                    .all(|c| c.is_whitespace() || c == '(' || c == '_' || c.is_alphabetic())
+            for piece in text.split('"').skip(1).step_by(2) {
+                // Real ids have at least three segments, which rules out the
+                // "ui.toml" filename and the two-segment fixtures in unit
+                // tests without needing to know where either lives.
+                if pattern.iter().any(|p| piece.starts_with(p))
+                    && piece.split('.').count() >= 3
+                    && piece.chars().all(|c| {
+                        c.is_ascii_lowercase() || c.is_ascii_digit() || c == '.' || c == '-'
+                    })
                 {
-                    continue;
-                }
-                let after = &rest[open + 1..];
-                let Some(close) = after.find('"') else {
-                    continue;
-                };
-                let id = &after[..close];
-                if id.starts_with("ui.") {
-                    found.insert(id.to_owned());
+                    found.insert(piece.to_owned());
                 }
             }
         }
@@ -437,12 +433,13 @@ fn ui_ids_named_in_code() -> std::collections::BTreeSet<String> {
 }
 
 #[test]
-fn ui_string_ids_match_the_code() {
+fn code_side_string_ids_match_the_code() {
     let catalogue = rh_content::load_embedded().expect("embedded content");
-    let in_code = ui_ids_named_in_code();
+    let in_code = code_side_ids();
     assert!(
-        !in_code.is_empty(),
-        "the scanner found no ui.* ids at all, so it is not testing anything"
+        in_code.len() > 50,
+        "the scanner found only {} ids, so it is not testing anything",
+        in_code.len()
     );
 
     let missing: Vec<&String> = in_code
@@ -457,11 +454,14 @@ fn ui_string_ids_match_the_code() {
     let orphans: Vec<&str> = catalogue
         .strings
         .ids()
-        .filter(|id| id.starts_with("ui."))
+        .filter(|id| id.starts_with("ui.") || id.starts_with("log.") || id.starts_with("gen."))
         // ui.toml holds these, so content references them, not code.
         .filter(|id| !id.starts_with("ui.keys.") && !id.starts_with("ui.splash.intro"))
         .filter(|id| *id != "ui.splash.title")
         .filter(|id| !in_code.contains(*id))
         .collect();
-    assert!(orphans.is_empty(), "ui rows no code reaches: {orphans:?}");
+    assert!(
+        orphans.is_empty(),
+        "code-side rows no code reaches: {orphans:?}"
+    );
 }

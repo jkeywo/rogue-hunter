@@ -413,7 +413,10 @@ fn build_run_view(session: &ClientSession) -> RunView {
                     rh_core::world::FeatureKind::Workstation => 'W',
                     rh_core::world::FeatureKind::Grave { .. } if opened_grave => 'u',
                     rh_core::world::FeatureKind::Grave { .. } => 'n',
-                    rh_core::world::FeatureKind::Landmark => cell.glyph,
+                    // A kill site draws as its terrain, like any other
+                    // landmark; the distinction is where minions gather.
+                    rh_core::world::FeatureKind::KillSite
+                    | rh_core::world::FeatureKind::Landmark => cell.glyph,
                 };
                 cell = Cell {
                     glyph,

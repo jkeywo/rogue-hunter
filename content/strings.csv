@@ -181,6 +181,26 @@ gathers.sweep-the-crypt.reveal,Log line once the gathering is done,[You speak th
 gathers.take-wronged-earth.name,"Name of a gathering opportunity, shown on the map and in the action list",[Take earth from the wronged plot]
 gathers.take-wronged-earth.prompt,Opportunity text shown before gathering here,"[If a wrong was done here, the one it was done to is in this ground, and the ground remembers the debt.]"
 gathers.take-wronged-earth.reveal,Log line once the gathering is done,"[The gravedigger walks you to the plot without being told which, and turns his back while you fill a fold of cloth.]"
+gen.feature.altar,Name of the church altar landmark,[the altar]
+gen.feature.forge,Name of the forge landmark,[the forge]
+gen.feature.grave,Name of a villager's grave on the map,[the grave of {deceased}]
+gen.force.barred-door.name,Action name for forcing a barred door,[Force the barred door]
+gen.force.barred-door.prompt,Prompt shown at a barred door,[The door is barred against something. Muscle would answer it.]
+gen.force.barred-door.reveal,Log line after forcing a barred door,[The bar gives way with a crack that echoes.]
+gen.force.rubble.name,Action name for clearing rubble blocking a path,[Shift the fallen rubble]
+gen.force.rubble.prompt,Prompt shown at rubble blocking a path,[Fallen stone blocks the way. A strong back could move it.]
+gen.force.rubble.reveal,Log line after clearing rubble,[You heave the rubble clear. The way is open.]
+gen.npc.disproof.prompt,Prompt for checking the parish records against a rumour,"[If the whispers about {npc} were true, the parish records would show it.]"
+gen.npc.disproof.reveal,Log line when the parish records disprove a rumour,"[The record is plain, and the whisper is a lie.]"
+gen.npc.favour.name,Action name for asking a mystical NPC for a favour,[Seek a favour of {npc}]
+gen.npc.favour.prompt,Prompt for asking a mystical NPC for a favour,[{npc} knows older arts than she sells. The right asking might borrow them.]
+gen.npc.gossip.name,Action name for asking around about an NPC,[Ask around about {npc}]
+gen.npc.gossip.prompt,Prompt for asking around about an NPC,[Everyone is tangled with everyone here. {npc} too.]
+gen.npc.spy.name,Action name for watching an NPC covertly,[Watch {npc} quietly]
+gen.npc.spy.prompt,Prompt for watching an NPC covertly,[{npc} keeps something close. Patience would show it.]
+gen.npc.spy.reveal,Log line after watching an NPC and learning their secret,[You learn what {npc} hides.]
+gen.villain.revenant-title,How the revenant is named before its grave is proven,[the revenant of {name}]
+gen.villain.werewolf-title,How the werewolf is named before its host is proven,[the beast wearing {npc}'s face]
 grimoire.entries.ancient-curse.body,Grimoire entry body text,"[Some evils are inherited like debts. Where the trouble is old, its signs are old: parish records, weathered stones, dreams that repeat in different sleepers. Ask the church and the graves before you ask the living.]"
 grimoire.entries.ancient-curse.title,Grimoire entry title,[Of Ancient Curses]
 grimoire.entries.bandit.body,Grimoire entry body text,"[Desperate men with pistols and poor judgement. They keep their distance and shoot while they can; close with them, or answer in kind. Ask who pays them, for someone always does.]"
@@ -277,6 +297,43 @@ items.wound-draught.description,"Item description, shown when inspecting it in t
 items.wound-draught.name,"Item name, shown in the pack and in loot messages",[Wound Draught]
 items.wronged-earth.description,"Item description, shown when inspecting it in the pack","[A handful of soil from the plot of the one who was wronged. It carries the debt, and a debt can be made to answer.]"
 items.wronged-earth.name,"Item name, shown in the pack and in loot messages",[Wronged Earth]
+log.accusation.correct,Log line when your two proofs name the quarry correctly,[The proofs agree. Your quarry is {quarry}. Now you may hunt.]
+log.clue.new-lead,Log line when a new lead opens up,[New lead: {lead}.]
+log.clue.resting-place,Log line when you learn where the villain rests,[You know where the thing rests.]
+log.combat.melee-miss,Log line when your melee attack misses,[Your blow goes wide.]
+log.combat.ranged-miss,Log line when your shot misses,[The shot cracks past its head.]
+log.combat.slain,Log line when an ordinary enemy dies,[The {target} is slain.]
+log.combat.strike,Log line when you land a hit,[You strike the {target} for {damage}.]
+log.combat.villain-destroyed,Log line when the villain is finally destroyed,[The {villain} comes apart into cold ash. The valley is delivered.]
+log.craft.done,Log line when you finish crafting,[You craft: {item}.]
+log.discovery.opportunity,Log line when something investigable comes into view,[Something worth a closer look: {what}.]
+log.force.barred-door,Log line when you force a barred door open,[The bar splinters and the door swings free.]
+log.force.rubble,Log line when you clear fallen rubble,"[Stone by stone, you heave the rubble aside until there is a way through.]"
+log.grave.empty,Log line when you open an empty grave,[Empty. The earth here never held a coffin at all.]
+log.grave.mundane,Log line when you open an ordinary grave,"[Old bones, folded hands: an honest death, honestly buried.]"
+log.grave.open,Log line when you dig open a grave,[You put your back into it and open {grave}.]
+log.item.carried-in,Log line for an item the run opened with,[You came in carrying: {item}.]
+log.item.draught,Log line when you drink a wound draught,[You drink the bitter draught; torn flesh knits.]
+log.item.gained,Log line when you gain an item,[Gained: {item}.]
+log.loot.coin,Log line when a slain enemy drops coin,[It carried a little coin.]
+log.loot.dropped,Log line when a slain enemy drops an item,[It dropped: {item}.]
+log.manoeuvre.power-attack,Log line when you ready a power attack,[You set your weight for a heavy blow.]
+log.manoeuvre.sprint,Log line when you sprint,[You sprint.]
+log.outcome.death-costs-a-day,Log line when you die before the final night and lose a day,"[Darkness takes you... but not for good. You wake in the settlement, a day poorer, your effects intact.]"
+log.outcome.final-death,Log line when you die on the final night,"[You fall, and this time there is no morning. The valley belongs to the dark now.]"
+log.rite.consecration,Log line when you complete the consecration rite,[You spend the evening at the rite. By its end the church ground is warded against the risen dead.]
+log.signature.killing-blow,Log line when you line up a killing blow,[You measure the killing blow.]
+log.signature.snare,Log line when you set a snare,"[You rig a snare, quick and quiet.]"
+log.social.favour,Log line when an NPC grants you a mystic favour,"[A favour granted: for a while, the other world will answer you.]"
+log.social.murdered,Log line when you kill an innocent villager,[{npc} falls. No curse leaves the body. You have murdered a villager.]
+log.social.nothing-new,Log line when questioning reveals nothing you did not know,[Nothing new: you already know their entanglements.]
+log.social.settlement-turns,Log line when the settlement turns against you for killing a villager,[Doors bar as you pass. The settlement has turned against you; whatever that villager knew or held is beyond reach now.]
+log.social.wounded-innocent,Log line when you wound an innocent villager who then flees,"[{npc} screams and flees, bleeding. There was no monster in them.]"
+log.travel.ambush,Log line when travelling is interrupted by an ambush,[The undergrowth erupts — an ambush on the road!]
+log.travel.arrive,Log line on arriving somewhere new,[You arrive at {place}.]
+log.travel.depart,Log line when you set off for another place,[You take the road toward {place}.]
+log.travel.flee,Log line when you break off a fight to travel,[You break away and flee toward {place}.]
+log.turn.wait,Log line when you pass a turn deliberately,"[You wait, watching.]"
 maps.outlying-abbey.description,"Map description, shown on the travel screen","[An abbey the river took back. Roofless walls, a flooded cloister, and a crypt that has stayed dry rather longer than it should have.]"
 maps.outlying-abbey.name,"Map name, shown on the travel screen and status panel",[Saint Ceolwulf's]
 maps.outlying-abbey.slots.campsite.label,"Landmark name, shown when inspecting this spot on the map",[the campsite]

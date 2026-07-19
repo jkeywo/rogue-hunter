@@ -190,7 +190,10 @@ impl<'a> Builder<'a> {
                         kind: FeatureKind::Grave {
                             contents: GraveContents::Mundane,
                         },
-                        name: format!("the grave of {deceased}"),
+                        name: self
+                            .catalogue
+                            .strings
+                            .ui_fill("gen.feature.grave", &[("deceased", &deceased)]),
                     });
                     self.next_feature += 1;
                 }
@@ -199,7 +202,7 @@ impl<'a> Builder<'a> {
                         id: feature_id,
                         at,
                         kind: FeatureKind::Workstation,
-                        name: "the forge".to_owned(),
+                        name: self.catalogue.strings.ui("gen.feature.forge").to_owned(),
                     });
                     self.next_feature += 1;
                 }
@@ -208,7 +211,7 @@ impl<'a> Builder<'a> {
                         id: feature_id,
                         at,
                         kind: FeatureKind::Altar,
-                        name: "the altar".to_owned(),
+                        name: self.catalogue.strings.ui("gen.feature.altar").to_owned(),
                     });
                     self.next_feature += 1;
                 }
@@ -216,7 +219,11 @@ impl<'a> Builder<'a> {
                     features.push(FeatureSpec {
                         id: feature_id,
                         at,
-                        kind: FeatureKind::Landmark,
+                        kind: if slot.kind == SiteKind::KillSite {
+                            FeatureKind::KillSite
+                        } else {
+                            FeatureKind::Landmark
+                        },
                         name: self.catalogue.strings.get(&slot.label).to_owned(),
                     });
                     self.next_feature += 1;
@@ -386,9 +393,9 @@ impl<'a> Builder<'a> {
                     archetype: self.combo.villain.clone(),
                     origin: self.combo.origin.clone(),
                     scheme: self.combo.scheme.clone(),
-                    title: format!(
-                        "the beast wearing {}'s face",
-                        self.cast.members[host_index].name
+                    title: self.catalogue.strings.ui_fill(
+                        "gen.villain.werewolf-title",
+                        &[("npc", &self.cast.members[host_index].name)],
                     ),
                     host: Some(host),
                     grave: None,
@@ -449,7 +456,10 @@ impl<'a> Builder<'a> {
                     archetype: self.combo.villain.clone(),
                     origin: self.combo.origin.clone(),
                     scheme: self.combo.scheme.clone(),
-                    title: format!("the revenant of {name}"),
+                    title: self
+                        .catalogue
+                        .strings
+                        .ui_fill("gen.villain.revenant-title", &[("name", &name)]),
                     host: None,
                     grave: Some((map_id, feature_id)),
                     lair: (map_id, at),
@@ -468,14 +478,14 @@ impl<'a> Builder<'a> {
                     let terrain = tile_at(&self.maps[map_index].tiles, at);
                     let (name, prompt, reveal) = match terrain {
                         Terrain::Rubble => (
-                            "Shift the fallen rubble",
-                            "Fallen stone blocks the way. A strong back could move it.",
-                            "You heave the rubble clear. The way is open.",
+                            "gen.force.rubble.name",
+                            "gen.force.rubble.prompt",
+                            "gen.force.rubble.reveal",
                         ),
                         Terrain::BarredDoor => (
-                            "Force the barred door",
-                            "The door is barred against something. Muscle would answer it.",
-                            "The bar gives way with a crack that echoes.",
+                            "gen.force.barred-door.name",
+                            "gen.force.barred-door.prompt",
+                            "gen.force.barred-door.reveal",
                         ),
                         _ => continue,
                     };
@@ -483,7 +493,7 @@ impl<'a> Builder<'a> {
                     self.opportunities.push(OpportunitySpec {
                         id,
                         source: "force".to_owned(),
-                        name: name.to_owned(),
+                        name: self.catalogue.strings.ui(name).to_owned(),
                         map: map_id,
                         anchor: OpportunityAnchor::Tile(at),
                         pool: Some(PoolKind::Physical),
@@ -494,8 +504,8 @@ impl<'a> Builder<'a> {
                         requires: None,
                         clears_terrain: true,
                         covert: false,
-                        prompt: prompt.to_owned(),
-                        reveal: reveal.to_owned(),
+                        prompt: self.catalogue.strings.ui(prompt).to_owned(),
+                        reveal: self.catalogue.strings.ui(reveal).to_owned(),
                     });
                 }
             }
@@ -920,7 +930,10 @@ impl<'a> Builder<'a> {
             self.opportunities.push(OpportunitySpec {
                 id: spy_id,
                 source: format!("spy:{}", npc.name),
-                name: format!("Watch {} quietly", npc.name),
+                name: self
+                    .catalogue
+                    .strings
+                    .ui_fill("gen.npc.spy.name", &[("npc", &npc.name)]),
                 map,
                 anchor: OpportunityAnchor::Npc(npc.id),
                 pool: Some(PoolKind::Social),
@@ -931,11 +944,14 @@ impl<'a> Builder<'a> {
                 requires: None,
                 clears_terrain: false,
                 covert: true,
-                prompt: format!(
-                    "{} keeps something close. Patience would show it.",
-                    npc.name
-                ),
-                reveal: format!("You learn what {} hides.", npc.name),
+                prompt: self
+                    .catalogue
+                    .strings
+                    .ui_fill("gen.npc.spy.prompt", &[("npc", &npc.name)]),
+                reveal: self
+                    .catalogue
+                    .strings
+                    .ui_fill("gen.npc.spy.reveal", &[("npc", &npc.name)]),
             });
 
             if secret_def.false_secret {
@@ -960,11 +976,15 @@ impl<'a> Builder<'a> {
                     requires: None,
                     clears_terrain: false,
                     covert: true,
-                    prompt: format!(
-                        "If the whispers about {} were true, the parish records would show it.",
-                        npc.name
-                    ),
-                    reveal: "The record is plain, and the whisper is a lie.".to_owned(),
+                    prompt: self
+                        .catalogue
+                        .strings
+                        .ui_fill("gen.npc.disproof.prompt", &[("npc", &npc.name)]),
+                    reveal: self
+                        .catalogue
+                        .strings
+                        .ui("gen.npc.disproof.reveal")
+                        .to_owned(),
                 });
             } else {
                 // A true secret is leverage.
@@ -996,7 +1016,10 @@ impl<'a> Builder<'a> {
             self.opportunities.push(OpportunitySpec {
                 id,
                 source: format!("ties:{}", npc.name),
-                name: format!("Ask around about {}", npc.name),
+                name: self
+                    .catalogue
+                    .strings
+                    .ui_fill("gen.npc.gossip.name", &[("npc", &npc.name)]),
                 map,
                 anchor: OpportunityAnchor::Npc(npc.id),
                 pool: Some(PoolKind::Social),
@@ -1007,7 +1030,10 @@ impl<'a> Builder<'a> {
                 requires: None,
                 clears_terrain: false,
                 covert: false,
-                prompt: format!("Everyone is tangled with everyone here. {} too.", npc.name),
+                prompt: self
+                    .catalogue
+                    .strings
+                    .ui_fill("gen.npc.gossip.prompt", &[("npc", &npc.name)]),
                 reveal: String::new(),
             });
 
@@ -1017,7 +1043,10 @@ impl<'a> Builder<'a> {
                 self.opportunities.push(OpportunitySpec {
                     id,
                     source: "mystic-favour".to_owned(),
-                    name: format!("Seek a favour of {}", npc.name),
+                    name: self
+                        .catalogue
+                        .strings
+                        .ui_fill("gen.npc.favour.name", &[("npc", &npc.name)]),
                     map,
                     anchor: OpportunityAnchor::Npc(npc.id),
                     pool: Some(PoolKind::Social),
@@ -1028,10 +1057,10 @@ impl<'a> Builder<'a> {
                     requires: None,
                     clears_terrain: false,
                     covert: false,
-                    prompt: format!(
-                        "{} knows older arts than she sells. The right asking might borrow them.",
-                        npc.name
-                    ),
+                    prompt: self
+                        .catalogue
+                        .strings
+                        .ui_fill("gen.npc.favour.prompt", &[("npc", &npc.name)]),
                     reveal: String::new(),
                 });
             }
