@@ -468,3 +468,37 @@ fn code_side_string_ids_match_the_code() {
         "code-side rows no code reaches: {orphans:?}"
     );
 }
+
+#[test]
+fn a_slot_walled_off_from_the_map_is_rejected() {
+    // Cover and blocked-lane geometry is exactly what a variation pack will
+    // rewrite, and a slot sealed behind it would break a certified route in
+    // silence: the planner reasons about maps and gates, never about whether
+    // the tiles actually join up.
+    let mut sources: Vec<(&str, String)> = rh_content::embedded_sources()
+        .iter()
+        .map(|(name, text)| (*name, (*text).to_owned()))
+        .collect();
+    for (name, text) in sources.iter_mut() {
+        if *name == "maps/settlement.toml" {
+            // Wall in the church altar's corner.
+            *text = text.replace("\"#.A.....+", "\"#.A#####+").replace(
+                "\"#.......#,,,,,,,,,,,,,,,#......#",
+                "\"#.###...#,,,,,,,,,,,,,,,#......#",
+            );
+        }
+    }
+    let borrowed: Vec<(&str, &str)> = sources
+        .iter()
+        .map(|(name, text)| (*name, text.as_str()))
+        .collect();
+    let error = rh_content::Catalogue::from_sources(&borrowed);
+    let message = format!(
+        "{:?}",
+        error.expect_err("a sealed-off slot must not validate")
+    );
+    assert!(
+        message.contains("cannot be walked to"),
+        "expected a reachability complaint, got: {message}"
+    );
+}

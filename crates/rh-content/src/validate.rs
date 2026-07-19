@@ -711,6 +711,31 @@ fn check_maps(cat: &Catalogue, issues: &mut Vec<String>) {
                 .and_then(|glyph| map.legend.get(&glyph))
                 .copied()
         };
+        // Everything the world needs must be walkable-to from an exit. Cover
+        // and blocked lanes are exactly the kind of geometry a variation pack
+        // will rewrite, and a slot walled off by one would break a certified
+        // route silently — the planner reasons about maps and gates, never
+        // about whether the tiles actually join up.
+        if let Some(start) = map.exits.first().map(|exit| exit.at) {
+            let reachable = walkable_from(start, &terrain_at);
+            for slot in &map.slots {
+                if !reachable.contains(&slot.at) {
+                    issues.push(format!(
+                        "maps: '{id}' slot '{}' at {},{} cannot be walked to from the map's                          own exit",
+                        slot.id, slot.at[0], slot.at[1]
+                    ));
+                }
+            }
+            for exit in &map.exits {
+                if !reachable.contains(&exit.at) {
+                    issues.push(format!(
+                        "maps: '{id}' exit to '{}' at {},{} is cut off from the rest of the map",
+                        exit.to, exit.at[0], exit.at[1]
+                    ));
+                }
+            }
+        }
+
         let mut slot_ids: Vec<&str> = map.slots.iter().map(|s| s.id.as_str()).collect();
         slot_ids.sort_unstable();
         slot_ids.dedup();
@@ -1258,4 +1283,53 @@ fn check_conditions(cat: &Catalogue, issues: &mut Vec<String>) {
             ));
         }
     }
+}
+
+/// Tiles reachable from `start` by an eight-way walk.
+///
+/// Barred doors and rubble count as passable: they cost a Physical point to
+/// force, which is a price rather than a wall, and certified routes are allowed
+/// to schedule that.
+fn walkable_from(
+    start: Coord,
+    terrain_at: &impl Fn(Coord) -> Option<Terrain>,
+) -> std::collections::HashSet<Coord> {
+    let passable = |at: Coord| {
+        matches!(
+            terrain_at(at),
+            Some(
+                Terrain::Floor
+                    | Terrain::Grass
+                    | Terrain::Road
+                    | Terrain::Door
+                    | Terrain::BarredDoor
+                    | Terrain::Rubble
+                    | Terrain::Grave
+                    | Terrain::Altar
+                    | Terrain::Workstation
+            )
+        )
+    };
+    let mut seen = std::collections::HashSet::new();
+    if !passable(start) {
+        return seen;
+    }
+    seen.insert(start);
+    let mut queue = vec![start];
+    while let Some([x, y]) = queue.pop() {
+        for dx in -1i16..=1 {
+            for dy in -1i16..=1 {
+                let (nx, ny) = (i16::from(x) + dx, i16::from(y) + dy);
+                if nx < 0 || ny < 0 || nx >= MAP_WIDTH as i16 || ny >= MAP_HEIGHT as i16 {
+                    continue;
+                }
+                let next = [nx as u8, ny as u8];
+                if !seen.contains(&next) && passable(next) {
+                    seen.insert(next);
+                    queue.push(next);
+                }
+            }
+        }
+    }
+    seen
 }
