@@ -642,7 +642,7 @@ pub struct NpcCatalogue {
     /// Relationship kinds the generator may draw for NPC links.
     pub relationship_kinds: Vec<RelationshipKind>,
     /// Names for the settled dead: grave markers and revenant identities.
-    pub deceased_name_pool: Vec<String>,
+    pub deceased_name_pool: Vec<StringId>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -651,7 +651,7 @@ pub struct NpcArchetype {
     pub name: StringId,
     pub glyph: char,
     /// Names the generator draws from for this archetype.
-    pub name_pool: Vec<String>,
+    pub name_pool: Vec<StringId>,
     /// Map slot id where this NPC works during the day.
     pub work_slot: String,
     /// Whether this archetype can secretly host the Werewolf.

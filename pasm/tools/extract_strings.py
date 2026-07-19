@@ -106,6 +106,8 @@ MANIFEST: dict[str, list[tuple[str, str]]] = {
         ("secrets.*.disproof", "Journal text when an NPC's secret is disproved"),
         ("relationship_kinds[].name", "Name of a relationship between two NPCs"),
         ("relationship_kinds[].discovered_text", "Log line when a relationship between two NPCs is discovered"),
+        ("archetypes.*.name_pool", "A villager's name, drawn for this archetype when the valley is populated"),
+        ("deceased_name_pool", "A dead villager's name, drawn for a grave"),
     ],
     "grimoire.toml": [
         ("entries[].title", "Grimoire entry title"),
@@ -140,7 +142,7 @@ STRUCTURAL = {
     "work_slot", "map_role", "site_map", "anchor", "grant", "discovery",
     "supports", "rules_out", "villains", "origins", "schemes", "inputs",
     "items", "starting_items", "sign_sites", "secrets", "grants_items",
-    "rows", "legend", "name_pool", "deceased_name_pool", "clue",
+    "rows", "legend", "clue",
     "church_slot", "ammo", "false_secret",
 }
 

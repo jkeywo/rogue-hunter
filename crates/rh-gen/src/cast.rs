@@ -93,7 +93,12 @@ pub fn pick_cast(rng: &mut SimRng, catalogue: &Catalogue, combo: &Combo) -> Resu
     let mut members = Vec::new();
     for (index, archetype_id) in chosen.iter().enumerate() {
         let def = &catalogue.npcs.archetypes[archetype_id];
-        let name = def.name_pool[rng.index(def.name_pool.len())].clone();
+        // The pool is indexed structurally and resolved for display: which
+        // villager is drawn is generation, what they are called is text.
+        let name = catalogue
+            .strings
+            .get(&def.name_pool[rng.index(def.name_pool.len())])
+            .to_owned();
         let disposition = if hostile_index == Some(index) {
             Disposition::Hostile
         } else if rng.percent(50) {

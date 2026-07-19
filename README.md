@@ -87,9 +87,12 @@ rule to keep:
 > stays in TOML. `strings.csv` holds only strings that are rendered and never
 > read.
 
-NPC name pools are the clearest case — pool order is a generation input, so
-they stay in `npcs.toml`. Validation refuses content pointing at an id that
-does not resolve, and tests check the reverse: no row goes unreferenced.
+NPC name pools show how that plays out: the pools stay in `npcs.toml` because
+pool length and order are a generation input the RNG indexes, but they hold
+ids, so the names themselves are translatable. Which villager is drawn is
+generation; what they are called is text. Validation refuses content pointing
+at an id that does not resolve, and tests check the reverse: no row goes
+unreferenced.
 
 To re-run the extraction after adding prose fields to the schema, add them to
 the manifest in `pasm/tools/extract_strings.py` and run it. It refuses to run

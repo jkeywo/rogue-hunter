@@ -522,3 +522,49 @@ fn a_run_opens_with_its_hook_then_its_conditions() {
     // Why she came, then what she walked into, in axis order.
     assert_eq!(actual, expected);
 }
+
+#[test]
+fn renaming_a_villager_changes_the_name_and_nothing_else() {
+    // Name pools hold ids, so the RNG still indexes them structurally: which
+    // villager is drawn is generation, what they are called is text. This is
+    // the property that lets the whole table sit outside the fingerprint --
+    // rewrite or translate a name and the same valley comes back.
+    let sources = rh_content::embedded_sources();
+    let renamed = rh_content::Catalogue::from_sources_with_strings(
+        sources,
+        &rh_content::embedded_strings().replace("[Old Nan]", "[A Completely Different Person]"),
+    )
+    .expect("a catalogue with a renamed villager loads");
+
+    let mut saw_the_rename = false;
+    for seed in 0..24u64 {
+        let plain = rh_gen::generate(seed, &catalogue()).expect("world generates");
+        let other = rh_gen::generate(seed, &renamed).expect("world generates");
+
+        assert_eq!(
+            plain.world.npcs.len(),
+            other.world.npcs.len(),
+            "seed {seed}: the cast changed size"
+        );
+        for (a, b) in plain.world.npcs.iter().zip(&other.world.npcs) {
+            assert_eq!(a.archetype, b.archetype, "seed {seed}: a role moved");
+            assert_eq!(a.map, b.map, "seed {seed}: someone moved map");
+            assert_eq!(a.work, b.work, "seed {seed}: someone moved tile");
+            assert_eq!(a.disposition, b.disposition, "seed {seed}: a mood changed");
+            if a.name == "[Old Nan]" {
+                saw_the_rename = true;
+                assert_eq!(b.name, "[A Completely Different Person]");
+            } else {
+                assert_eq!(a.name, b.name, "seed {seed}: an unrelated name changed");
+            }
+        }
+        assert_eq!(
+            plain.world.villain.host, other.world.villain.host,
+            "seed {seed}: the villain took a different host"
+        );
+    }
+    assert!(
+        saw_the_rename,
+        "no seed drew the renamed villager, so this proved nothing"
+    );
+}

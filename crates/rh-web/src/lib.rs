@@ -142,7 +142,7 @@ impl WebClient {
                 set_html(
                     &document,
                     "fullscreen",
-                    &fullscreen_html(other, &view.status),
+                    &fullscreen_html(other, &view.status, &view.labels),
                 )?;
             }
         }
@@ -430,7 +430,7 @@ fn overlay_html(overlay: &OverlayView, labels: &PanelLabels) -> String {
     html
 }
 
-fn fullscreen_html(screen: &ScreenView, status: &str) -> String {
+fn fullscreen_html(screen: &ScreenView, status: &str, labels: &PanelLabels) -> String {
     match screen {
         ScreenView::Splash {
             title,
@@ -503,7 +503,10 @@ fn fullscreen_html(screen: &ScreenView, status: &str) -> String {
                     html.push_str(&format!("<p>{}</p>", escape(line)));
                 }
             }
-            html.push_str("</div></div><p class=\"hints\">arrows browse — Esc returns</p>");
+            html.push_str(&format!(
+                "</div></div><p class=\"hints\">{}</p>",
+                escape(&labels.list_hint)
+            ));
             html
         }
         ScreenView::CaseReport(report) => {

@@ -4,20 +4,20 @@
 
 # Names for the settled dead: grave markers and revenant identities.
 deceased_name_pool = [
-  "Aldous Crane",
-  "Goody Marsh",
-  "Nathaniel Pryor",
-  "Tamsin Vale",
-  "Ezekiel Thorn",
-  "Rosamund Leigh",
-  "Old Corwin",
-  "Prudence Ashby",
+  "npcs.deceased-name-pool.1",
+  "npcs.deceased-name-pool.2",
+  "npcs.deceased-name-pool.3",
+  "npcs.deceased-name-pool.4",
+  "npcs.deceased-name-pool.5",
+  "npcs.deceased-name-pool.6",
+  "npcs.deceased-name-pool.7",
+  "npcs.deceased-name-pool.8",
 ]
 
 [archetypes.priest]
 name = "npcs.archetypes.priest.name"
 glyph = "P"
-name_pool = ["Father Ambrose", "Father Caleb", "Parson Grey"]
+name_pool = ["npcs.archetypes.priest.name-pool.1", "npcs.archetypes.priest.name-pool.2", "npcs.archetypes.priest.name-pool.3"]
 work_slot = "church-altar"
 can_host_villain = true
 mystical = false
@@ -27,7 +27,7 @@ description = "npcs.archetypes.priest.description"
 [archetypes.blacksmith]
 name = "npcs.archetypes.blacksmith.name"
 glyph = "B"
-name_pool = ["Marta Reed", "Old Hew", "Goodman Tarn"]
+name_pool = ["npcs.archetypes.blacksmith.name-pool.1", "npcs.archetypes.blacksmith.name-pool.2", "npcs.archetypes.blacksmith.name-pool.3"]
 work_slot = "forge"
 can_host_villain = true
 mystical = false
@@ -37,7 +37,7 @@ description = "npcs.archetypes.blacksmith.description"
 [archetypes.innkeeper]
 name = "npcs.archetypes.innkeeper.name"
 glyph = "I"
-name_pool = ["Widow Hale", "Master Pell", "Goodwife Brandy"]
+name_pool = ["npcs.archetypes.innkeeper.name-pool.1", "npcs.archetypes.innkeeper.name-pool.2", "npcs.archetypes.innkeeper.name-pool.3"]
 work_slot = "inn-hearth"
 can_host_villain = true
 mystical = false
@@ -47,7 +47,7 @@ description = "npcs.archetypes.innkeeper.description"
 [archetypes.herbalist]
 name = "npcs.archetypes.herbalist.name"
 glyph = "H"
-name_pool = ["Mother Wren", "Sylvie of the Hedge", "Old Nan"]
+name_pool = ["npcs.archetypes.herbalist.name-pool.1", "npcs.archetypes.herbalist.name-pool.2", "npcs.archetypes.herbalist.name-pool.3"]
 work_slot = "market-stall"
 can_host_villain = false
 mystical = true
@@ -57,7 +57,7 @@ description = "npcs.archetypes.herbalist.description"
 [archetypes.gravedigger]
 name = "npcs.archetypes.gravedigger.name"
 glyph = "G"
-name_pool = ["Sexton Mould", "Digger Finch", "Quiet Tobias"]
+name_pool = ["npcs.archetypes.gravedigger.name-pool.1", "npcs.archetypes.gravedigger.name-pool.2", "npcs.archetypes.gravedigger.name-pool.3"]
 work_slot = "graveyard-gate"
 can_host_villain = true
 mystical = false
@@ -67,7 +67,7 @@ description = "npcs.archetypes.gravedigger.description"
 [archetypes.poacher]
 name = "npcs.archetypes.poacher.name"
 glyph = "O"
-name_pool = ["Wat Snare", "Bess Longstride", "Crooked Jem"]
+name_pool = ["npcs.archetypes.poacher.name-pool.1", "npcs.archetypes.poacher.name-pool.2", "npcs.archetypes.poacher.name-pool.3"]
 work_slot = "square"
 can_host_villain = true
 mystical = false

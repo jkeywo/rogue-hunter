@@ -310,7 +310,8 @@ impl<'a> Builder<'a> {
 
     fn pick_deceased(&mut self) -> String {
         let pool = &self.catalogue.npcs.deceased_name_pool;
-        pool[self.rng.index(pool.len())].clone()
+        let picked = self.rng.index(pool.len());
+        self.catalogue.strings.get(&pool[picked]).to_owned()
     }
 
     fn place_npcs(&mut self) -> Result<(), String> {

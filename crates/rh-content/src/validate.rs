@@ -992,6 +992,12 @@ pub fn referenced_ids(cat: &Catalogue) -> Vec<(String, &StringId)> {
             format!("npcs.archetypes.{key}.description"),
             &archetype.description,
         ));
+        for (index, id) in archetype.name_pool.iter().enumerate() {
+            ids.push((format!("npcs.archetypes.{key}.name_pool[{index}]"), id));
+        }
+    }
+    for (index, id) in cat.npcs.deceased_name_pool.iter().enumerate() {
+        ids.push((format!("npcs.deceased_name_pool[{index}]"), id));
     }
     for (key, secret) in &cat.npcs.secrets {
         ids.push((format!("npcs.secrets.{key}.name"), &secret.name));

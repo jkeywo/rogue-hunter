@@ -1294,7 +1294,17 @@ impl ClientSession {
             }
             if let Some(npc_id) = state.npc_at(&sim.world, map, point) {
                 let spec = sim.world.npc(npc_id);
-                parts.push(format!("{}, the {}", spec.name, spec.archetype));
+                let role = sim
+                    .catalogue
+                    .npcs
+                    .archetypes
+                    .get(&spec.archetype)
+                    .map(|def| sim.catalogue.strings.get(&def.name))
+                    .unwrap_or_default();
+                parts.push(sim.catalogue.strings.ui_fill(
+                    "ui.npc.name-and-role",
+                    &[("name", &spec.name), ("role", role)],
+                ));
                 // Leads that involve talking to this villager.
                 for opp in &sim.world.opportunities {
                     if opp.map == map

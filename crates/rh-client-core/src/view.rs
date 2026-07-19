@@ -65,6 +65,8 @@ pub struct PanelLabels {
     pub look_hint: String,
     /// Shown while a direction is awaited.
     pub direction_hint: String,
+    /// Footer on list screens.
+    pub list_hint: String,
     /// Footer on the case report.
     pub case_report_footer: String,
 }
@@ -83,6 +85,7 @@ impl PanelLabels {
             look_plain: strings.ui("ui.panel.look").to_owned(),
             look_hint: strings.ui("ui.hint.look").to_owned(),
             direction_hint: strings.ui("ui.hint.direction").to_owned(),
+            list_hint: strings.ui("ui.hint.list-nav").to_owned(),
             case_report_footer: strings.ui("ui.hint.case-report-footer").to_owned(),
         }
     }
@@ -781,8 +784,20 @@ pub(crate) fn relationship_entries(session: &ClientSession) -> Vec<(String, Stri
                 lines.push(link.discovered_text.clone());
             }
         }
+        // `spec.archetype` is a structural id; the label a player reads is the
+        // archetype's authored name, which is what the log line already uses.
+        let role = session
+            .catalogue
+            .npcs
+            .archetypes
+            .get(&spec.archetype)
+            .map(|def| session.catalogue.strings.get(&def.name))
+            .unwrap_or_default();
         entries.push((
-            format!("{}, the {}", spec.name, spec.archetype),
+            session.catalogue.strings.ui_fill(
+                "ui.npc.name-and-role",
+                &[("name", &spec.name), ("role", role)],
+            ),
             lines.join("\n"),
         ));
     }
