@@ -621,6 +621,18 @@ entities:
       summary: Clients map raw events onto a platform-neutral Key; what a key means is decided once, in intent_for_key, against the session's input mode - text entry, list navigation, or tactical. The action panel prints its key hints off the same table, and the persisted-save policy lives behind save_action, so the clients cannot drift apart at the keyboard or the save file.
       references: [semantic-command-boundary, terminal-client, web-client, visible-opportunity-affordances]
 
+  - component: action-economy
+    implementation:
+      status: confirmed
+      paths: [crates/rh-core/src/economy.rs]
+      tests: [cargo test -p rh-core, cargo test -p rh-gen]
+    core:
+      status: accepted
+      confidence: confirmed
+      title: One owner for what an action costs and restores
+      summary: The settlement-hostility surcharge on Social work and the clock's pool restores are priced in one module the sim executes and the planner budgets from, so certification prices exactly what play charges. The planner keeps its deliberately restricted operator set; what it reads here is the price of an operator, never the set. Craft interpretation stays two readings of one authored recipe, because the reagent rule lives in the requires_origin_reagent field and each side's code is representation, not knowledge.
+      references: [investigation-pools, social-action-costs, travel-clock, clue-graph-validator]
+
   - component: villain-combat-primitives
     implementation:
       status: confirmed

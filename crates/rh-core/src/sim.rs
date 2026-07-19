@@ -929,12 +929,11 @@ impl Sim {
                 }
             }
         }
-        // Pool cost, with the settlement-hostility surcharge on Social.
-        if let Some(pool) = spec.pool {
-            let mut cost = spec.cost;
-            if pool == PoolKind::Social && self.state.settlement_hostile {
-                cost += 1;
-            }
+        // Pool cost, priced by the shared economy (settlement-hostility
+        // surcharge included) so play charges what certification budgeted.
+        if let Some((pool, cost)) =
+            crate::economy::opportunity_cost(spec.pool, spec.cost, self.state.settlement_hostile)
+        {
             if self.state.hunter.pool(pool) < cost {
                 return Err(Rejection::PoolEmpty { pool, needed: cost });
             }
@@ -2099,11 +2098,14 @@ impl Sim {
             ),
         );
 
-        // Physical restores on every global-clock advance.
+        // What the clock restores is the economy's to say; the planner
+        // budgets from the same answer.
+        let restore = crate::economy::clock_restore(reason);
         let caps = &self.catalogue.hunter;
-        self.state.hunter.physical = (self.state.hunter.physical + 1).min(caps.physical_cap);
-        // Travel additionally restores every investigation pool.
-        if reason == ClockReason::Travel {
+        if restore.physical {
+            self.state.hunter.physical = (self.state.hunter.physical + 1).min(caps.physical_cap);
+        }
+        if restore.investigation_pools {
             self.state.hunter.lore = (self.state.hunter.lore + 1).min(caps.lore_cap);
             self.state.hunter.social = (self.state.hunter.social + 1).min(caps.social_cap);
             self.state.hunter.mystic = (self.state.hunter.mystic + 1).min(caps.mystic_cap);

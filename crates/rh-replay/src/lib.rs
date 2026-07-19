@@ -18,8 +18,10 @@ use serde::{Deserialize, Serialize};
 /// Replay format version. Share codes embed it; mismatches are rejected
 /// rather than misinterpreted, since any rules change invalidates old logs.
 /// Version 2 adds the selected hunter: routes are certified per hunter, so a
-/// seed alone no longer identifies a run.
-pub const REPLAY_VERSION: u8 = 2;
+/// seed alone no longer identifies a run. Version 3 prices travel's Mystic
+/// restore into certification (the planner had under-credited it), so which
+/// seeds certify can differ from version 2 worlds.
+pub const REPLAY_VERSION: u8 = 3;
 
 /// How far `new_from_viable_seed` will walk forward before giving up. Well
 /// above the observed rejection rate, so exhausting it means something is

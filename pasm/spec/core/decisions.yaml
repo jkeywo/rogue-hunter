@@ -489,6 +489,14 @@ entities:
       summary: How many identity proofs naming the quarry demands was the literal two written independently at nine sites across six crates - the sim's gate and its log twin, the autoplayer's readiness, the interact menu, the dossier, the planner's goal, and generation's final validation. It is now corroborating_proofs in balance.toml, per the standing rule that anything the rules branch on is authored tuning, and rh-core exposes one Corroboration reading - have, need, decisive - that every layer asks instead of counting for itself. Supply-side checks that look like the same two are not it and keep their own literals - two discriminating clues per axis and two placed discriminators are route-independence arithmetic, two disjoint routes each needing one, and say so in their messages.
       references: [naming-requires-a-discriminator, evidence-supports-rules-out, authored-content-catalogue, two-sources-per-origin-reagent]
 
+  - decision: sim-is-truth-for-the-economy
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Where planner and sim disagreed on a price, the sim was right
+      summary: The planner's travel restored Lore, Social and Physical but not Mystic, while the sim restores every pool per the spec - travel restores one point to every pool up to its cap. The consolidation adopts the sim's behaviour as truth, so the planner stops under-crediting a Mystic hunter's economy and certification may reach routes it used to refuse. Which seeds certify can therefore differ, and REPLAY_VERSION moves to 3 rather than letting a version 2 code replay against a world it was never certified for. The planner applies restores by adding below cap only, because it tracks the favour's over-cap Mystic point in the same field and a clamping restore would have silently destroyed it.
+      references: [investigation-pools, mystic-is-a-real-pool-not-only-a-favour, favour-single-point, share-code-format]
+
   - decision: viability-agreement-is-a-corpus-scan
     core:
       status: accepted

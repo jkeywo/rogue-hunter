@@ -1486,21 +1486,19 @@ impl ClientSession {
             if !near {
                 continue;
             }
-            let blocked = opp.pool.and_then(|pool| {
-                let mut cost = opp.cost;
-                if pool == rh_content::PoolKind::Social && state.settlement_hostile {
-                    cost += 1;
-                }
-                (state.hunter.pool(pool) < cost).then(|| {
-                    sim.catalogue.strings.ui_fill(
-                        "ui.blocked.needs-pool",
-                        &[
-                            ("cost", &cost.to_string()),
-                            ("pool", crate::view::pool_name(&sim.catalogue.strings, pool)),
-                        ],
-                    )
-                })
-            });
+            let blocked =
+                rh_core::economy::opportunity_cost(opp.pool, opp.cost, state.settlement_hostile)
+                    .and_then(|(pool, cost)| {
+                        (state.hunter.pool(pool) < cost).then(|| {
+                            sim.catalogue.strings.ui_fill(
+                                "ui.blocked.needs-pool",
+                                &[
+                                    ("cost", &cost.to_string()),
+                                    ("pool", crate::view::pool_name(&sim.catalogue.strings, pool)),
+                                ],
+                            )
+                        })
+                    });
             let cost_note = match opp.pool {
                 Some(pool) => sim.catalogue.strings.ui_fill(
                     "ui.action.cost-suffix",

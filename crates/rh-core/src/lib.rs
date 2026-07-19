@@ -8,6 +8,7 @@
 pub mod ai;
 pub mod combat;
 pub mod command;
+pub mod economy;
 pub mod events;
 pub mod fov;
 pub mod geometry;

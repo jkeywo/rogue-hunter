@@ -611,11 +611,10 @@ fn build_ctx<'a>(
             pool: spec.pool,
             // An unwelcoming valley taxes consequential Social work, and the
             // planner has to certify against that or it would promise routes
-            // the run cannot afford.
-            cost: spec.cost
-                + u8::from(
-                    social_surcharge && spec.pool == Some(PoolKind::Social) && spec.cost > 0,
-                ),
+            // the run cannot afford. The price comes from the same economy
+            // the sim charges by.
+            cost: rh_core::economy::opportunity_cost(spec.pool, spec.cost, social_surcharge)
+                .map_or(spec.cost, |(_, cost)| cost),
             obscurity: spec.obscurity,
             grants,
             revealed_by: None,
@@ -1153,6 +1152,29 @@ fn candidate_actions(ctx: &Ctx, cfg: &PlannerConfig, state: &PState) -> Vec<Acti
     actions
 }
 
+/// The clock's restores, applied to the planner's tracked pools. Which pools
+/// restore is the economy's answer; adding below cap only is this side's
+/// care — a favour point held above the Mystic cap must never be clamped
+/// away by a restore.
+fn apply_clock_restore(next: &mut PState, ctx: &Ctx, reason: rh_core::sim::ClockReason) {
+    let caps = &ctx.catalogue.hunter;
+    let restore = rh_core::economy::clock_restore(reason);
+    if restore.physical && next.physical < caps.physical_cap {
+        next.physical += 1;
+    }
+    if restore.investigation_pools {
+        if next.lore < caps.lore_cap {
+            next.lore += 1;
+        }
+        if next.social < caps.social_cap {
+            next.social += 1;
+        }
+        if next.mystic < caps.mystic_cap {
+            next.mystic += 1;
+        }
+    }
+}
+
 fn apply_action(ctx: &Ctx, state: &PState, action: &Action) -> (PState, String, RouteAction) {
     let mut next = state.clone();
     match action {
@@ -1216,8 +1238,7 @@ fn apply_action(ctx: &Ctx, state: &PState, action: &Action) -> (PState, String, 
             next.consecrated = true;
             next.turn += 1;
             next.min_op = 0;
-            let caps = &ctx.catalogue.hunter;
-            next.physical = (next.physical + 1).min(caps.physical_cap);
+            apply_clock_restore(&mut next, ctx, rh_core::sim::ClockReason::CostlyAction);
             (
                 next,
                 ctx.catalogue.strings.ui("ui.route.consecrate").to_owned(),
@@ -1230,10 +1251,7 @@ fn apply_action(ctx: &Ctx, state: &PState, action: &Action) -> (PState, String, 
             next.min_op = 0;
             next.legs += 1;
             next.effort += 2;
-            let caps = &ctx.catalogue.hunter;
-            next.lore = (next.lore + 1).min(caps.lore_cap);
-            next.social = (next.social + 1).min(caps.social_cap);
-            next.physical = (next.physical + 1).min(caps.physical_cap);
+            apply_clock_restore(&mut next, ctx, rh_core::sim::ClockReason::Travel);
             (
                 next,
                 ctx.catalogue.strings.ui_fill(

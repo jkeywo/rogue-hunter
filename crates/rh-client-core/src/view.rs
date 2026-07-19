@@ -900,11 +900,9 @@ pub(crate) fn dossier_entries(session: &ClientSession) -> Vec<(String, String)> 
             "ui.dossier.leads.entry",
             &[("name", &opp.name), ("place", place)],
         );
-        if let Some(pool) = opp.pool {
-            let mut cost = opp.cost;
-            if pool == rh_content::PoolKind::Social && state.settlement_hostile {
-                cost += 1;
-            }
+        if let Some((pool, cost)) =
+            rh_core::economy::opportunity_cost(opp.pool, opp.cost, state.settlement_hostile)
+        {
             line.push_str(&strings.ui_fill(
                 "ui.dossier.leads.cost",
                 &[
