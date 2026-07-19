@@ -522,6 +522,19 @@ fn the_case_report_marks_the_certified_routes_against_what_was_done() {
                 "a defeat should say what was short, not only that it went badly"
             );
             assert!(!report.routes.is_empty(), "the routes were certified");
+            // The report used to build these three straight out of StringIds,
+            // so it told players the villain was "villains.werewolf.name".
+            let strings = client.catalogue.strings.clone();
+            for field in [&report.villain, &report.origin, &report.scheme] {
+                assert!(
+                    !strings.ids().any(|id| field.contains(id)),
+                    "the report shows a raw string id: {field:?}"
+                );
+                assert!(
+                    !field.contains("!missing"),
+                    "the report failed to resolve an id: {field:?}"
+                );
+            }
             for route in &report.routes {
                 // Every step line carries a mark saying whether it was done.
                 for line in route.lines().skip(1) {
@@ -684,4 +697,60 @@ fn splash_text_comes_from_the_string_table() {
             );
         }
     }
+}
+
+#[test]
+fn an_opened_grave_reports_what_it_held_on_inspect() {
+    // The log announces a grave's contents when it is opened, but that
+    // scrolls away. Inspect has to be able to answer the question again for
+    // a player re-walking a graveyard -- which is what grave_contents_name
+    // was written for and never wired to.
+    use rh_core::command::Command;
+    use rh_core::world::FeatureKind;
+
+    let mut client = run_on_seed("42");
+    let run = client.run.as_mut().expect("a run is under way");
+    let map = run.sim.state.current_map;
+    let grave = run
+        .sim
+        .world
+        .map(map)
+        .features
+        .iter()
+        .find(|f| matches!(f.kind, FeatureKind::Grave { .. }))
+        .map(|f| (f.id, f.at))
+        .expect("the settlement has graves");
+
+    // Unopened, inspect gives the name and nothing about the contents.
+    let before = client.inspect(grave.1).expect("the grave is inspectable");
+    assert!(
+        !before.contains("(opened)"),
+        "an unopened grave must not read as opened: {before:?}"
+    );
+
+    // Stand on it, pay the Physical point, and dig.
+    let run = client.run.as_mut().expect("a run is under way");
+    run.sim.state.hunter.pos = grave.1;
+    run.sim.state.hunter.physical = run.sim.catalogue.hunter.physical_cap.max(1);
+    run.apply(Command::OpenGrave(grave.0))
+        .expect("standing on a grave with a Physical point, it opens");
+
+    let after = client.inspect(grave.1).expect("the grave is inspectable");
+    assert!(
+        after.contains("(opened)"),
+        "an opened grave must say so: {after:?}"
+    );
+    let contents = [
+        "an empty grave",
+        "an honest burial",
+        "the villain's resting place",
+    ];
+    assert!(
+        contents.iter().any(|c| after.contains(c)),
+        "an opened grave must name what it held, got {after:?}"
+    );
+    assert!(
+        !after.contains("!missing"),
+        "the inspect line must resolve every id: {after:?}"
+    );
 }

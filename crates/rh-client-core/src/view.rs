@@ -1231,9 +1231,27 @@ fn build_case_report(session: &ClientSession) -> CaseReportView {
 
     CaseReportView {
         outcome,
-        villain: format!("{} — {}", villain_def.name, sim.world.villain.title),
-        origin: format!("{}: {}", origin.name, origin.description),
-        scheme: format!("{}: {}", scheme.name, scheme.description),
+        villain: strings.ui_fill(
+            "ui.report.villain",
+            &[
+                ("name", strings.get(&villain_def.name)),
+                ("title", &sim.world.villain.title),
+            ],
+        ),
+        origin: strings.ui_fill(
+            "ui.report.axis",
+            &[
+                ("name", strings.get(&origin.name)),
+                ("description", strings.get(&origin.description)),
+            ],
+        ),
+        scheme: strings.ui_fill(
+            "ui.report.axis",
+            &[
+                ("name", strings.get(&scheme.name)),
+                ("description", strings.get(&scheme.description)),
+            ],
+        ),
         hidden_clues,
         tier: strings.ui_fill(
             "ui.report.tier",

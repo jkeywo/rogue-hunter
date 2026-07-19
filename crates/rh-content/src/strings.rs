@@ -33,11 +33,10 @@ impl StringId {
     }
 }
 
-impl std::fmt::Display for StringId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.0)
-    }
-}
+// Deliberately no `Display`. An id is a lookup key, and formatting one into a
+// player-facing string is always a bug -- the planner did exactly that and put
+// "Craft: recipes.silver-bullet.name" in front of players. Without the impl
+// that stops compiling. Diagnostics use `as_str`.
 
 impl From<&str> for StringId {
     fn from(value: &str) -> Self {
@@ -114,7 +113,7 @@ impl StringTable {
     /// the sentinel, so this only ever fires on a code-side typo.
     pub fn get(&self, id: &StringId) -> &str {
         self.try_get(id.as_str()).unwrap_or_else(|| {
-            debug_assert!(false, "missing string id '{id}'");
+            debug_assert!(false, "missing string id '{}'", id.as_str());
             "[!missing]"
         })
     }

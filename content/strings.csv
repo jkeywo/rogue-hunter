@@ -299,6 +299,7 @@ items.wronged-earth.description,"Item description, shown when inspecting it in t
 items.wronged-earth.name,"Item name, shown in the pack and in loot messages",[Wronged Earth]
 log.accusation.correct,Log line when your two proofs name the quarry correctly,[The proofs agree. Your quarry is {quarry}. Now you may hunt.]
 log.clue.new-lead,Log line when a new lead opens up,[New lead: {lead}.]
+log.clue.origin-settled,"Log line when the case's origin is proven, naming it",[That settles how this began: {origin}. Any counter you make must be quenched accordingly.]
 log.clue.resting-place,Log line when you learn where the villain rests,[You know where the thing rests.]
 log.combat.melee-miss,Log line when your melee attack misses,[Your blow goes wide.]
 log.combat.ranged-miss,Log line when your shot misses,[The shot cracks past its head.]
@@ -322,6 +323,7 @@ log.manoeuvre.sprint,Log line when you sprint,[You sprint.]
 log.outcome.death-costs-a-day,Log line when you die before the final night and lose a day,"[Darkness takes you... but not for good. You wake in the settlement, a day poorer, your effects intact.]"
 log.outcome.final-death,Log line when you die on the final night,"[You fall, and this time there is no morning. The valley belongs to the dark now.]"
 log.rite.consecration,Log line when you complete the consecration rite,[You spend the evening at the rite. By its end the church ground is warded against the risen dead.]
+log.run.arrive,Opening line of a run: the hunter reaches the valley,[{hunter} arrives in {place}.]
 log.signature.killing-blow,Log line when you line up a killing blow,[You measure the killing blow.]
 log.signature.snare,Log line when you set a snare,"[You rig a snare, quick and quiet.]"
 log.social.favour,Log line when an NPC grants you a mystic favour,"[A favour granted: for a while, the other world will answer you.]"
@@ -334,6 +336,10 @@ log.travel.arrive,Log line on arriving somewhere new,[You arrive at {place}.]
 log.travel.depart,Log line when you set off for another place,[You take the road toward {place}.]
 log.travel.flee,Log line when you break off a fight to travel,[You break away and flee toward {place}.]
 log.turn.wait,Log line when you pass a turn deliberately,"[You wait, watching.]"
+log.villain.final-night-drops-pretence,Log line on the sixth night when the disguised villain drops its cover,[The sixth night falls. The {villain} drops all pretence — it has come for you.]
+log.villain.final-night-hunts,Log line on the sixth night when the villain comes for the hunter,[The sixth night falls. The {villain} is done waiting — it has come for you.]
+log.villain.grave-opened,Log line when the dormant villain is found whole in its grave,"[The coffin lid comes away — and the thing within is whole. {villain} lies before you, dreaming its errand.]"
+log.villain.unmasked,Log line when a villain hiding as a villager is exposed,[{name}'s face comes apart like a torn mask. The {villain} stands where your neighbour stood!]
 maps.outlying-abbey.description,"Map description, shown on the travel screen","[An abbey the river took back. Roofless walls, a flooded cloister, and a crypt that has stayed dry rather longer than it should have.]"
 maps.outlying-abbey.name,"Map name, shown on the travel screen and status panel",[Saint Ceolwulf's]
 maps.outlying-abbey.slots.campsite.label,"Landmark name, shown when inspecting this spot on the map",[the campsite]
@@ -582,6 +588,7 @@ schemes.the-calling.preempt.reveal,Journal text once the scheme pre-emption is t
 ui.action.aim,Action panel: aim so the next shot cannot miss,[Aim (sure next shot)]
 ui.action.binding-charm,Action panel: press a binding charm on an adjacent revenant,[Press Binding Charm]
 ui.action.consecrate,"Menu entry: consecrate the ground, costing a day",[Perform the consecration rite (spends a day)]
+ui.action.craft,Action-menu label for crafting a recipe at a workstation,[Craft: {recipe}]
 ui.action.dossier,Action-panel row: open the case dossier,[The case]
 ui.action.draught,Action panel: drink a healing draught,[Drink Wound Draught]
 ui.action.faces,Action panel: open the faces and relationships screen,[Faces & ties]
@@ -656,6 +663,7 @@ ui.dossier.title,Title of the case dossier screen,[The Case So Far]
 ui.error.enter-number,Error on the seed-entry screen when the input is not a number,[Enter a number.]
 ui.error.generation-failed,Error when a run could not be generated,[Generation failed: {error}]
 ui.event-log.title,Title of the event log screen,[The Record]
+ui.feature.opened-grave,"Inspect line for a grave the player has already opened, naming what it held",[{name} (opened): {contents}]
 ui.grave.empty,Inspect line for an empty grave,[an empty grave]
 ui.grave.mundane,Inspect line for an ordinary grave,[an honest burial]
 ui.grave.villain,Inspect line for the grave the villain rests in,[the villain's resting place]
@@ -672,6 +680,7 @@ ui.hint.list-nav,Footer on list screens telling the player how to navigate,[arro
 ui.hint.look,Look panel hint shown when no tile is targeted,"[Hover a tile, or press ; to look around.]"
 ui.hunter-select.pools,Stat line on the hunter-selection screen,[Health {health}  Lore {lore}  Social {social}  Mystic {mystic}  Physical {physical}]
 ui.hunter-select.title,Title of the hunter-selection screen,[Who Takes the Case]
+ui.inspect.hunter,Inspect line when the player points at their own tile,[{hunter} (you)]
 ui.inspect.snare,Inspect line for your own snare,"[Your snare, set and waiting]"
 ui.inspect.unexplored,Inspect line for a tile never seen,[Unexplored darkness.]
 ui.keys.abilities,"Splash screen key-bindings table, action column",[Aim / Power Attack / Sprint (stamina)]
@@ -727,6 +736,7 @@ ui.relationships.empty.title,"Relationships screen, shown before meeting anyone"
 ui.relationships.title,Title of the NPC relationships screen,[Faces and Entanglements]
 ui.replay-entry.prompt,Instruction on the share-code entry screen,"[Paste an RH1- share code, then confirm.]"
 ui.replay-entry.title,Title of the share-code entry screen,[Paste Replay Code]
+ui.report.axis,"Case report: an origin or scheme line, its name and what it means",[{name}: {description}]
 ui.report.consecrated,Case-report line when the church ground had been warded,[The church ground was warded.]
 ui.report.origin-known,Case-report line when the origin had been pinned,[You had pinned the origin.]
 ui.report.origin-unknown,Case-report line when the origin was never pinned,[You never pinned the origin.]
@@ -737,6 +747,7 @@ ui.report.step-neutral,Marker on a certified route step that resolves no lead,[-
 ui.report.step-taken,Marker on a certified route step the hunter actually did,[done]
 ui.report.tier,Case-report line giving the tier the quarry reached,[The quarry reached tier {tier}.]
 ui.report.unconsecrated,Case-report line when the church ground was never warded,[The church ground was never warded.]
+ui.report.villain,"Case report: the villain line, its name and the title it wore",[{name} — {title}]
 ui.report.weakness-held,Case-report line when the hunter held the thing that bites,[You were carrying {item}.]
 ui.report.weakness-missing,Case-report line when the hunter lacked the thing that bites,[You never carried {item}.]
 ui.seed-entry.prompt,Instruction on the seed-entry screen,"[Type a number, then confirm.]"
@@ -762,6 +773,8 @@ ui.status.no-target-there,Status line when clicking a tile with nothing to shoot
 ui.status.nothing-here,Status line when interacting with an empty tile,[Nothing here calls for attention.]
 ui.status.nothing-to-shoot,Status line when firing with no visible target,[Nothing in sight to shoot.]
 ui.status.pools,Status panel: the four investigation pools and their caps,[Lore {lore}/{lore_cap}  Social {social}/{social_cap}  Mystic {mystic}  Physical {physical}/{physical_cap}]
+ui.status.run-started,Status line when a run begins on the seed the player asked for,[{hunter}. Seed {seed}.]
+ui.status.run-started-substitute,"Status line when the requested seed had no fair case, so a nearby seed was used instead",[{hunter}. Seed {seed} had no case for her; seed {used}.]
 ui.status.stamina,Status panel: current and maximum stamina,[Stamina {current}/{max}]
 ui.status.walk-arrived,Status line when a walk reaches where it was going,[You arrive.]
 ui.status.walk-blocked,Status line when no path to the marked tile exists,[There is no way through to there.]

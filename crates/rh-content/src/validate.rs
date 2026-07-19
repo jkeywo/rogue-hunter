@@ -376,10 +376,10 @@ fn item_sources(cat: &Catalogue, item: &str) -> usize {
 /// that ran out.
 fn check_counter_ingredients(cat: &Catalogue, issues: &mut Vec<String>) {
     for (villain_id, villain) in &cat.villains {
-        let Some(recipe) = cat
+        let Some((recipe_id, recipe)) = cat
             .recipes
-            .values()
-            .find(|recipe| recipe.output == villain.weakness_item)
+            .iter()
+            .find(|(_, recipe)| recipe.output == villain.weakness_item)
         else {
             continue;
         };
@@ -387,10 +387,9 @@ fn check_counter_ingredients(cat: &Catalogue, issues: &mut Vec<String>) {
             let sources = item_sources(cat, input);
             if sources < 2 {
                 issues.push(format!(
-                    "recipes: '{}' is the only counter to '{villain_id}' but its ingredient \
-                     '{input}' has {sources} source(s); it needs at least 2 so two independent \
-                     routes can each craft the counter",
-                    recipe.name
+                    "recipes: '{recipe_id}' is the only counter to '{villain_id}' but its \
+                     ingredient '{input}' has {sources} source(s); it needs at least 2 so two \
+                     independent routes can each craft the counter"
                 ));
             }
         }
@@ -1059,7 +1058,8 @@ fn check_strings(cat: &Catalogue, issues: &mut Vec<String>) {
     for (label, id) in referenced_ids(cat) {
         if cat.strings.try_get(id.as_str()).is_none() {
             issues.push(format!(
-                "strings: {label} references unknown string id '{id}'"
+                "strings: {label} references unknown string id '{}'",
+                id.as_str()
             ));
         }
     }

@@ -443,7 +443,12 @@ impl ClientSession {
     fn start_run(&mut self, seed: u64, hunter: &str) {
         match RunSession::new_from_viable_seed(seed, self.catalogue.clone(), hunter) {
             Ok((run, used)) => {
-                let name = run.sim.catalogue.hunter.name.clone();
+                let name = run
+                    .sim
+                    .catalogue
+                    .strings
+                    .get(&run.sim.catalogue.hunter.name)
+                    .to_owned();
                 self.run = Some(run);
                 self.modal = None;
                 self.look_cursor = None;
@@ -453,9 +458,19 @@ impl ClientSession {
                 // hunter: the player asked for a specific world and did not
                 // get it, which they should hear from us rather than notice.
                 self.status = if used == seed {
-                    format!("{name}. Seed {seed}.")
+                    self.catalogue.strings.ui_fill(
+                        "ui.status.run-started",
+                        &[("hunter", &name), ("seed", &seed.to_string())],
+                    )
                 } else {
-                    format!("{name}. Seed {seed} had no case for her; seed {used}.")
+                    self.catalogue.strings.ui_fill(
+                        "ui.status.run-started-substitute",
+                        &[
+                            ("hunter", &name),
+                            ("seed", &seed.to_string()),
+                            ("used", &used.to_string()),
+                        ],
+                    )
                 };
             }
             Err(error) => {
@@ -1426,8 +1441,7 @@ impl ClientSession {
 
         // Graves can be opened with muscle.
         for feature in &sim.world.map(map).features {
-            if let FeatureKind::Grave { contents } = feature.kind {
-                let _ = contents;
+            if let FeatureKind::Grave { .. } = feature.kind {
                 if hunter == feature.at || hunter.is_adjacent(feature.at) {
                     let blocked = if state.opened_graves.contains(&feature.id) {
                         Some(
@@ -1519,7 +1533,10 @@ impl ClientSession {
                 let blocked =
                     (!missing.is_empty()).then(|| format!("Missing: {}.", missing.join(", ")));
                 items.push(MenuItem {
-                    label: format!("Craft: {}", recipe.name),
+                    label: sim.catalogue.strings.ui_fill(
+                        "ui.action.craft",
+                        &[("recipe", sim.catalogue.strings.get(&recipe.name))],
+                    ),
                     blocked,
                     action: MenuAction::Do(Command::Craft {
                         recipe: recipe_id.clone(),
@@ -1693,7 +1710,13 @@ impl ClientSession {
         }
         let mut parts: Vec<String> = Vec::new();
         if point == state.hunter.pos {
-            parts.push(format!("{} (you)", sim.catalogue.hunter.name));
+            parts.push(sim.catalogue.strings.ui_fill(
+                "ui.inspect.hunter",
+                &[(
+                    "hunter",
+                    sim.catalogue.strings.get(&sim.catalogue.hunter.name),
+                )],
+            ));
         }
         if visible {
             if let Some(actor) = state.actor_at(map, point) {
@@ -1736,13 +1759,27 @@ impl ClientSession {
             }
         }
         if let Some(feature) = sim.world.map(map).feature_at(point) {
-            let opened = matches!(feature.kind, FeatureKind::Grave { .. })
-                && state.opened_graves.contains(&feature.id);
-            if opened {
-                parts.push(format!("{} (opened)", feature.name));
-            } else {
-                parts.push(feature.name.clone());
-            }
+            let strings = &sim.catalogue.strings;
+            // A grave's contents are secret until it is opened. Once it has
+            // been, say so here as well as in the log: the log line scrolls
+            // away, and a player walking a graveyard needs to be able to
+            // re-check which one held nothing.
+            let opened_grave = match feature.kind {
+                FeatureKind::Grave { contents } if state.opened_graves.contains(&feature.id) => {
+                    Some(contents)
+                }
+                _ => None,
+            };
+            parts.push(match opened_grave {
+                Some(contents) => strings.ui_fill(
+                    "ui.feature.opened-grave",
+                    &[
+                        ("name", &feature.name),
+                        ("contents", grave_contents_name(strings, contents)),
+                    ],
+                ),
+                None => feature.name.clone(),
+            });
         }
         for opp in &sim.world.opportunities {
             if opp.map == map
@@ -1781,7 +1818,10 @@ impl ClientSession {
     }
 }
 
-/// A grave's contents are secret until opened; used by the case report.
+/// What an opened grave held, for the inspect line.
+///
+/// A grave's contents are secret until it is opened, so callers must check
+/// `opened_graves` first.
 pub fn grave_contents_name(strings: &rh_content::StringTable, contents: GraveContents) -> &str {
     match contents {
         GraveContents::Empty => strings.ui("ui.grave.empty"),

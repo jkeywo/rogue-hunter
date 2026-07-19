@@ -1197,7 +1197,11 @@ fn apply_action(
             if let Some(index) = TRACKED.iter().position(|tracked| *tracked == recipe.output) {
                 next.items[index] = (next.items[index] + 1).min(ITEM_CAP[index]);
             }
-            (next, format!("Craft: {}", recipe.name), None)
+            (
+                next,
+                format!("Craft: {}", ctx.catalogue.strings.get(&recipe.name)),
+                None,
+            )
         }
         Action::Consecrate => {
             next.consecrated = true;

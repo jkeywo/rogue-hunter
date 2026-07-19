@@ -44,14 +44,17 @@ impl Sim {
             state,
         };
         sim.apply_opening();
-        sim.log(
-            EventKind::System,
-            format!(
-                "{} arrives in {}.",
-                sim.catalogue.hunter.name,
-                sim.world.map(sim.state.current_map).name
-            ),
+        let arrival = sim.catalogue.strings.ui_fill(
+            "log.run.arrive",
+            &[
+                (
+                    "hunter",
+                    sim.catalogue.strings.get(&sim.catalogue.hunter.name),
+                ),
+                ("place", &sim.world.map(sim.state.current_map).name),
+            ],
         );
+        sim.log(EventKind::System, arrival);
         // Quietly: the opening prose is what turn zero is for.
         sim.refresh_senses_quietly();
         sim
@@ -786,10 +789,9 @@ impl Sim {
                     let origin = &self.catalogue.origins[&self.world.villain.origin];
                     self.log(
                         EventKind::Clue,
-                        format!(
-                            "That settles how this began: {}. Any counter you make must be \
-                             quenched accordingly.",
-                            origin.name
+                        self.catalogue.strings.ui_fill(
+                            "log.clue.origin-settled",
+                            &[("origin", self.catalogue.strings.get(&origin.name))],
                         ),
                     );
                 }
@@ -1439,9 +1441,9 @@ impl Sim {
         self.state.villain_location_known = true;
         self.log(
             EventKind::Telegraph,
-            format!(
-                "The coffin lid comes away — and the thing within is whole. {} lies before you, dreaming its errand.",
-                def.name
+            self.catalogue.strings.ui_fill(
+                "log.villain.grave-opened",
+                &[("villain", self.catalogue.strings.get(&def.name))],
             ),
         );
     }
@@ -1501,9 +1503,12 @@ impl Sim {
         self.state.villain_location_known = true;
         self.log(
             EventKind::Telegraph,
-            format!(
-                "{name}'s face comes apart like a torn mask. The {} stands where your neighbour stood!",
-                def.name
+            self.catalogue.strings.ui_fill(
+                "log.villain.unmasked",
+                &[
+                    ("name", &name),
+                    ("villain", self.catalogue.strings.get(&def.name)),
+                ],
             ),
         );
     }
@@ -1978,9 +1983,9 @@ impl Sim {
                 }
                 self.log(
                     EventKind::Clock,
-                    format!(
-                        "The sixth night falls. The {} is done waiting — it has come for you.",
-                        def.name
+                    self.catalogue.strings.ui_fill(
+                        "log.villain.final-night-hunts",
+                        &[("villain", self.catalogue.strings.get(&def.name))],
                     ),
                 );
                 return;
@@ -2006,9 +2011,9 @@ impl Sim {
         }
         self.log(
             EventKind::Clock,
-            format!(
-                "The sixth night falls. The {} drops all pretence — it has come for you.",
-                def.name
+            self.catalogue.strings.ui_fill(
+                "log.villain.final-night-drops-pretence",
+                &[("villain", self.catalogue.strings.get(&def.name))],
             ),
         );
     }

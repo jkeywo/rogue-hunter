@@ -212,7 +212,12 @@ impl Bot {
                 .catalogue
                 .recipes
                 .iter()
-                .find(|(_, def)| description.ends_with(def.name.as_str()))
+                // The description carries the recipe's resolved name, so the
+                // match has to resolve too -- comparing against the id worked
+                // only while the planner was leaking ids into the text.
+                .find(|(_, def)| {
+                    description.ends_with(session.sim.catalogue.strings.get(&def.name))
+                })
                 .map(|(id, _)| id.clone());
             match recipe {
                 Some(recipe) => {

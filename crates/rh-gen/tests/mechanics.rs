@@ -568,3 +568,29 @@ fn renaming_a_villager_changes_the_name_and_nothing_else() {
         "no seed drew the renamed villager, so this proved nothing"
     );
 }
+
+#[test]
+fn no_route_step_shows_the_player_a_raw_string_id() {
+    // The planner built "Craft: {}" straight from a StringId, so the case
+    // report told players to craft "recipes.silver-bullet.name". Removing
+    // Display from StringId stops that at compile time; this catches any path
+    // that reintroduces it through as_str(). Authored prose never contains a
+    // bare id, and every id in the table is dotted and lowercase.
+    let catalogue = catalogue();
+    for seed in 0..32u64 {
+        let Ok(generated) = rh_gen::generate(seed, &catalogue) else {
+            continue;
+        };
+        for route in &generated.world.certified_routes {
+            for step in &route.steps {
+                for id in catalogue.strings.ids() {
+                    assert!(
+                        !step.description.contains(id),
+                        "seed {seed}: route step leaks the string id '{id}': {:?}",
+                        step.description
+                    );
+                }
+            }
+        }
+    }
+}
