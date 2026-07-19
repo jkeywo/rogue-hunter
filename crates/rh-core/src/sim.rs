@@ -52,7 +52,8 @@ impl Sim {
                 sim.world.map(sim.state.current_map).name
             ),
         );
-        sim.refresh_senses();
+        // Quietly: the opening prose is what turn zero is for.
+        sim.refresh_senses_quietly();
         sim
     }
 
@@ -1278,6 +1279,21 @@ impl Sim {
     }
 
     pub(crate) fn refresh_senses(&mut self) {
+        self.refresh_senses_announcing(true);
+    }
+
+    /// Sense the world without narrating what is found.
+    ///
+    /// Used once, at the start of a run: the opening prose is the only thing
+    /// worth reading at turn zero, and a dozen "something worth a closer look"
+    /// lines would push it off the log before the first frame is drawn. The
+    /// map already glows where those opportunities are, so nothing is lost by
+    /// staying quiet about them.
+    pub(crate) fn refresh_senses_quietly(&mut self) {
+        self.refresh_senses_announcing(false);
+    }
+
+    fn refresh_senses_announcing(&mut self, announce: bool) {
         let radius = self
             .catalogue
             .balance
@@ -1287,11 +1303,11 @@ impl Sim {
             .saturating_sub(self.state.sight_penalty)
             .max(1);
         fov::refresh_visibility(&mut self.state, &self.world, radius);
-        self.discovery_pass();
+        self.discovery_pass(announce);
     }
 
     /// Discover sight-based opportunities and meet visible NPCs.
-    fn discovery_pass(&mut self) {
+    fn discovery_pass(&mut self, announce: bool) {
         let map = self.state.current_map;
         // Meet NPCs the hunter can currently see.
         let met: Vec<NpcId> = self
@@ -1310,6 +1326,9 @@ impl Sim {
             .collect();
         for npc in met {
             self.state.met_npcs.insert(npc);
+            if !announce {
+                continue;
+            }
             let spec = self.world.npc(npc);
             let archetype = self
                 .catalogue
@@ -1351,6 +1370,9 @@ impl Sim {
             .collect();
         for (id, name) in discovered {
             self.state.discovered.insert(id);
+            if !announce {
+                continue;
+            }
             self.log(
                 EventKind::Clue,
                 self.catalogue
