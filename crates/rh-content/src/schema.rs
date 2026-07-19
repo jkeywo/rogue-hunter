@@ -485,6 +485,10 @@ pub struct ClueTemplate {
     pub pool: PoolKind,
     /// Site kind where the generator may place this clue.
     pub site: SiteKind,
+    /// Which church slot to anchor to. Required when `site` is `Church`,
+    /// meaningless otherwise; `validate` enforces both.
+    #[serde(default)]
+    pub church_slot: Option<ChurchSlot>,
     /// 0 = obvious .. 3 = niche. Fallback routes prefer low totals.
     pub obscurity: u8,
     /// Items granted directly on resolution (weakness clues that hand over
@@ -602,6 +606,26 @@ pub enum SiteKind {
     Wilds,
     OutlyingSite,
     Workstation,
+}
+
+/// Which church slot a `Church`-site clue anchors to. Authored explicitly:
+/// the generator must never infer placement from display prose, because that
+/// text is localised and would silently move the world when it changes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ChurchSlot {
+    Candles,
+    Records,
+}
+
+impl ChurchSlot {
+    /// Map slot id this anchors to.
+    pub fn slot_id(self) -> &'static str {
+        match self {
+            Self::Candles => "church-candles",
+            Self::Records => "church-records",
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -754,6 +778,10 @@ pub struct SlotDef {
     pub id: String,
     pub kind: SiteKind,
     pub at: Coord,
+    /// Display name for a landmark placed here. Authored rather than derived
+    /// from `id`, so the structural id stays free to change and the prose
+    /// stays free to be rewritten or translated.
+    pub label: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

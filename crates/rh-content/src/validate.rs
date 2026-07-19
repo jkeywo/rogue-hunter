@@ -448,6 +448,22 @@ fn check_clues(cat: &Catalogue, issues: &mut Vec<String>) {
         }
     };
     for (id, clue) in &cat.clues {
+        // Church clues anchor to an authored slot. The generator has no
+        // fallback, so a missing or stray declaration is a load-time error
+        // rather than a surprise at world-build time.
+        match (clue.site, clue.church_slot) {
+            (SiteKind::Church, None) => {
+                issues.push(format!(
+                    "clues: '{id}' is a church clue without a church_slot"
+                ));
+            }
+            (site, Some(_)) if site != SiteKind::Church => {
+                issues.push(format!(
+                    "clues: '{id}' declares a church_slot but its site is {site:?}"
+                ));
+            }
+            _ => {}
+        }
         // Cross-axis scoping filters must name real values.
         for (label, list, known) in [
             (

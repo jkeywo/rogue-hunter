@@ -43,81 +43,97 @@ rows = [
 id = "manor-hall"
 kind = "outlying-site"
 at = [17, 5]
+label = "the manor hall"
 
 [[slots]]
 id = "manor-study"
 kind = "outlying-site"
 at = [14, 9]
+label = "the manor study"
 
 [[slots]]
 id = "manor-cellar"
 kind = "outlying-site"
 at = [22, 9]
+label = "the manor cellar"
 
 [[slots]]
 id = "well"
 kind = "outlying-site"
 at = [12, 13]
+label = "the well"
 
 [[slots]]
 id = "campsite"
 kind = "outlying-site"
 at = [4, 16]
+label = "the campsite"
 
 [[slots]]
 id = "family-plot-1"
 kind = "grave"
 at = [24, 13]
+label = "the family plot 1"
 
 [[slots]]
 id = "family-plot-2"
 kind = "grave"
 at = [26, 13]
+label = "the family plot 2"
 
 [[slots]]
 id = "family-plot-3"
 kind = "grave"
 at = [28, 13]
+label = "the family plot 3"
 
 [[slots]]
 id = "crypt-1"
 kind = "grave"
 at = [21, 15]
+label = "the crypt 1"
 
 [[slots]]
 id = "crypt-2"
 kind = "grave"
 at = [23, 15]
+label = "the crypt 2"
 
 [[slots]]
 id = "crypt-3"
 kind = "grave"
 at = [25, 15]
+label = "the crypt 3"
 
 [[slots]]
 id = "crypt-4"
 kind = "grave"
 at = [27, 15]
+label = "the crypt 4"
 
 [[slots]]
 id = "crypt-5"
 kind = "grave"
 at = [21, 17]
+label = "the crypt 5"
 
 [[slots]]
 id = "crypt-6"
 kind = "grave"
 at = [23, 17]
+label = "the crypt 6"
 
 [[slots]]
 id = "crypt-7"
 kind = "grave"
 at = [25, 17]
+label = "the crypt 7"
 
 [[slots]]
 id = "crypt-8"
 kind = "grave"
 at = [27, 17]
+label = "the crypt 8"
 
 [[initial_enemies]]
 enemy = "restless-dead"

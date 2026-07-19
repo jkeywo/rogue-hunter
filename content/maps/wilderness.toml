@@ -41,31 +41,37 @@ rows = [
 id = "mine"
 kind = "wilds"
 at = [4, 4]
+label = "the mine"
 
 [[slots]]
 id = "herb-clearing-north"
 kind = "wilds"
 at = [8, 8]
+label = "the herb clearing north"
 
 [[slots]]
 id = "herb-clearing-south"
 kind = "wilds"
 at = [26, 12]
+label = "the herb clearing south"
 
 [[slots]]
 id = "standing-stones"
 kind = "wilds"
 at = [25, 16]
+label = "the standing stones"
 
 [[slots]]
 id = "wolf-den"
 kind = "wilds"
 at = [5, 17]
+label = "the wolf den"
 
 [[slots]]
 id = "ambush-site"
 kind = "wilds"
 at = [17, 13]
+label = "the ambush site"
 
 [[initial_enemies]]
 enemy = "wolf"

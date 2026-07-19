@@ -46,32 +46,38 @@ rows = [
 id = "mine"
 kind = "wilds"
 at = [9, 5]
+label = "the mine"
 
 [[slots]]
 id = "herb-clearing-north"
 kind = "wilds"
 at = [5, 4]
+label = "the herb clearing north"
 
 [[slots]]
 id = "herb-clearing-south"
 kind = "wilds"
 at = [10, 12]
+label = "the herb clearing south"
 
 [[slots]]
 id = "standing-stones"
 kind = "wilds"
 at = [24, 13]
+label = "the standing stones"
 
 [[slots]]
 id = "wolf-den"
 kind = "wilds"
 at = [6, 16]
+label = "the wolf den"
 
 # The ford: the one place the beck can be crossed, and the obvious ambush.
 [[slots]]
 id = "ambush-site"
 kind = "wilds"
 at = [17, 8]
+label = "the ambush site"
 
 [[initial_enemies]]
 enemy = "wolf"

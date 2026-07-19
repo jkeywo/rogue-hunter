@@ -51,77 +51,92 @@ rows = [
 id = "church-altar"
 kind = "church"
 at = [24, 2]
+label = "the church altar"
 
 [[slots]]
 id = "church-candles"
 kind = "church"
 at = [27, 2]
+label = "the church candles"
 
 [[slots]]
 id = "church-records"
 kind = "church"
 at = [22, 3]
+label = "the church records"
 
 [[slots]]
 id = "forge"
 kind = "workstation"
 at = [5, 1]
+label = "the forge"
 
 [[slots]]
 id = "grave-1"
 kind = "grave"
 at = [25, 12]
+label = "the grave 1"
 
 [[slots]]
 id = "grave-2"
 kind = "grave"
 at = [26, 12]
+label = "the grave 2"
 
 [[slots]]
 id = "grave-3"
 kind = "grave"
 at = [27, 12]
+label = "the grave 3"
 
 [[slots]]
 id = "grave-4"
 kind = "grave"
 at = [25, 14]
+label = "the grave 4"
 
 [[slots]]
 id = "grave-5"
 kind = "grave"
 at = [26, 14]
+label = "the grave 5"
 
 [[slots]]
 id = "grave-6"
 kind = "grave"
 at = [27, 14]
+label = "the grave 6"
 
 [[slots]]
 id = "graveyard-gate"
 kind = "npc"
 at = [24, 13]
+label = "the graveyard gate"
 
 # The body was found at the water's edge, where the race runs fastest.
 [[slots]]
 id = "kill-site"
 kind = "kill-site"
 at = [9, 9]
+label = "the kill site"
 
 [[slots]]
 id = "market-stall"
 kind = "npc"
 at = [5, 8]
+label = "the market stall"
 
 [[slots]]
 id = "square"
 kind = "npc"
 at = [6, 11]
+label = "the square"
 
 [[slots]]
 id = "inn-hearth"
 kind = "npc"
 at = [23, 18]
+label = "the inn hearth"
 
 [[exits]]
 to = "wilderness"

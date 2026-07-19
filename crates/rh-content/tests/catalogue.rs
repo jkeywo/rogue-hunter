@@ -138,6 +138,32 @@ fn a_half_keyed_opening_is_rejected() {
 }
 
 #[test]
+fn a_church_clue_must_declare_its_slot() {
+    // The generator once picked the church slot by sniffing the clue's display
+    // name for "candle", which made world layout depend on prose that is now
+    // localised. Placement is authored, and validation is what keeps it so.
+    let mut sources: Vec<(&str, String)> = rh_content::embedded_sources()
+        .iter()
+        .map(|(name, text)| (*name, (*text).to_owned()))
+        .collect();
+    for (name, text) in sources.iter_mut() {
+        if *name == "clues.toml" {
+            // Content files are CRLF; match the key alone so the assertion
+            // does not quietly depend on line endings.
+            *text = text.replace("church_slot = \"records\"", "");
+        }
+    }
+    let borrowed: Vec<(&str, &str)> = sources
+        .iter()
+        .map(|(name, text)| (*name, text.as_str()))
+        .collect();
+    assert!(
+        rh_content::Catalogue::from_sources(&borrowed).is_err(),
+        "a church clue without a church_slot must not validate"
+    );
+}
+
+#[test]
 fn every_axis_is_worth_drawing_from_and_mostly_texture() {
     let catalogue = rh_content::load_embedded().expect("embedded content");
     use rh_content::ConditionAxis;

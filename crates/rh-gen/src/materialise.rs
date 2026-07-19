@@ -209,7 +209,7 @@ impl<'a> Builder<'a> {
                         id: feature_id,
                         at,
                         kind: FeatureKind::Landmark,
-                        name: prettify(&slot.id),
+                        name: slot.label.clone(),
                     });
                     self.next_feature += 1;
                 }
@@ -680,13 +680,10 @@ impl<'a> Builder<'a> {
                 Ok((map, OpportunityAnchor::Tile(at), None))
             }
             SiteKind::Church => {
-                let about_candles = template.action == OpportunityAction::Scavenge
-                    || template.name.to_lowercase().contains("candle");
-                let slot_id = if about_candles {
-                    "church-candles"
-                } else {
-                    "church-records"
-                };
+                let slot_id = template
+                    .church_slot
+                    .ok_or_else(|| "church clue without a church_slot".to_owned())?
+                    .slot_id();
                 let (map, at) = slot(self, "settlement", slot_id)
                     .ok_or_else(|| format!("church slot '{slot_id}' missing"))?;
                 Ok((map, OpportunityAnchor::Tile(at), None))
@@ -1040,10 +1037,6 @@ fn is_ambush_leg(from: &str, to: &str) -> bool {
         (from, to),
         ("wilderness", "outlying") | ("outlying", "wilderness")
     )
-}
-
-fn prettify(slot_id: &str) -> String {
-    format!("the {}", slot_id.replace('-', " "))
 }
 
 fn tile_at(tiles: &[Terrain], at: Point) -> Terrain {

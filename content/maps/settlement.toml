@@ -44,76 +44,91 @@ rows = [
 id = "church-altar"
 kind = "church"
 at = [2, 2]
+label = "the church altar"
 
 [[slots]]
 id = "church-candles"
 kind = "church"
 at = [5, 2]
+label = "the church candles"
 
 [[slots]]
 id = "church-records"
 kind = "church"
 at = [3, 4]
+label = "the church records"
 
 [[slots]]
 id = "forge"
 kind = "workstation"
 at = [26, 2]
+label = "the forge"
 
 [[slots]]
 id = "grave-1"
 kind = "grave"
 at = [10, 2]
+label = "the grave 1"
 
 [[slots]]
 id = "grave-2"
 kind = "grave"
 at = [13, 2]
+label = "the grave 2"
 
 [[slots]]
 id = "grave-3"
 kind = "grave"
 at = [16, 2]
+label = "the grave 3"
 
 [[slots]]
 id = "grave-4"
 kind = "grave"
 at = [10, 4]
+label = "the grave 4"
 
 [[slots]]
 id = "grave-5"
 kind = "grave"
 at = [13, 4]
+label = "the grave 5"
 
 [[slots]]
 id = "grave-6"
 kind = "grave"
 at = [16, 4]
+label = "the grave 6"
 
 [[slots]]
 id = "graveyard-gate"
 kind = "npc"
 at = [10, 5]
+label = "the graveyard gate"
 
 [[slots]]
 id = "kill-site"
 kind = "kill-site"
 at = [16, 8]
+label = "the kill site"
 
 [[slots]]
 id = "market-stall"
 kind = "npc"
 at = [10, 11]
+label = "the market stall"
 
 [[slots]]
 id = "square"
 kind = "npc"
 at = [15, 11]
+label = "the square"
 
 [[slots]]
 id = "inn-hearth"
 kind = "npc"
 at = [19, 15]
+label = "the inn hearth"
 
 [[exits]]
 to = "wilderness"
