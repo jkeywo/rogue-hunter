@@ -5,6 +5,7 @@
 
 use crate::catalogue::Catalogue;
 use crate::schema::*;
+use crate::strings::StringId;
 
 pub const MAP_WIDTH: usize = 32;
 pub const MAP_HEIGHT: usize = 20;
@@ -28,6 +29,7 @@ pub fn validate(cat: &Catalogue) -> Vec<String> {
     check_ui(cat, &mut issues);
     check_openings(cat, &mut issues);
     check_conditions(cat, &mut issues);
+    check_strings(cat, &mut issues);
     issues
 }
 
@@ -866,6 +868,41 @@ fn check_ui(cat: &Catalogue, issues: &mut Vec<String>) {
     }
     if cat.ui.key_bindings.is_empty() {
         issues.push("ui: key_bindings must not be empty".into());
+    }
+}
+
+/// Every `StringId` the catalogue references, paired with a label naming
+/// where it came from.
+///
+/// Written out by hand rather than derived: it is the list that both the
+/// resolve check and the orphan check read, and being able to grep for a
+/// field here is worth more than the boilerplate it saves.
+fn referenced_ids(cat: &Catalogue) -> Vec<(String, &StringId)> {
+    let mut ids = Vec::new();
+    ids.push(("ui.splash_title".to_owned(), &cat.ui.splash_title));
+    for (index, id) in cat.ui.splash_intro.iter().enumerate() {
+        ids.push((format!("ui.splash_intro[{index}]"), id));
+    }
+    for (index, binding) in cat.ui.key_bindings.iter().enumerate() {
+        ids.push((format!("ui.key_bindings[{index}].keys"), &binding.keys));
+        ids.push((format!("ui.key_bindings[{index}].action"), &binding.action));
+    }
+    ids
+}
+
+fn check_strings(cat: &Catalogue, issues: &mut Vec<String>) {
+    for (label, id) in referenced_ids(cat) {
+        if cat.strings.try_get(id.as_str()).is_none() {
+            issues.push(format!(
+                "strings: {label} references unknown string id '{id}'"
+            ));
+        }
+    }
+    // A row nobody can read is a row nobody should be asked to translate.
+    for (id, row) in cat.strings.rows() {
+        if row.context.trim().is_empty() {
+            issues.push(format!("strings: '{id}' has no context note"));
+        }
     }
 }
 

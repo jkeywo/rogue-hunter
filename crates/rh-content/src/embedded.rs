@@ -32,3 +32,9 @@ pub const SOURCES: &[(&str, &str)] = &[
     content!("maps/outlying.toml"),
     content!("maps/outlying-abbey.toml"),
 ];
+
+/// The localisation string table, embedded like the rest but held apart from
+/// `SOURCES` on purpose: it is excluded from `content_fingerprint`, so a copy
+/// edit or a translation leaves every share code still valid. See `strings`
+/// for the rule that exclusion depends on.
+pub const STRINGS_CSV: &str = include_str!("../../../content/strings.csv");

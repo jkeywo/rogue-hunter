@@ -1,0 +1,27 @@
+id,context,english
+ui.keys.abilities,"Splash screen key-bindings table, action column",[Aim / Power Attack / Sprint (stamina)]
+ui.keys.abilities.keys,"Splash screen key-bindings table, keys column",[a / p / s]
+ui.keys.cancel,"Splash screen key-bindings table, action column",[Cancel / back]
+ui.keys.cancel.keys,"Splash screen key-bindings table, keys column",[Esc]
+ui.keys.consume,"Splash screen key-bindings table, action column",[Drink a wound draught / press a binding charm]
+ui.keys.consume.keys,"Splash screen key-bindings table, keys column",[q / c]
+ui.keys.fire,"Splash screen key-bindings table, action column",[Fire the flintlock / fire a silver bullet]
+ui.keys.fire.keys,"Splash screen key-bindings table, keys column",[f / F]
+ui.keys.interact,"Splash screen key-bindings table, action column","[Interact: investigate, talk, travel, craft, loot]"
+ui.keys.interact.keys,"Splash screen key-bindings table, keys column",[e / Enter]
+ui.keys.look,"Splash screen key-bindings table, action column",[Look mode: detach a cursor to examine any tile]
+ui.keys.look.keys,"Splash screen key-bindings table, keys column",[;]
+ui.keys.mouse,"Splash screen key-bindings table, action column",[Hover any tile to inspect it; click the map or an action to act]
+ui.keys.mouse.keys,"Splash screen key-bindings table, keys column",[Mouse]
+ui.keys.move,"Splash screen key-bindings table, action column",[Move (8 directions) / melee an adjacent enemy]
+ui.keys.move.keys,"Splash screen key-bindings table, keys column",[Arrows / numpad / hjkl+yubn]
+ui.keys.screens,"Splash screen key-bindings table, action column",[Grimoire / Faces / the Valley / the Record]
+ui.keys.screens.keys,"Splash screen key-bindings table, keys column",[g / r / v / L]
+ui.keys.tactics,"Splash screen key-bindings table, action column",[Set Snare / Killing Blow (Physical)]
+ui.keys.tactics.keys,"Splash screen key-bindings table, keys column",[x / K]
+ui.keys.wait,"Splash screen key-bindings table, action column",[Wait a turn]
+ui.keys.wait.keys,"Splash screen key-bindings table, keys column",[Space / .]
+ui.splash.intro.1,"Splash screen opening paragraph, first of three","[Something is killing the valley folk, and the valley has sent for you.]"
+ui.splash.intro.2,"Splash screen opening paragraph, second of three: the shape of a run","[You have six days. Walk the settlement, the deep wood, and the forsaken manor; trade words and watch faces; read the signs the thing cannot help but leave. Prove its name twice over, prepare its death, and take the hunt to it — or let the sixth night come, and it will take the hunt to you.]"
+ui.splash.intro.3,"Splash screen opening paragraph, third of three: what death costs","[Everything you learn, you keep. Even dying only costs you a day. Days are the one thing you cannot craft.]"
+ui.splash.title,Game title on the splash screen,[ROGUE HUNTER]

@@ -1,53 +1,56 @@
 # Splash-screen text and key bindings shown before a run begins.
+#
+# The prose itself lives in content/strings.csv; the ids below are lookups
+# into it. Paragraph and binding *order* is structure, and stays here.
 
-splash_title = "ROGUE HUNTER"
+splash_title = "ui.splash.title"
 
 splash_intro = [
-  "Something is killing the valley folk, and the valley has sent for you.",
-  "You have six days. Walk the settlement, the deep wood, and the forsaken manor; trade words and watch faces; read the signs the thing cannot help but leave. Prove its name twice over, prepare its death, and take the hunt to it — or let the sixth night come, and it will take the hunt to you.",
-  "Everything you learn, you keep. Even dying only costs you a day. Days are the one thing you cannot craft.",
+  "ui.splash.intro.1",
+  "ui.splash.intro.2",
+  "ui.splash.intro.3",
 ]
 
 [[key_bindings]]
-keys = "Arrows / numpad / hjkl+yubn"
-action = "Move (8 directions) / melee an adjacent enemy"
+keys = "ui.keys.move.keys"
+action = "ui.keys.move"
 
 [[key_bindings]]
-keys = "e / Enter"
-action = "Interact: investigate, talk, travel, craft, loot"
+keys = "ui.keys.interact.keys"
+action = "ui.keys.interact"
 
 [[key_bindings]]
-keys = "f / F"
-action = "Fire the flintlock / fire a silver bullet"
+keys = "ui.keys.fire.keys"
+action = "ui.keys.fire"
 
 [[key_bindings]]
-keys = "a / p / s"
-action = "Aim / Power Attack / Sprint (stamina)"
+keys = "ui.keys.abilities.keys"
+action = "ui.keys.abilities"
 
 [[key_bindings]]
-keys = "x / K"
-action = "Set Snare / Killing Blow (Physical)"
+keys = "ui.keys.tactics.keys"
+action = "ui.keys.tactics"
 
 [[key_bindings]]
-keys = "q / c"
-action = "Drink a wound draught / press a binding charm"
+keys = "ui.keys.consume.keys"
+action = "ui.keys.consume"
 
 [[key_bindings]]
-keys = "g / r / v / L"
-action = "Grimoire / Faces / the Valley / the Record"
+keys = "ui.keys.screens.keys"
+action = "ui.keys.screens"
 
 [[key_bindings]]
-keys = ";"
-action = "Look mode: detach a cursor to examine any tile"
+keys = "ui.keys.look.keys"
+action = "ui.keys.look"
 
 [[key_bindings]]
-keys = "Space / ."
-action = "Wait a turn"
+keys = "ui.keys.wait.keys"
+action = "ui.keys.wait"
 
 [[key_bindings]]
-keys = "Mouse"
-action = "Hover any tile to inspect it; click the map or an action to act"
+keys = "ui.keys.mouse.keys"
+action = "ui.keys.mouse"
 
 [[key_bindings]]
-keys = "Esc"
-action = "Cancel / back"
+keys = "ui.keys.cancel.keys"
+action = "ui.keys.cancel"

@@ -8,6 +8,8 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
+use crate::strings::StringId;
+
 /// A grid coordinate inside a 32x20 tactical map, `[x, y]` with `0,0` top-left.
 pub type Coord = [u8; 2];
 
@@ -1011,14 +1013,16 @@ impl OpeningDef {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct UiText {
-    pub splash_title: String,
-    pub splash_intro: Vec<String>,
+    pub splash_title: StringId,
+    /// One id per paragraph. Paragraph count is structure, so it stays here
+    /// rather than becoming newlines inside a single string-table cell.
+    pub splash_intro: Vec<StringId>,
     pub key_bindings: Vec<KeyBinding>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct KeyBinding {
-    pub keys: String,
-    pub action: String,
+    pub keys: StringId,
+    pub action: StringId,
 }

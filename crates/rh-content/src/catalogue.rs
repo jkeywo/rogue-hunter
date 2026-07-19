@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 use serde::Deserialize;
 
 use crate::schema::*;
+use crate::strings::StringTable;
 use crate::validate;
 
 /// The fully parsed, cross-validated content catalogue.
@@ -35,6 +36,9 @@ pub struct Catalogue {
     /// What the valley is like on arrival; a run draws exactly one.
     pub conditions: Vec<ConditionDef>,
     pub ui: UiText,
+    /// Every string the player reads. Resolved at display time from the ids
+    /// held in the TOML above and in the clients.
+    pub strings: StringTable,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -57,8 +61,20 @@ struct GrimoireFile {
 }
 
 impl Catalogue {
-    /// Parse a catalogue from `(file name, TOML text)` pairs and validate it.
+    /// Parse a catalogue from `(file name, TOML text)` pairs and validate it,
+    /// against the embedded string table.
     pub fn from_sources(sources: &[(&str, &str)]) -> Result<Self, ContentError> {
+        Self::from_sources_with_strings(sources, crate::embedded::STRINGS_CSV)
+    }
+
+    /// As `from_sources`, with the string table supplied — for tests that
+    /// perturb the table, and for checking that doing so leaves the content
+    /// fingerprint alone.
+    pub fn from_sources_with_strings(
+        sources: &[(&str, &str)],
+        strings_csv: &str,
+    ) -> Result<Self, ContentError> {
+        let strings = StringTable::parse(strings_csv)?;
         let lookup: BTreeMap<&str, &str> = sources.iter().copied().collect();
         let text = |file: &str| -> Result<&str, ContentError> {
             lookup
@@ -117,6 +133,7 @@ impl Catalogue {
             openings: openings_file.openings,
             conditions: openings_file.conditions,
             ui: parse("ui.toml", text("ui.toml")?)?,
+            strings,
         };
 
         let issues = validate::validate(&catalogue);

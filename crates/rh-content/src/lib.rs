@@ -8,10 +8,12 @@
 mod catalogue;
 mod embedded;
 mod schema;
+mod strings;
 mod validate;
 
 pub use catalogue::{Catalogue, ContentError};
 pub use schema::*;
+pub use strings::{StringId, StringRow, StringTable};
 
 /// Load and validate the embedded content catalogue.
 ///
@@ -21,6 +23,11 @@ pub use schema::*;
 /// check that validation refuses the result.
 pub fn embedded_sources() -> &'static [(&'static str, &'static str)] {
     embedded::SOURCES
+}
+
+/// The embedded string-table CSV, for tests that need to perturb it.
+pub fn embedded_strings() -> &'static str {
+    embedded::STRINGS_CSV
 }
 
 pub fn load_embedded() -> Result<Catalogue, ContentError> {

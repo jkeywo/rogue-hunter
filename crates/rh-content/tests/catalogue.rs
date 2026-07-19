@@ -138,6 +138,116 @@ fn a_half_keyed_opening_is_rejected() {
 }
 
 #[test]
+fn the_string_table_is_outside_the_content_fingerprint() {
+    // The whole point of holding strings apart from SOURCES: rewriting a line
+    // or translating it must not invalidate a share code in the wild.
+    assert!(
+        !rh_content::embedded_sources()
+            .iter()
+            .any(|(name, _)| name.contains("strings")),
+        "strings.csv must not be a fingerprinted source"
+    );
+
+    let before = rh_content::content_fingerprint();
+    let mutated = rh_content::embedded_strings().replace("ROGUE HUNTER", "A QUITE DIFFERENT NAME");
+    assert_ne!(
+        mutated,
+        rh_content::embedded_strings(),
+        "the perturbation must actually change the table"
+    );
+    let catalogue =
+        rh_content::Catalogue::from_sources_with_strings(rh_content::embedded_sources(), &mutated)
+            .expect("a catalogue with rewritten copy still loads");
+    assert_eq!(
+        catalogue
+            .strings
+            .try_get("ui.splash.title")
+            .expect("the title resolves"),
+        "[A QUITE DIFFERENT NAME]"
+    );
+    assert_eq!(
+        before,
+        rh_content::content_fingerprint(),
+        "rewriting copy must leave the content fingerprint alone"
+    );
+}
+
+#[test]
+fn every_string_is_bracketed_placeholder_copy() {
+    // Every line in the table was written by an agent, and brackets are how we
+    // say so. As real copy lands, delete the brackets and narrow this test --
+    // it is a gate on unreviewed prose, not on the format.
+    let catalogue = rh_content::load_embedded().expect("embedded content");
+    for (id, row) in catalogue.strings.rows() {
+        assert!(
+            row.english.starts_with('[') && row.english.ends_with(']'),
+            "'{id}' is not marked as placeholder copy: {:?}",
+            row.english
+        );
+    }
+}
+
+#[test]
+fn every_string_row_carries_a_context_note() {
+    let catalogue = rh_content::load_embedded().expect("embedded content");
+    for (id, row) in catalogue.strings.rows() {
+        assert!(!row.context.trim().is_empty(), "'{id}' has no context note");
+    }
+}
+
+#[test]
+fn string_ids_are_unique_and_sorted() {
+    // Sorted so diffs stay reviewable and the file stays bisectable.
+    let source = rh_content::embedded_strings();
+    // Reading ids off raw lines is only sound while no cell spans lines. The
+    // parser supports embedded newlines; the table deliberately does not use
+    // them, and multi-paragraph prose is indexed ids instead.
+    let catalogue = rh_content::load_embedded().expect("embedded content");
+    assert_eq!(
+        catalogue.strings.len(),
+        source
+            .lines()
+            .filter(|line| !line.trim().is_empty())
+            .count()
+            - 1,
+        "no string-table cell may span lines"
+    );
+    let ids: Vec<&str> = source
+        .lines()
+        .skip(1)
+        .filter(|line| !line.trim().is_empty())
+        .map(|line| line.split(',').next().unwrap_or_default())
+        .collect();
+    let mut sorted = ids.clone();
+    sorted.sort_unstable();
+    assert_eq!(ids, sorted, "strings.csv rows must be sorted by id");
+    let mut deduped = sorted.clone();
+    deduped.dedup();
+    assert_eq!(deduped.len(), ids.len(), "string ids must be unique");
+}
+
+#[test]
+fn an_unresolvable_string_id_is_refused() {
+    let mut sources: Vec<(&str, String)> = rh_content::embedded_sources()
+        .iter()
+        .map(|(name, text)| (*name, (*text).to_owned()))
+        .collect();
+    for (name, text) in sources.iter_mut() {
+        if *name == "ui.toml" {
+            *text = text.replace("ui.splash.title", "ui.splash.title.typo");
+        }
+    }
+    let borrowed: Vec<(&str, &str)> = sources
+        .iter()
+        .map(|(name, text)| (*name, text.as_str()))
+        .collect();
+    assert!(
+        rh_content::Catalogue::from_sources(&borrowed).is_err(),
+        "content pointing at a missing string id must not validate"
+    );
+}
+
+#[test]
 fn a_church_clue_must_declare_its_slot() {
     // The generator once picked the church slot by sniffing the clue's display
     // name for "candle", which made world layout depend on prose that is now

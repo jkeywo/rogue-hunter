@@ -147,13 +147,23 @@ pub fn build(session: &ClientSession) -> ViewModel {
     let screen = match &session.screen {
         Screen::Splash { selected } => {
             let ui = &session.catalogue.ui;
+            let strings = &session.catalogue.strings;
             ScreenView::Splash {
-                title: ui.splash_title.clone(),
-                intro: ui.splash_intro.clone(),
+                title: strings.get(&ui.splash_title).to_owned(),
+                intro: ui
+                    .splash_intro
+                    .iter()
+                    .map(|id| strings.get(id).to_owned())
+                    .collect(),
                 bindings: ui
                     .key_bindings
                     .iter()
-                    .map(|binding| (binding.keys.clone(), binding.action.clone()))
+                    .map(|binding| {
+                        (
+                            strings.get(&binding.keys).to_owned(),
+                            strings.get(&binding.action).to_owned(),
+                        )
+                    })
                     .collect(),
                 options: vec![
                     "New Run".to_owned(),

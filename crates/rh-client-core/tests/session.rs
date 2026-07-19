@@ -374,3 +374,42 @@ fn hovering_past_the_end_of_a_menu_is_ignored() {
         Screen::HunterSelect { selected: 0, .. }
     ));
 }
+
+#[test]
+fn splash_text_comes_from_the_string_table() {
+    // The tracer bullet: ui.toml holds only ids now, so if the splash still
+    // renders prose it can only have come through the string table. The
+    // brackets are the marker that this copy is agent-written placeholder.
+    let client = session();
+    let view = rh_client_core::view::build(&client);
+    let rh_client_core::view::ScreenView::Splash {
+        title,
+        intro,
+        bindings,
+        ..
+    } = view.screen
+    else {
+        panic!("the session opens on the splash");
+    };
+
+    assert_eq!(title, "[ROGUE HUNTER]");
+    assert!(!intro.is_empty(), "the splash has intro prose");
+    for paragraph in &intro {
+        assert!(
+            paragraph.starts_with('[') && paragraph.ends_with(']'),
+            "unbracketed splash paragraph: {paragraph:?}"
+        );
+    }
+    for (keys, action) in &bindings {
+        for text in [keys, action] {
+            assert!(
+                !text.contains("!missing"),
+                "unresolved string id in the bindings table: {text:?}"
+            );
+            assert!(
+                text.starts_with('[') && text.ends_with(']'),
+                "unbracketed binding text: {text:?}"
+            );
+        }
+    }
+}
