@@ -212,7 +212,7 @@ fn villain_act(sim: &mut Sim, id: ActorId) {
                 .map(|actor| sim.state.is_visible(actor.pos))
                 .unwrap_or(false);
             if visible {
-                sim.log(EventKind::Telegraph, regen.telegraph.clone());
+                sim.log_id(EventKind::Telegraph, &regen.telegraph);
             }
         }
     }
@@ -236,7 +236,7 @@ fn villain_act(sim: &mut Sim, id: ActorId) {
             if let Some(actor) = sim.state.actor_mut(id) {
                 actor.ward_charges = charges;
             }
-            sim.log(EventKind::Telegraph, ward.reweave_telegraph.clone());
+            sim.log_id(EventKind::Telegraph, &ward.reweave_telegraph);
         }
     }
 
@@ -321,7 +321,7 @@ fn werewolf_act(sim: &mut Sim, id: ActorId, tier: u8, def: &rh_content::VillainD
         if let Some(actor) = sim.state.actor_mut(id) {
             actor.pounce_primed = true;
         }
-        sim.log(EventKind::Telegraph, pounce.telegraph.clone());
+        sim.log_id(EventKind::Telegraph, &pounce.telegraph);
         return;
     }
     chase_or_attack(
@@ -355,7 +355,7 @@ fn revenant_act(
     };
     let vulnerable_now = sim.villain_is_vulnerable(id);
     if vulnerable_now && sim.state.is_visible(pos) {
-        sim.log(EventKind::Telegraph, cadence.vulnerable_telegraph.clone());
+        sim.log_id(EventKind::Telegraph, &cadence.vulnerable_telegraph);
     }
 
     // Consecrated ground scalds it while it stands there.
@@ -416,7 +416,7 @@ fn revenant_act(
             if let Some(actor) = sim.state.actor_mut(id) {
                 actor.dash_cooldown = dash_cooldown_max;
             }
-            sim.log(EventKind::Telegraph, cadence.dash_telegraph.clone());
+            sim.log_id(EventKind::Telegraph, &cadence.dash_telegraph);
             return;
         }
     }
@@ -424,7 +424,7 @@ fn revenant_act(
         if let Some(actor) = sim.state.actor_mut(id) {
             actor.dash_cooldown = dash_cooldown_max;
         }
-        sim.log(EventKind::Telegraph, cadence.dash_telegraph.clone());
+        sim.log_id(EventKind::Telegraph, &cadence.dash_telegraph);
         return;
     }
     chase_or_attack(
@@ -763,7 +763,7 @@ fn tick_villain_cadence(sim: &mut Sim, id: ActorId) {
         actor.pos
     };
     if sim.villain_is_vulnerable(id) && sim.state.is_visible(pos) {
-        sim.log(EventKind::Telegraph, cadence.vulnerable_telegraph.clone());
+        sim.log_id(EventKind::Telegraph, &cadence.vulnerable_telegraph);
     }
 }
 

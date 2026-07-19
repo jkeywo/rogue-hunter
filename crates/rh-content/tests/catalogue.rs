@@ -336,3 +336,45 @@ fn a_condition_may_not_name_a_clue_or_an_informant() {
         .collect();
     assert!(rh_content::Catalogue::from_sources(&borrowed).is_err());
 }
+
+#[test]
+fn every_string_in_the_table_is_referenced_by_content() {
+    // Both directions matter. `check_strings` proves every id the content
+    // names resolves; this proves the table has no rows nothing reaches --
+    // dead copy a translator would otherwise be asked to work on.
+    let catalogue = rh_content::load_embedded().expect("embedded content");
+    let referenced: std::collections::BTreeSet<&str> =
+        rh_content::referenced_string_ids(&catalogue)
+            .into_iter()
+            .map(|(_, id)| id.as_str())
+            .collect();
+    let orphans: Vec<&str> = catalogue
+        .strings
+        .ids()
+        .filter(|id| !referenced.contains(id))
+        .collect();
+    assert!(orphans.is_empty(), "unreferenced string rows: {orphans:?}");
+}
+
+#[test]
+fn a_typo_in_any_content_string_id_is_refused() {
+    // The resolve check must cover the whole catalogue, not just the file it
+    // was first written for.
+    let mut sources: Vec<(&str, String)> = rh_content::embedded_sources()
+        .iter()
+        .map(|(name, text)| (*name, (*text).to_owned()))
+        .collect();
+    for (name, text) in sources.iter_mut() {
+        if *name == "clues.toml" {
+            *text = text.replace("clues.second-face.reveal", "clues.second-face.rveeal");
+        }
+    }
+    let borrowed: Vec<(&str, &str)> = sources
+        .iter()
+        .map(|(name, text)| (*name, text.as_str()))
+        .collect();
+    assert!(
+        rh_content::Catalogue::from_sources(&borrowed).is_err(),
+        "a mistyped clue string id must not validate"
+    );
+}

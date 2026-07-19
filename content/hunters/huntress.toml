@@ -2,8 +2,8 @@
 # certifies routes against whichever hunter the run selected, so her caps
 # and abilities are read per-run rather than assumed.
 
-name = "The Huntress"
-title = "A hunter of beasts, who has learned that some beasts wear faces"
+name = "hunters.huntress.name"
+title = "hunters.huntress.title"
 glyph = "@"
 health = 12
 lore_cap = 2
@@ -17,37 +17,37 @@ starting_items = ["hunting-blade", "flintlock", "flintlock-shot", "flintlock-sho
 
 [[manoeuvres]]
 id = "aim"
-name = "Aim"
+name = "hunters.huntress.manoeuvres.aim.name"
 stamina_cost = 3
 effect = { kind = "sure-ranged-shot" }
-description = "Steady the flintlock. Your next ranged shot this encounter cannot miss."
+description = "hunters.huntress.manoeuvres.aim.description"
 
 [[manoeuvres]]
 id = "power-attack"
-name = "Power Attack"
+name = "hunters.huntress.manoeuvres.power-attack.name"
 stamina_cost = 3
 effect = { kind = "melee-damage-multiplier", numerator = 3 }
-description = "Put your weight behind the next blow. Your next melee strike deals half again its damage."
+description = "hunters.huntress.manoeuvres.power-attack.description"
 
 [[manoeuvres]]
 id = "sprint"
-name = "Sprint"
+name = "hunters.huntress.manoeuvres.sprint.name"
 stamina_cost = 2
 effect = { kind = "dash", tiles = 2 }
-description = "Move two tiles in a single direction, in one action."
+description = "hunters.huntress.manoeuvres.sprint.description"
 
 # Hunter-specific Physical-point signatures expressing the Huntress's identity.
 
 [[signatures]]
 id = "set-snare"
-name = "Set Snare"
+name = "hunters.huntress.signatures.set-snare.name"
 physical_cost = 1
 effect = { kind = "set-snare" }
-description = "Rig a hunting snare on an adjacent tile. The first enemy to step in is held fast for three turns: it cannot move, pounce, or dash, and its flailing blows falter."
+description = "hunters.huntress.signatures.set-snare.description"
 
 [[signatures]]
 id = "killing-blow"
-name = "Killing Blow"
+name = "hunters.huntress.signatures.killing-blow.name"
 physical_cost = 1
 effect = { kind = "killing-blow" }
-description = "A single perfect strike for double damage, against a foe that is held fast or already gravely wounded."
+description = "hunters.huntress.signatures.killing-blow.description"

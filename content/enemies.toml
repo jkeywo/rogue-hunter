@@ -1,40 +1,40 @@
 # Ordinary enemy families: generated early threats and scheme minions.
 
 [wolf]
-name = "Wolf"
+name = "enemies.wolf.name"
 glyph = "w"
 health = 4
 melee_damage = 2
 hit_percent = 65
 behaviour = "pack-hunter"
-description = "A lean grey wolf, bolder than it should be. It runs straight at what it means to kill."
+description = "enemies.wolf.description"
 
 [bandit]
-name = "Bandit"
+name = "enemies.bandit.name"
 glyph = "b"
 health = 5
 melee_damage = 2
 hit_percent = 60
 behaviour = "skirmisher"
 ranged = { damage = 2, hit_percent = 55, range = 5 }
-description = "A road-thief with a short pistol and no scruples. Keeps distance while it can."
+description = "enemies.bandit.description"
 
 [restless-dead]
 unnatural = true
-name = "Restless Dead"
+name = "enemies.restless-dead.name"
 glyph = "z"
 health = 6
 melee_damage = 2
 hit_percent = 60
 behaviour = "shambler"
-description = "A corpse that did not stay put. Slow, patient, and terribly strong when it closes."
+description = "enemies.restless-dead.description"
 
 [thrall]
 unnatural = true
-name = "Thrall"
+name = "enemies.thrall.name"
 glyph = "t"
 health = 5
 melee_damage = 2
 hit_percent = 55
 behaviour = "pack-hunter"
-description = "A villager who answered the call and kept walking. Their eyes track you without recognition, and they will not be reasoned with — but they are still, underneath, only a frightened neighbour."
+description = "enemies.thrall.description"

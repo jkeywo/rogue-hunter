@@ -877,8 +877,158 @@ fn check_ui(cat: &Catalogue, issues: &mut Vec<String>) {
 /// Written out by hand rather than derived: it is the list that both the
 /// resolve check and the orphan check read, and being able to grep for a
 /// field here is worth more than the boilerplate it saves.
-fn referenced_ids(cat: &Catalogue) -> Vec<(String, &StringId)> {
-    let mut ids = Vec::new();
+pub fn referenced_ids(cat: &Catalogue) -> Vec<(String, &StringId)> {
+    let mut ids: Vec<(String, &StringId)> = Vec::new();
+
+    for (key, hunter) in &cat.hunters {
+        ids.push((format!("hunters/{key}.name"), &hunter.name));
+        ids.push((format!("hunters/{key}.title"), &hunter.title));
+        for m in &hunter.manoeuvres {
+            ids.push((format!("hunters/{key}.manoeuvre.{}.name", m.id), &m.name));
+            ids.push((
+                format!("hunters/{key}.manoeuvre.{}.description", m.id),
+                &m.description,
+            ));
+        }
+        for s in &hunter.signatures {
+            ids.push((format!("hunters/{key}.signature.{}.name", s.id), &s.name));
+            ids.push((
+                format!("hunters/{key}.signature.{}.description", s.id),
+                &s.description,
+            ));
+        }
+    }
+    for (key, enemy) in &cat.enemies {
+        ids.push((format!("enemies.{key}.name"), &enemy.name));
+        ids.push((format!("enemies.{key}.description"), &enemy.description));
+    }
+    for (key, villain) in &cat.villains {
+        ids.push((format!("villains.{key}.name"), &villain.name));
+        ids.push((format!("villains.{key}.description"), &villain.description));
+        if let Some(ward) = &villain.ward {
+            ids.push((
+                format!("villains.{key}.ward.absorb"),
+                &ward.absorb_telegraph,
+            ));
+            ids.push((format!("villains.{key}.ward.break"), &ward.break_telegraph));
+            ids.push((
+                format!("villains.{key}.ward.reweave"),
+                &ward.reweave_telegraph,
+            ));
+        }
+        if let Some(pounce) = &villain.pounce {
+            ids.push((format!("villains.{key}.pounce"), &pounce.telegraph));
+        }
+        if let Some(regen) = &villain.regeneration {
+            ids.push((format!("villains.{key}.regeneration"), &regen.telegraph));
+        }
+        if let Some(cadence) = &villain.cadence {
+            ids.push((
+                format!("villains.{key}.cadence.vulnerable"),
+                &cadence.vulnerable_telegraph,
+            ));
+            ids.push((
+                format!("villains.{key}.cadence.dash"),
+                &cadence.dash_telegraph,
+            ));
+            ids.push((
+                format!("villains.{key}.cadence.guarded"),
+                &cadence.guarded_telegraph,
+            ));
+        }
+        for tier in &villain.tier_behaviours {
+            ids.push((format!("villains.{key}.tier.{}.name", tier.id), &tier.name));
+            ids.push((
+                format!("villains.{key}.tier.{}.telegraph", tier.id),
+                &tier.telegraph,
+            ));
+        }
+    }
+    for (key, origin) in &cat.origins {
+        ids.push((format!("origins.{key}.name"), &origin.name));
+        ids.push((format!("origins.{key}.description"), &origin.description));
+        ids.push((
+            format!("origins.{key}.counter_flavour"),
+            &origin.counter_flavour,
+        ));
+    }
+    for (key, scheme) in &cat.schemes {
+        ids.push((format!("schemes.{key}.name"), &scheme.name));
+        ids.push((format!("schemes.{key}.description"), &scheme.description));
+        for (label, event) in [
+            ("minor_event", &scheme.minor_event),
+            ("major_event", &scheme.major_event),
+        ] {
+            ids.push((format!("schemes.{key}.{label}.name"), &event.name));
+            ids.push((format!("schemes.{key}.{label}.text"), &event.text));
+        }
+        let p = &scheme.preempt;
+        ids.push((format!("schemes.{key}.preempt.name"), &p.name));
+        ids.push((format!("schemes.{key}.preempt.prompt"), &p.prompt));
+        ids.push((format!("schemes.{key}.preempt.reveal"), &p.reveal));
+        ids.push((format!("schemes.{key}.preempt.blunted"), &p.blunted_text));
+    }
+    for (key, item) in &cat.items {
+        ids.push((format!("items.{key}.name"), &item.name));
+        ids.push((format!("items.{key}.description"), &item.description));
+    }
+    for (key, recipe) in &cat.recipes {
+        ids.push((format!("recipes.{key}.name"), &recipe.name));
+        ids.push((format!("recipes.{key}.description"), &recipe.description));
+    }
+    for (key, clue) in &cat.clues {
+        ids.push((format!("clues.{key}.name"), &clue.name));
+        ids.push((format!("clues.{key}.prompt"), &clue.prompt));
+        ids.push((format!("clues.{key}.reveal"), &clue.reveal));
+    }
+    for (key, gather) in &cat.gathers {
+        ids.push((format!("gathers.{key}.name"), &gather.name));
+        ids.push((format!("gathers.{key}.prompt"), &gather.prompt));
+        ids.push((format!("gathers.{key}.reveal"), &gather.reveal));
+    }
+    for (key, archetype) in &cat.npcs.archetypes {
+        ids.push((format!("npcs.archetypes.{key}.name"), &archetype.name));
+        ids.push((
+            format!("npcs.archetypes.{key}.description"),
+            &archetype.description,
+        ));
+    }
+    for (key, secret) in &cat.npcs.secrets {
+        ids.push((format!("npcs.secrets.{key}.name"), &secret.name));
+        ids.push((format!("npcs.secrets.{key}.text"), &secret.text));
+        if let Some(disproof) = &secret.disproof {
+            ids.push((format!("npcs.secrets.{key}.disproof"), disproof));
+        }
+    }
+    for kind in &cat.npcs.relationship_kinds {
+        ids.push((format!("npcs.relationship.{}.name", kind.id), &kind.name));
+        ids.push((
+            format!("npcs.relationship.{}.discovered_text", kind.id),
+            &kind.discovered_text,
+        ));
+    }
+    for (key, map) in &cat.maps {
+        ids.push((format!("maps/{key}.name"), &map.name));
+        ids.push((format!("maps/{key}.description"), &map.description));
+        for slot in &map.slots {
+            ids.push((format!("maps/{key}.slot.{}.label", slot.id), &slot.label));
+        }
+    }
+    for entry in &cat.grimoire {
+        ids.push((format!("grimoire.{}.title", entry.id), &entry.title));
+        ids.push((format!("grimoire.{}.body", entry.id), &entry.body));
+    }
+    for opening in &cat.openings {
+        for (index, id) in opening.body.iter().enumerate() {
+            ids.push((format!("openings.{}.body[{index}]", opening.id), id));
+        }
+    }
+    for condition in &cat.conditions {
+        for (index, id) in condition.body.iter().enumerate() {
+            ids.push((format!("conditions.{}.body[{index}]", condition.id), id));
+        }
+    }
+
     ids.push(("ui.splash_title".to_owned(), &cat.ui.splash_title));
     for (index, id) in cat.ui.splash_intro.iter().enumerate() {
         ids.push((format!("ui.splash_intro[{index}]"), id));
@@ -888,6 +1038,15 @@ fn referenced_ids(cat: &Catalogue) -> Vec<(String, &StringId)> {
         ids.push((format!("ui.key_bindings[{index}].action"), &binding.action));
     }
     ids
+}
+
+/// The English behind an id, or "" if it does not resolve.
+///
+/// Checks that read prose -- for placeholders an opening has no source for,
+/// say -- go through this. An unresolvable id is `check_strings`' problem,
+/// and reporting it twice would only bury the useful message.
+fn resolve<'a>(cat: &'a Catalogue, id: &StringId) -> &'a str {
+    cat.strings.try_get(id.as_str()).unwrap_or_default()
 }
 
 fn check_strings(cat: &Catalogue, issues: &mut Vec<String>) {
@@ -940,7 +1099,7 @@ fn check_openings(cat: &Catalogue, issues: &mut Vec<String>) {
             issues.push(format!("openings: '{}' has no prose", opening.id));
         }
         for line in &opening.body {
-            if line.trim().is_empty() {
+            if resolve(cat, line).trim().is_empty() {
                 issues.push(format!("openings: '{}' has an empty paragraph", opening.id));
             }
         }
@@ -953,7 +1112,10 @@ fn check_openings(cat: &Catalogue, issues: &mut Vec<String>) {
             ));
         }
         // A person's name has nowhere to come from in a place-anchored opening.
-        let mentions_npc = opening.body.iter().any(|line| line.contains("{npc}"));
+        let mentions_npc = opening
+            .body
+            .iter()
+            .any(|line| resolve(cat, line).contains("{npc}"));
         if mentions_npc && opening.anchor != Some(OpeningAnchor::Npc) {
             issues.push(format!(
                 "openings: '{}' uses {{npc}} but is not anchored on a person",
@@ -1023,6 +1185,7 @@ fn check_conditions(cat: &Catalogue, issues: &mut Vec<String>) {
             issues.push(format!("conditions: '{}' has no prose", condition.id));
         }
         for line in &condition.body {
+            let line = resolve(cat, line);
             if line.trim().is_empty() {
                 issues.push(format!(
                     "conditions: '{}' has an empty paragraph",

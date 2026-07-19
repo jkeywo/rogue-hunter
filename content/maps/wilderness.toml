@@ -2,9 +2,9 @@
 # east, outlying site south. Abandoned silver mine north-west behind fallen
 # rubble; standing stones and herb clearings off the trail.
 
-name = "The Deep Wood"
+name = "maps.wilderness.name"
 role = "wilderness"
-description = "Old forest pressing close on a rutted trail. The shortcut to the manor runs through here — when the road is watched, so does trouble."
+description = "maps.wilderness.description"
 
 rows = [
   "################################",
@@ -41,37 +41,37 @@ rows = [
 id = "mine"
 kind = "wilds"
 at = [4, 4]
-label = "the mine"
+label = "maps.wilderness.slots.mine.label"
 
 [[slots]]
 id = "herb-clearing-north"
 kind = "wilds"
 at = [8, 8]
-label = "the herb clearing north"
+label = "maps.wilderness.slots.herb-clearing-north.label"
 
 [[slots]]
 id = "herb-clearing-south"
 kind = "wilds"
 at = [26, 12]
-label = "the herb clearing south"
+label = "maps.wilderness.slots.herb-clearing-south.label"
 
 [[slots]]
 id = "standing-stones"
 kind = "wilds"
 at = [25, 16]
-label = "the standing stones"
+label = "maps.wilderness.slots.standing-stones.label"
 
 [[slots]]
 id = "wolf-den"
 kind = "wilds"
 at = [5, 17]
-label = "the wolf den"
+label = "maps.wilderness.slots.wolf-den.label"
 
 [[slots]]
 id = "ambush-site"
 kind = "wilds"
 at = [17, 13]
-label = "the ambush site"
+label = "maps.wilderness.slots.ambush-site.label"
 
 [[initial_enemies]]
 enemy = "wolf"

@@ -1,4 +1,501 @@
 id,context,english
+clues.a-wrong-between-people.name,"Clue name, shown in the journal and on the opportunity",[A Wrong Between People]
+clues.a-wrong-between-people.prompt,Opportunity text shown before this clue is taken,[The settlement talks around something the way a tongue works at a broken tooth.]
+clues.a-wrong-between-people.reveal,Journal and event-log text once this clue is revealed,"[It started with people, not omens: an arrangement, and someone on the wrong end of it. Whether that was a grudge taken up or a bargain put down, the gossip cannot agree.]"
+clues.bodies-turning-up.name,"Clue name, shown in the journal and on the opportunity",[Bodies Turning Up]
+clues.bodies-turning-up.prompt,Opportunity text shown before this clue is taken,[There is a body's worth of blood here and the ground has been worked over.]
+clues.bodies-turning-up.reveal,Journal and event-log text once this clue is revealed,"[Somebody died badly on this spot. Whether they were killed to be seen, or killed for what could be taken from them, the ground will not say.]"
+clues.cold-iron-lore.name,"Clue name, shown in the journal and on the opportunity",[The Iron Rule]
+clues.cold-iron-lore.prompt,Opportunity text shown before this clue is taken,"[The old women have a rule about workings, and they will recite it for the asking.]"
+clues.cold-iron-lore.reveal,Journal and event-log text once this clue is revealed,"['Nothing that ever saw the forge fire,' says Mother Wren. 'Cold iron, straight out the bog, never smelted. A hex has to get hold of a thing, and it can get no hold on that.']"
+clues.den-tracks.name,"Clue name, shown in the journal and on the opportunity",[The Den]
+clues.den-tracks.prompt,Opportunity text shown before this clue is taken,[Old kills litter the undergrowth. Something beds down near here.]
+clues.den-tracks.reveal,Journal and event-log text once this clue is revealed,[You find the den: a hollow of cracked bones. The beast returns here when the settlement is too watchful.]
+clues.grave-shadow.name,"Clue name, shown in the journal and on the opportunity",[The Shroud of Grave-Shadow]
+clues.grave-shadow.prompt,Opportunity text shown before this clue is taken,"[The killing blows here fell strangely — some bit deep, most seem not to have landed at all.]"
+clues.grave-shadow.reveal,Journal and event-log text once this clue is revealed,"[Blows that pass through without wounding, then one that tears. That is grave-shadow thinning and closing: the risen dead's rhythm, not a beast's and not a hex.]"
+clues.gravediggers-map.name,"Clue name, shown in the journal and on the opportunity",[The Gravedigger's Knowledge]
+clues.gravediggers-map.prompt,Opportunity text shown before this clue is taken,[Nobody knows the ground here better than the one who digs it.]
+clues.gravediggers-map.reveal,Journal and event-log text once this clue is revealed,[He walks you the rows and points without looking: '{grave}. That one. Do what you came to do.']
+clues.herbwifes-tip.name,"Clue name, shown in the journal and on the opportunity",[The Herbwife's Tip]
+clues.herbwifes-tip.prompt,Opportunity text shown before this clue is taken,[The old women trade remedies at the market stall.]
+clues.herbwifes-tip.reveal,Journal and event-log text once this clue is revealed,[They tell you where moon-herb and bitter-root grow thick: the clearings off the forest trail.]
+clues.hex-marks.name,"Clue name, shown in the journal and on the opportunity",[Hex-marks on the Lintel]
+clues.hex-marks.prompt,Opportunity text shown before this clue is taken,"[The door-frames in this row all carry the same small scoring, cut fresh over older cuts.]"
+clues.hex-marks.reveal,Journal and event-log text once this clue is revealed,"[Deliberate hex-work, cut by a steady hand that knew the figure — and cut outward, from {npc}'s house toward the rest. Beasts do not draw, and the dead do not need to.]"
+clues.killed-to-be-found.name,"Clue name, shown in the journal and on the opportunity",[Killed to Be Found]
+clues.killed-to-be-found.prompt,Opportunity text shown before this clue is taken,"[The body was left on the green, in the open, in the middle of the path.]"
+clues.killed-to-be-found.reveal,Journal and event-log text once this clue is revealed,[Nothing was taken and nothing was hidden. It was dragged from where it fell to where it would be found first. This killing is a notice nailed to a door.]
+clues.living-memory.name,"Clue name, shown in the journal and on the opportunity",[Inside Living Memory]
+clues.living-memory.prompt,Opportunity text shown before this clue is taken,"[Whatever started this, someone here was alive when it did.]"
+clues.living-memory.reveal,Journal and event-log text once this clue is revealed,"[They can date it. A season, a name, an argument in the road — this began inside living memory, and inherited curses do not have a date.]"
+clues.materials-not-people.name,"Clue name, shown in the journal and on the opportunity","[Materials, Not People]"
+clues.materials-not-people.prompt,Opportunity text shown before this clue is taken,[Take an inventory rather than a statement: what has actually gone missing this month?]
+clues.materials-not-people.reveal,Journal and event-log text once this clue is revealed,"[Candle-wax, lead from the flashing, chalk, a censer, grave-earth by the sackful. Things, not people, and every one of them a component. Something is being built here.]"
+clues.mine-lode.name,"Clue name, shown in the journal and on the opportunity",[The Abandoned Lode]
+clues.mine-lode.prompt,Opportunity text shown before this clue is taken,[The old mine was abandoned when the vein pinched out — or so the story goes.]
+clues.mine-lode.reveal,Journal and event-log text once this clue is revealed,[The story lied. Past the fallen rubble a thread of true silver still glints in the rock.]
+clues.no-hex-work.name,"Clue name, shown in the journal and on the opportunity",[No Hand Behind It]
+clues.no-hex-work.prompt,Opportunity text shown before this clue is taken,"[If a working were being kept up in this parish, it would leave the same marks in the same places every time.]"
+clues.no-hex-work.reveal,Journal and event-log text once this clue is revealed,"[You check the lintels, the font, the threshold stones: no figures, no scoring, no working kept up anywhere. Whatever this is, no living hand is drawing it.]"
+clues.nothing-for-show.name,"Clue name, shown in the journal and on the opportunity",[Nothing Done for Show]
+clues.nothing-for-show.prompt,Opportunity text shown before this clue is taken,"[For all the fear in this valley, ask what anyone has actually witnessed.]"
+clues.nothing-for-show.reveal,Journal and event-log text once this clue is revealed,"[Nobody has seen a thing. No display, no bodies left where the road runs, no message. Whatever this is, it is working quietly and would rather not be watched at all.]"
+clues.plot-map.name,"Clue name, shown in the journal and on the opportunity",[The Plot Map]
+clues.plot-map.prompt,Opportunity text shown before this clue is taken,"[A vestry drawer holds the parish plot map, annotated in a shaking hand.]"
+clues.plot-map.reveal,Journal and event-log text once this clue is revealed,[The map marks every plot and names its occupant. Now you know exactly where {grave} lies.]
+clues.preparation-not-appetite.name,"Clue name, shown in the journal and on the opportunity","[Preparation, Not Appetite]"
+clues.preparation-not-appetite.prompt,Opportunity text shown before this clue is taken,"[The traffic to this place is regular, and regular traffic has a purpose.]"
+clues.preparation-not-appetite.reveal,Journal and event-log text once this clue is revealed,"[The same trips, the same loads, the same hours — carrying in, never carrying out. This is not hunger and it is not display. It is a schedule of works.]"
+clues.route-stones.name,"Clue name, shown in the journal and on the opportunity",[The Marked Route-Stones]
+clues.route-stones.prompt,Opportunity text shown before this clue is taken,[There are stones set along this trail at intervals too even to be chance.]
+clues.route-stones.reveal,Journal and event-log text once this clue is revealed,"[Each stone scored with the same mark, each set exactly within sight of the next — a road laid out to be followed by someone who is not deciding to follow it. This is a route, and it leads somewhere that is counting arrivals.]"
+clues.second-face.name,"Clue name, shown in the journal and on the opportunity",[A Second Face]
+clues.second-face.prompt,Opportunity text shown before this clue is taken,"[The villagers are eager to talk about the nights, if you let them circle to it.]"
+clues.second-face.reveal,Journal and event-log text once this clue is revealed,"[The same shape to every account: somebody here keeps a second face for after dark. Which of the old horrors that means, nobody will say.]"
+clues.sextons-spade.name,"Clue name, shown in the journal and on the opportunity",[The Sexton's Spade]
+clues.sextons-spade.prompt,Opportunity text shown before this clue is taken,"[Grave-dust for a binding charm must be freely given, not stolen.]"
+clues.sextons-spade.reveal,Journal and event-log text once this clue is revealed,[The gravedigger fills a pouch from the old consecrated rows and presses it on you. 'Sew it tight. Use it close.']
+clues.shepherds-account.name,"Clue name, shown in the journal and on the opportunity",[The Shepherd's Account]
+clues.shepherds-account.prompt,Opportunity text shown before this clue is taken,[The shepherds drive their flocks wide of the high pasture and will not say why.]
+clues.shepherds-account.reveal,Journal and event-log text once this clue is revealed,"[The oldest shepherd finally speaks: the beast walks the tree-line at dusk, and dens in the deep wood.]"
+clues.silver-candlesticks.name,"Clue name, shown in the journal and on the opportunity",[The Silver Candlesticks]
+clues.silver-candlesticks.prompt,Opportunity text shown before this clue is taken,"[The altar candlesticks are old, heavy, and untarnished.]"
+clues.silver-candlesticks.reveal,Journal and event-log text once this clue is revealed,"[They are true silver — enough, melted down, to cast a bullet the curse cannot heal.]"
+clues.something-old.name,"Clue name, shown in the journal and on the opportunity",[Something Old Behind It]
+clues.something-old.prompt,Opportunity text shown before this clue is taken,"[The parish keeps its papers badly, but it keeps them.]"
+clues.something-old.reveal,Journal and event-log text once this clue is revealed,"[The trouble has a long tail: the same field-names, the same families, the same complaint recurring across generations. Something here was set in motion a long time ago — set, or promised.]"
+clues.steel-turned-aside.name,"Clue name, shown in the journal and on the opportunity",[Honest Steel Turned Aside]
+clues.steel-turned-aside.prompt,Opportunity text shown before this clue is taken,[One of the drovers swung on something in the dark and wants to tell you he is not a coward.]
+clues.steel-turned-aside.reveal,Journal and event-log text once this clue is revealed,"['The blade went wide,' he insists, 'and I had it dead straight.' Steel that slides off a working, over and over — that is a ward worn on the body, not a hide and not a shroud.]"
+clues.stones-before-the-parish.name,"Clue name, shown in the journal and on the opportunity",[Stones Before the Parish]
+clues.stones-before-the-parish.prompt,Opportunity text shown before this clue is taken,"[The standing stones were old when the church was new, and they are still warm to the hand.]"
+clues.stones-before-the-parish.reveal,Journal and event-log text once this clue is revealed,[What answers is older than any compact and older than any grudge: a thing laid down before there were parties to agree or betray. It has simply been waiting to be fed again.]
+clues.the-audience.name,"Clue name, shown in the journal and on the opportunity",[It Wants an Audience]
+clues.the-audience.prompt,Opportunity text shown before this clue is taken,"[Ask them when they hear it, rather than what they hear.]"
+clues.the-audience.reveal,Journal and event-log text once this clue is revealed,"[Always at the hour the taproom empties, always near enough the houses to carry. It is timed for the largest number of listeners. Something that wanted quiet work would not perform.]"
+clues.the-dead-are-in-it.name,"Clue name, shown in the journal and on the opportunity",[The Dead Are In It]
+clues.the-dead-are-in-it.prompt,Opportunity text shown before this clue is taken,[The churchyard has been walked over more than the sexton's work accounts for.]
+clues.the-dead-are-in-it.reveal,Journal and event-log text once this clue is revealed,"[Grave-earth trodden and re-trodden, and a plot disturbed at the edges. Something in this valley has business with the dead — whether it is one of them, or only using them, the ground does not say.]"
+clues.the-earth-breathes.name,"Clue name, shown in the journal and on the opportunity",[The Earth Breathes]
+clues.the-earth-breathes.prompt,Opportunity text shown before this clue is taken,[The gravedigger drinks like a man trying to forget his own trade.]
+clues.the-earth-breathes.reveal,Journal and event-log text once this clue is revealed,"[He grips your wrist: 'I saw the earth breathe over {grave}. Rise and fall, like a sleeper.' Nothing living lies in a grave and breathes it.]"
+clues.the-long-register.name,"Clue name, shown in the journal and on the opportunity",[The Long Register]
+clues.the-long-register.prompt,Opportunity text shown before this clue is taken,"[The registers go back three hundred years, and someone has been careless with the old pages.]"
+clues.the-long-register.reveal,Journal and event-log text once this clue is revealed,"[The same affliction, entered in the same words, in three centuries of different hands. This did not begin with anyone now living, and nobody promised it — it was simply laid on, and never lifted.]"
+clues.the-pinned-hare.name,"Clue name, shown in the journal and on the opportunity",[The Pinned Hare]
+clues.the-pinned-hare.prompt,Opportunity text shown before this clue is taken,"[Something has been left on the trail as a warning, and warnings are instructions read backwards.]"
+clues.the-pinned-hare.reveal,Journal and event-log text once this clue is revealed,"[A hare pinned to a stump with a rough black pin — and the pin is unsmelted bog iron. Somebody in this valley already knows what holds a working still, and wanted the fact known.]"
+clues.the-stopped-payment.name,"Clue name, shown in the journal and on the opportunity",[The Stopped Payment]
+clues.the-stopped-payment.prompt,Opportunity text shown before this clue is taken,"[The manor kept its accounts to the penny, and then, one year, stopped keeping one of them.]"
+clues.the-stopped-payment.reveal,Journal and event-log text once this clue is revealed,"[A payment rendered every year without fail for four generations — then a line ruled through it, and nothing after. Not a grudge and not a curse: a compact honoured for centuries, and broken by someone who thought it was only money.]"
+clues.the-sworn-vengeance.name,"Clue name, shown in the journal and on the opportunity",[The Sworn Vengeance]
+clues.the-sworn-vengeance.prompt,Opportunity text shown before this clue is taken,"[There is old bad blood here, and someone knows who swore what, and before whom.]"
+clues.the-sworn-vengeance.reveal,Journal and event-log text once this clue is revealed,"[It spills out at last: a wrong done, and a vow sworn before witnesses to make the valley pay for it. No bargain, no obligation — only a debt of spite, taken up freely.]"
+clues.the-unpaid-obligation.name,"Clue name, shown in the journal and on the opportunity",[The Unpaid Obligation]
+clues.the-unpaid-obligation.prompt,Opportunity text shown before this clue is taken,"[Something here is owed, and knows the exact figure.]"
+clues.the-unpaid-obligation.reveal,Journal and event-log text once this clue is revealed,"[What answers is not spite and not an old malediction. It recites terms: what was promised, what was given, and the year the giving stopped. It is not angry. It is collecting.]"
+clues.the-widows-warning.name,"Clue name, shown in the journal and on the opportunity",[The Widow's Warning]
+clues.the-widows-warning.prompt,Opportunity text shown before this clue is taken,[One neighbour has stopped taking the short way past a particular door.]
+clues.the-widows-warning.reveal,Journal and event-log text once this clue is revealed,"['I'll not walk that side of the row after dark,' she says, and names the house. She is not guessing, and she is not wrong.]"
+clues.the-working-room.name,"Clue name, shown in the journal and on the opportunity",[The Working Room]
+clues.the-working-room.prompt,Opportunity text shown before this clue is taken,"[Whatever is being kept up in this valley is being kept up somewhere, at regular hours.]"
+clues.the-working-room.reveal,Journal and event-log text once this clue is revealed,"[You watch {npc}'s house until the shutter opens: a back room laid out for work, and the same hour kept every night. That is where she will be when it matters.]"
+clues.tracks-to-town.name,"Clue name, shown in the journal and on the opportunity",[Tracks to Town]
+clues.tracks-to-town.prompt,Opportunity text shown before this clue is taken,"[Pad-marks the size of plates cross the trail here, heading for the settlement.]"
+clues.tracks-to-town.reveal,Journal and event-log text once this clue is revealed,"[You follow the pad-marks until, at the field's edge, they become boot-prints — walking calmly toward {npc}'s door. Nothing dead and nothing merely hexed leaves that trail.]"
+clues.undisturbed-ground.name,"Clue name, shown in the journal and on the opportunity",[The Undisturbed Ground]
+clues.undisturbed-ground.prompt,Opportunity text shown before this clue is taken,"[The sexton's rows can be read like a ledger, if you know that settled earth lies flat.]"
+clues.undisturbed-ground.reveal,Journal and event-log text once this clue is revealed,"[Every plot settled, every sod flat, not one pushed up from beneath. Nothing has risen out of this ground — whatever walks here walked in on its own two feet.]"
+clues.walked-out-unhurried.name,"Clue name, shown in the journal and on the opportunity",[They Walked Out Unhurried]
+clues.walked-out-unhurried.prompt,Opportunity text shown before this clue is taken,"[The empty cottage was left open to the weather, and the bed not slept in.]"
+clues.walked-out-unhurried.reveal,Journal and event-log text once this clue is revealed,"[No struggle, no blood, no forced door. One set of prints, unhurried, even-strided, leading away and not coming back. Nobody took them. They were called, and they went.]"
+clues.wardens-dust.name,"Clue name, shown in the journal and on the opportunity",[The Warden's Dust]
+clues.wardens-dust.prompt,Opportunity text shown before this clue is taken,[Consecrated earth remembers what it holds.]
+clues.wardens-dust.reveal,Journal and event-log text once this clue is revealed,"[The oldest grave gives up its handful of dust freely, as if glad to be of use against the thing that mocks all graves.]"
+clues.working-toward-something.name,"Clue name, shown in the journal and on the opportunity",[Working Toward Something]
+clues.working-toward-something.prompt,Opportunity text shown before this clue is taken,[The air out here has the held-breath quality of a room set for a occasion.]
+clues.working-toward-something.reveal,Journal and event-log text once this clue is revealed,"[There is an intention running under all of this — stages, a sequence, an end being worked toward. What the end is, the working does not volunteer.]"
+clues.wounds-that-closed.name,"Clue name, shown in the journal and on the opportunity",[The Wounds That Closed]
+clues.wounds-that-closed.prompt,Opportunity text shown before this clue is taken,"[Someone got a blow in on the thing, and lived. They will not enjoy remembering it.]"
+clues.wounds-that-closed.reveal,Journal and event-log text once this clue is revealed,"['I opened it to the bone,' he says, 'and watched the bone close over.' Flesh that knits itself is the beast's trick, and only the beast's.]"
+clues.wrongness-in-the-air.name,"Clue name, shown in the journal and on the opportunity",[A Wrongness in the Air]
+clues.wrongness-in-the-air.prompt,Opportunity text shown before this clue is taken,[The old stones sit in a silence that presses on the ears.]
+clues.wrongness-in-the-air.reveal,Journal and event-log text once this clue is revealed,"[The vision is only weight and appetite and something walking. Whatever is loose here is old and it is hungry, and that is all the stones will commit to.]"
+enemies.bandit.description,"Enemy description, shown when inspecting it",[A road-thief with a short pistol and no scruples. Keeps distance while it can.]
+enemies.bandit.name,"Name of an ordinary enemy, shown when you fight or inspect it",[Bandit]
+enemies.restless-dead.description,"Enemy description, shown when inspecting it","[A corpse that did not stay put. Slow, patient, and terribly strong when it closes.]"
+enemies.restless-dead.name,"Name of an ordinary enemy, shown when you fight or inspect it",[Restless Dead]
+enemies.thrall.description,"Enemy description, shown when inspecting it","[A villager who answered the call and kept walking. Their eyes track you without recognition, and they will not be reasoned with — but they are still, underneath, only a frightened neighbour.]"
+enemies.thrall.name,"Name of an ordinary enemy, shown when you fight or inspect it",[Thrall]
+enemies.wolf.description,"Enemy description, shown when inspecting it","[A lean grey wolf, bolder than it should be. It runs straight at what it means to kill.]"
+enemies.wolf.name,"Name of an ordinary enemy, shown when you fight or inspect it",[Wolf]
+gathers.buy-simples.name,"Name of a gathering opportunity, shown on the map and in the action list",[Buy simples at the market stall]
+gathers.buy-simples.prompt,Opportunity text shown before gathering here,[The herb-stall sells remedies to those the seller likes the look of.]
+gathers.buy-simples.reveal,Log line once the gathering is done,"[A little talk, a little coin, and the bundle changes hands: moon-herb and bitter-root, fresh-cut.]"
+gathers.dig-bog-iron.name,"Name of a gathering opportunity, shown on the map and in the action list",[Dig bog iron from the seep]
+gathers.dig-bog-iron.prompt,Opportunity text shown before gathering here,"[The seep runs rust-red where the ground bleeds iron. Bog iron, never smelted — the kind the old women mean.]"
+gathers.dig-bog-iron.reveal,Log line once the gathering is done,"[You dig out a double handful of bog iron, heavy and cold and never once near a fire.]"
+gathers.dig-cellar-seep.name,"Name of a gathering opportunity, shown on the map and in the action list",[Dig the weeping cellar floor]
+gathers.dig-cellar-seep.prompt,Opportunity text shown before gathering here,"[The cellar floor weeps rust where the ground water comes through. The same bog, only with a house sat on top of it.]"
+gathers.dig-cellar-seep.reveal,Log line once the gathering is done,"[You break up the wet floor and pick the iron out of it, cold and unsmelted, exactly as the old women said it must be.]"
+gathers.draw-chapel-stoup.name,"Name of a gathering opportunity, shown on the map and in the action list",[Fill a flask at the chapel stoup]
+gathers.draw-chapel-stoup.prompt,Opportunity text shown before gathering here,"[The family kept a private chapel at the end of the hall, and the stoup by its door has not been emptied.]"
+gathers.draw-chapel-stoup.reveal,Log line once the gathering is done,"[The water is stale and the stone is filthy, and the blessing on it is as old as the house. It will serve.]"
+gathers.draw-hallowed-water.name,"Name of a gathering opportunity, shown on the map and in the action list",[Draw water from the font]
+gathers.draw-hallowed-water.prompt,Opportunity text shown before gathering here,[The font has stood blessed since before the register begins. What was hallowed that long ago answers what was cursed that long ago.]
+gathers.draw-hallowed-water.reveal,Log line once the gathering is done,"[You fill a stoppered flask from the font. The priest watches and says nothing, which is its own kind of permission.]"
+gathers.draw-the-well.name,"Name of a gathering opportunity, shown on the map and in the action list",[Sound the old well]
+gathers.draw-the-well.prompt,Opportunity text shown before gathering here,[Things get thrown down wells. Some of them keep.]
+gathers.draw-the-well.reveal,Log line once the gathering is done,"[The bucket comes up with sweet water and a knot of bitter-root, still good.]"
+gathers.find-parish-counterpart.name,"Name of a gathering opportunity, shown on the map and in the action list",[Find the parish's half of the seal]
+gathers.find-parish-counterpart.prompt,Opportunity text shown before gathering here,[A compact is sealed twice and kept in two places. The parish kept the other copy.]
+gathers.find-parish-counterpart.reveal,Log line once the gathering is done,"[Bound into the back of the register: the parish's half of the seal, snapped along the same break. Two halves of one broken promise.]"
+gathers.gather-herbs-north.name,"Name of a gathering opportunity, shown on the map and in the action list",[Gather herbs in the clearing]
+gathers.gather-herbs-north.prompt,Opportunity text shown before gathering here,[Moon-herb and bitter-root grow thick where the light gets in — for eyes that know them.]
+gathers.gather-herbs-north.reveal,Log line once the gathering is done,"[You cut moon-herb and dig bitter-root, wrapping them against the damp.]"
+gathers.gather-herbs-south.name,"Name of a gathering opportunity, shown on the map and in the action list",[Gather herbs off the trail]
+gathers.gather-herbs-south.prompt,Opportunity text shown before gathering here,"[A second clearing, rich with the same silver-leafed growth.]"
+gathers.gather-herbs-south.reveal,Log line once the gathering is done,"[More moon-herb, more bitter-root. The wood provides for those who ask properly.]"
+gathers.lift-family-plot-earth.name,"Name of a gathering opportunity, shown on the map and in the action list",[Lift earth from the family plot]
+gathers.lift-family-plot-earth.prompt,Opportunity text shown before gathering here,"[The family buried their own out here, including the one nobody in the settlement will name.]"
+gathers.lift-family-plot-earth.reveal,Log line once the gathering is done,"[You cut a square of turf from the plot and fold the earth away. Whatever was taken from them, the ground kept the account.]"
+gathers.mine-silver.name,"Name of a gathering opportunity, shown on the map and in the action list",[Chip silver from the lode]
+gathers.mine-silver.prompt,Opportunity text shown before gathering here,"[Past the fallen rubble, a thread of pale metal glints in the rockface.]"
+gathers.mine-silver.reveal,Log line once the gathering is done,[Your knife and patience win a fist of true silver from the lode.]
+gathers.recover-covenant-seal.name,"Name of a gathering opportunity, shown on the map and in the action list",[Recover the broken seal]
+gathers.recover-covenant-seal.prompt,Opportunity text shown before gathering here,"[The compacts were kept in this room, and one of them was broken rather than ended. Broken things leave halves.]"
+gathers.recover-covenant-seal.reveal,Log line once the gathering is done,"[Under the ledgers: half a wax seal, snapped clean, the other half long gone. The promise and the withholding, in one piece of wax.]"
+gathers.scavenge-candlesticks.name,"Name of a gathering opportunity, shown on the map and in the action list",[Scavenge the silver candlesticks]
+gathers.scavenge-candlesticks.prompt,Opportunity text shown before gathering here,"[The candlesticks are true silver, and the church owes the valley a defence.]"
+gathers.scavenge-candlesticks.reveal,Log line once the gathering is done,"[Forgive me. You wrap the cold silver in cloth; the altar keeps its dignity, barely.]"
+gathers.search-campsite.name,"Name of a gathering opportunity, shown on the map and in the action list",[Pick over the campsite]
+gathers.search-campsite.prompt,Opportunity text shown before gathering here,"[Someone camped in the manor grounds recently, and left in a hurry.]"
+gathers.search-campsite.reveal,Log line once the gathering is done,"[A spilled powder horn, a cast ball, a dropped penny. Their hurry is your gain.]"
+gathers.search-study.name,"Name of a gathering opportunity, shown on the map and in the action list",[Search the manor study]
+gathers.search-study.prompt,Opportunity text shown before gathering here,[The study was abandoned in haste. Drawers hang open; not all were emptied.]
+gathers.search-study.reveal,Log line once the gathering is done,[Under a false drawer-bottom: a purse the fleeing family never came back for.]
+gathers.sweep-the-crypt.name,"Name of a gathering opportunity, shown on the map and in the action list",[Gather dust from the old niches]
+gathers.sweep-the-crypt.prompt,Opportunity text shown before gathering here,"[The oldest niches hold dead long past all grudges. Taken with the proper words, their dust is freely given.]"
+gathers.sweep-the-crypt.reveal,Log line once the gathering is done,[You speak the old courtesies and take a handful of consecrated dust. The crypt stays quiet. It approves.]
+gathers.take-wronged-earth.name,"Name of a gathering opportunity, shown on the map and in the action list",[Take earth from the wronged plot]
+gathers.take-wronged-earth.prompt,Opportunity text shown before gathering here,"[If a wrong was done here, the one it was done to is in this ground, and the ground remembers the debt.]"
+gathers.take-wronged-earth.reveal,Log line once the gathering is done,"[The gravedigger walks you to the plot without being told which, and turns his back while you fill a fold of cloth.]"
+grimoire.entries.ancient-curse.body,Grimoire entry body text,"[Some evils are inherited like debts. Where the trouble is old, its signs are old: parish records, weathered stones, dreams that repeat in different sleepers. Ask the church and the graves before you ask the living.]"
+grimoire.entries.ancient-curse.title,Grimoire entry title,[Of Ancient Curses]
+grimoire.entries.bandit.body,Grimoire entry body text,"[Desperate men with pistols and poor judgement. They keep their distance and shoot while they can; close with them, or answer in kind. Ask who pays them, for someone always does.]"
+grimoire.entries.bandit.title,Grimoire entry title,[Of Bandits]
+grimoire.entries.binding-charm.body,Grimoire entry body text,"[Grave-dust freely given, moon-herb picked by night, sewn tight in a caul. Pressed close to the risen dead it strips their shroud of shadow for five long breaths — long enough, for a hunter who has kept her steel ready.]"
+grimoire.entries.binding-charm.title,Grimoire entry title,[Of Binding Charms]
+grimoire.entries.bitter-betrayal.body,Grimoire entry body text,"[Some evils are minted fresh from a wrong done between the living. Where the trouble is new, its signs walk about the settlement: grudges nursed, names not spoken, blood not yet dry. Ask the living, and watch their eyes.]"
+grimoire.entries.bitter-betrayal.title,Grimoire entry title,[Of Bitter Betrayals]
+grimoire.entries.broken-covenant.body,Grimoire entry body text,"[The hardest kind to read, because it wears the other two like borrowed coats. An obligation kept faithfully for generations — a payment, a rite, a door left unlocked one night a year — and then, within living memory, somebody decided it was superstition and stopped. It looks like an ancient curse, because the compact is genuinely old. It looks like a bitter betrayal, because a person alive today did the breaking. What tells you the truth is the *terms*: a curse rages, a grudge accuses, but a broken covenant simply presents the account and waits. Find the ledger, find the year the line was ruled through, and you have it. What answers it is the compact's own seal.]"
+grimoire.entries.broken-covenant.title,Grimoire entry title,[Of Broken Covenants]
+grimoire.entries.cold-iron-pin.body,Grimoire entry body text,"[Iron dug from the bog and beaten cold, never once shown the fire. Every working needs purchase, some edge or surface to take hold of, and unsmelted iron offers none — a hex slides off it the way water slides off wax. Against a warded thing it is not a better blade, it is the only blade. Draw the pin at the forge like any other work, but keep it cold, and quench it in what the evil's beginning demands.]"
+grimoire.entries.cold-iron-pin.title,Grimoire entry title,[Of Cold Iron]
+grimoire.entries.consecration.body,Grimoire entry body text,"[A church may be made proof against the risen dead: a rite of one evening, if the altar is willing. On warded ground a revenant's shroud cannot close and the very floor scalds it. Against a living curse like the beast, the rite is so much candle-smoke. Choose the ground of your last stand as carefully as your weapon.]"
+grimoire.entries.consecration.title,Grimoire entry title,[Of Consecrated Ground]
+grimoire.entries.hidden-design.body,Grimoire entry body text,"[Some monsters kill only as a mason chips stone: in service of a work. Watch for hired men guarding nothing worth stealing, and desecrations that look like errands. Each stage the design completes, its author grows greater.]"
+grimoire.entries.hidden-design.title,Grimoire entry title,[Of Hidden Designs]
+grimoire.entries.origin-reagents.body,Grimoire entry body text,"[A counter is only half made when it leaves the forge. Every decisive work must be quenched in something that answers *how the evil began*, and the three beginnings demand three different things. What was cursed in the deep past yields to what the parish blessed in the deep past: hallowed water from the font. What was born of a wrong done between the living yields to earth from the wronged one's own plot, because a debt answers to the one it was owed. What was a compact broken yields to the compact's own seal, the promise and the withholding together in one piece of wax. Read the beginning before you light the forge. You can carry all three and be certain — but you will pay for the certainty in daylight, and daylight is the one thing you cannot craft.]"
+grimoire.entries.origin-reagents.title,Grimoire entry title,[Of Quenching the Work]
+grimoire.entries.preparations.body,Grimoire entry body text,[A snare set in a doorway has killed more monsters than any sword. A draught of moon-herb has saved more hunters than any prayer. Take the hour at the forge; the grave you dodge may be your own.]
+grimoire.entries.preparations.title,Grimoire entry title,[Of Preparations]
+grimoire.entries.reign-of-fear.body,Grimoire entry body text,"[Some monsters kill to be feared, and grow strong on the fearing. Each outrage it lands unanswered, it swells bolder and harder to put down. Do not give it the week it wants.]"
+grimoire.entries.reign-of-fear.title,Grimoire entry title,[Of a Reign of Fear]
+grimoire.entries.restless-dead.body,Grimoire entry body text,"[Corpses walked by another's will. Slow — mercifully slow — but tireless, and strong enough to matter if you let them lay hands on you. Where the restless dead shuffle, a greater dead commands.]"
+grimoire.entries.restless-dead.title,Grimoire entry title,[Of the Restless Dead]
+grimoire.entries.revenant.body,Grimoire entry body text,"[A corpse that rose with unfinished business and no intention of leaving it so. It sleeps in its own grave between errands. No blade nor ball bites it while its shroud of grave-shadow holds; the shroud thins for a moment at its own slow rhythm — you will see it, and it knows you can. It flows across ground unnaturally fast when it wishes, and it wishes it mostly when retreating from your steel or closing on your throat. Consecrated ground holds the shroud open and scalds it; a binding charm pressed close does the same for a handful of breaths. Learn the rhythm, or bring the counter.]"
+grimoire.entries.revenant.title,Grimoire entry title,[Of the Revenant]
+grimoire.entries.silver-bullet.body,Grimoire entry body text,"[True silver is the old wound the curse remembers. A ball of it, cast honest over a forge, bites the beast to the quick — and what silver tears, no moon can mend. Churches keep more silver than they know; so do abandoned mines.]"
+grimoire.entries.silver-bullet.title,Grimoire entry title,[Of Silver]
+grimoire.entries.the-calling.body,Grimoire entry body text,"[It does not hunt. It invites. One by one the valley folk get up in the night, unlatch their own doors, and walk out unhurried along a road they have never chosen — and something at the far end keeps the tally. You will find no struggle and no blood, only even-strided footprints leading away, and stones set along the trail scored with the same mark and placed each within sight of the next. That is a road built to be followed by someone not deciding to follow it. Throw the route-stones down and grind the marks off, and the ones who walk out that night will come to themselves cold and bewildered at the trail's edge, and the tally will fall short.]"
+grimoire.entries.the-calling.title,Grimoire entry title,[Of the Calling]
+grimoire.entries.thrall.body,Grimoire entry body text,"[Those who answered the call and kept walking. They come at you steadily and without malice, and their eyes pass over your face without finding anything in it. They can be put down like anything else, and it is worth remembering while you do it that a week ago one of them sold you bread.]"
+grimoire.entries.thrall.title,Grimoire entry title,[Of Thralls]
+grimoire.entries.threat-tiers.body,Grimoire entry body text,"[Every night you spend certain-but-unready, the enemy spends feeding. An evil that lands its outrages grows in hide and cunning both. The prepared early hunt is the master's stroke; the patient hunt is the journeyman's; the hunt on the final night is the one you did not choose.]"
+grimoire.entries.threat-tiers.title,Grimoire entry title,[Of Letting Evil Wait]
+grimoire.entries.werewolf.body,Grimoire entry body text,"[By day it wears a neighbour's face and does a neighbour's work; you will not know it by looking. By night it is appetite in a grey hide. Its wounds close as fast as you can deal them — save one kind. Watch for the gather-and-leap: given a clear run it will cross half a field in a heartbeat, so keep a tree, a cart, a wall between you and it. Break its lane and you break its favourite trick. Two honest proofs of its day-name are enough to hunt it; one is gossip, and gossip hangs innocents.]"
+grimoire.entries.werewolf.title,Grimoire entry title,[Of the Werewolf]
+grimoire.entries.witch.body,Grimoire entry body text,"[Not a hag on a heath — a neighbour, with a trade and a doorstep and an opinion about the weather. She keeps the old compacts and asks the old prices, and the working she wears turns honest steel aside as if the air had gone thick. You will know her by her hand: hex-work is *drawn*, cut deliberate into lintels and thresholds, and a beast cannot draw and the dead do not need to. Do not go at her with good steel and confidence. The hex has to get hold of a thing to turn it, and it can get no hold at all on cold iron — bog iron, unsmelted, never near the forge fire. Wear the hex down or cut straight through it; either way, be carrying the pin.]"
+grimoire.entries.witch.title,Grimoire entry title,[Of the Witch]
+grimoire.entries.wolf.body,Grimoire entry body text,"[Honest beasts, if hungry ones. They come straight on and die like anything else. When wolves grow bold near a settlement, ask what emboldened them.]"
+grimoire.entries.wolf.title,Grimoire entry title,[Of Wolves]
+hunters.huntress.manoeuvres.aim.description,"Manoeuvre description, shown when inspecting the action",[Steady the flintlock. Your next ranged shot this encounter cannot miss.]
+hunters.huntress.manoeuvres.aim.name,"Name of a hunter manoeuvre, shown in the action list",[Aim]
+hunters.huntress.manoeuvres.power-attack.description,"Manoeuvre description, shown when inspecting the action",[Put your weight behind the next blow. Your next melee strike deals half again its damage.]
+hunters.huntress.manoeuvres.power-attack.name,"Name of a hunter manoeuvre, shown in the action list",[Power Attack]
+hunters.huntress.manoeuvres.sprint.description,"Manoeuvre description, shown when inspecting the action","[Move two tiles in a single direction, in one action.]"
+hunters.huntress.manoeuvres.sprint.name,"Name of a hunter manoeuvre, shown in the action list",[Sprint]
+hunters.huntress.name,"Hunter's name, shown on the hunter-select screen and status panel",[The Huntress]
+hunters.huntress.signatures.killing-blow.description,"Signature ability description, shown when inspecting the action","[A single perfect strike for double damage, against a foe that is held fast or already gravely wounded.]"
+hunters.huntress.signatures.killing-blow.name,"Name of a hunter signature ability, shown in the action list",[Killing Blow]
+hunters.huntress.signatures.set-snare.description,"Signature ability description, shown when inspecting the action","[Rig a hunting snare on an adjacent tile. The first enemy to step in is held fast for three turns: it cannot move, pounce, or dash, and its flailing blows falter.]"
+hunters.huntress.signatures.set-snare.name,"Name of a hunter signature ability, shown in the action list",[Set Snare]
+hunters.huntress.title,"Hunter's title, shown under their name on the hunter-select screen","[A hunter of beasts, who has learned that some beasts wear faces]"
+hunters.occultist.manoeuvres.aim.description,"Manoeuvre description, shown when inspecting the action",[Steady the flintlock. Your next ranged shot this encounter cannot miss.]
+hunters.occultist.manoeuvres.aim.name,"Name of a hunter manoeuvre, shown in the action list",[Aim]
+hunters.occultist.manoeuvres.sprint.description,"Manoeuvre description, shown when inspecting the action","[Move two tiles in a single direction, in one action.]"
+hunters.occultist.manoeuvres.sprint.name,"Name of a hunter manoeuvre, shown in the action list",[Sprint]
+hunters.occultist.name,"Hunter's name, shown on the hunter-select screen and status panel",[The Occultist]
+hunters.occultist.signatures.read-the-sign.description,"Signature ability description, shown when inspecting the action",[Sit with a sign you have already found and read it properly. One ambiguous proof you are carrying becomes decisive: it stops agreeing with your suspicion and starts ruling out the alternatives.]
+hunters.occultist.signatures.read-the-sign.name,"Name of a hunter signature ability, shown in the action list",[Read the Sign]
+hunters.occultist.signatures.ward-the-ground.description,"Signature ability description, shown when inspecting the action","[Draw the old marks into the earth around you. For a while, nothing unnatural crosses that ground without being torn at for the crossing.]"
+hunters.occultist.signatures.ward-the-ground.name,"Name of a hunter signature ability, shown in the action list",[Ward the Ground]
+hunters.occultist.title,"Hunter's title, shown under their name on the hunter-select screen","[A scholar of the old compacts, tolerated because she is useful]"
+items.binding-charm.description,"Item description, shown when inspecting it in the pack","[Grave-dust and moon-herb sewn in a caul. Pressed close to the risen dead, it strips their shroud of shadow for five long breaths.]"
+items.binding-charm.name,"Item name, shown in the pack and in loot messages",[Binding Charm]
+items.bitter-root.description,"Item description, shown when inspecting it in the pack",[A twisted root that numbs the tongue and cleans a wound.]
+items.bitter-root.name,"Item name, shown in the pack and in loot messages",[Bitter-root]
+items.coin.description,"Item description, shown when inspecting it in the pack","[Honest silver pennies. Good for trade, useless against the dark.]"
+items.coin.name,"Item name, shown in the pack and in loot messages",[Coin]
+items.cold-iron-pin.description,"Item description, shown when inspecting it in the pack","[A long pin of unworked cold iron, never near a forge fire. A hex slides off honest steel; it cannot get a grip on this at all.]"
+items.cold-iron-pin.name,"Item name, shown in the pack and in loot messages",[Cold Iron Pin]
+items.cold-iron.description,"Item description, shown when inspecting it in the pack","[Bog iron, never smelted, never blessed. The old women say the older things cannot abide it, and for once the old women are right.]"
+items.cold-iron.name,"Item name, shown in the pack and in loot messages",[Cold Iron]
+items.covenant-seal.description,"Item description, shown when inspecting it in the pack","[Half a broken wax seal off an old compact — the promise made, and the promise withheld. What ruined the bargain can be turned against what the bargain became.]"
+items.covenant-seal.name,"Item name, shown in the pack and in loot messages",[Covenant Seal]
+items.flintlock-shot.description,"Item description, shown when inspecting it in the pack",[A cast lead ball and a measure of powder.]
+items.flintlock-shot.name,"Item name, shown in the pack and in loot messages",[Flintlock Shot]
+items.flintlock.description,"Item description, shown when inspecting it in the pack","[A horse-pistol that throws a heavy ball. Slow to trust, loud as judgement.]"
+items.flintlock.name,"Item name, shown in the pack and in loot messages",[Flintlock]
+items.grave-dust.description,"Item description, shown when inspecting it in the pack","[Earth from a consecrated grave, dry as old paper.]"
+items.grave-dust.name,"Item name, shown in the pack and in loot messages",[Grave-dust]
+items.hallowed-water.description,"Item description, shown when inspecting it in the pack","[Water from the parish font, blessed at a season nobody now remembers. It answers what was cursed a long time ago.]"
+items.hallowed-water.name,"Item name, shown in the pack and in loot messages",[Hallowed Water]
+items.hunting-blade.description,"Item description, shown when inspecting it in the pack","[A long working knife, kept wickedly sharp.]"
+items.hunting-blade.name,"Item name, shown in the pack and in loot messages",[Hunting Blade]
+items.iron-charm.description,"Item description, shown when inspecting it in the pack",[A comforting trinket of cold iron. The folk swear by it. The folk are wrong.]
+items.iron-charm.name,"Item name, shown in the pack and in loot messages",[Iron Charm]
+items.moon-herb.description,"Item description, shown when inspecting it in the pack",[A silver-leafed herb that only shows itself by night.]
+items.moon-herb.name,"Item name, shown in the pack and in loot messages",[Moon-herb]
+items.silver-bullet.description,"Item description, shown when inspecting it in the pack","[A ball of true silver. Against the beast it bites to the curse's heart, and what it wounds does not heal.]"
+items.silver-bullet.name,"Item name, shown in the pack and in loot messages",[Silver Bullet]
+items.silver.description,"Item description, shown when inspecting it in the pack","[A fist of pale metal, cold to the touch.]"
+items.silver.name,"Item name, shown in the pack and in loot messages",[Raw Silver]
+items.wound-draught.description,"Item description, shown when inspecting it in the pack","[A bitter physic of moon-herb. Drinking it costs you the moment, but knits torn flesh.]"
+items.wound-draught.name,"Item name, shown in the pack and in loot messages",[Wound Draught]
+items.wronged-earth.description,"Item description, shown when inspecting it in the pack","[A handful of soil from the plot of the one who was wronged. It carries the debt, and a debt can be made to answer.]"
+items.wronged-earth.name,"Item name, shown in the pack and in loot messages",[Wronged Earth]
+maps.outlying-abbey.description,"Map description, shown on the travel screen","[An abbey the river took back. Roofless walls, a flooded cloister, and a crypt that has stayed dry rather longer than it should have.]"
+maps.outlying-abbey.name,"Map name, shown on the travel screen and status panel",[Saint Ceolwulf's]
+maps.outlying-abbey.slots.campsite.label,"Landmark name, shown when inspecting this spot on the map",[the campsite]
+maps.outlying-abbey.slots.crypt-1.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 1]
+maps.outlying-abbey.slots.crypt-2.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 2]
+maps.outlying-abbey.slots.crypt-3.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 3]
+maps.outlying-abbey.slots.crypt-4.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 4]
+maps.outlying-abbey.slots.crypt-5.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 5]
+maps.outlying-abbey.slots.crypt-6.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 6]
+maps.outlying-abbey.slots.crypt-7.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 7]
+maps.outlying-abbey.slots.crypt-8.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 8]
+maps.outlying-abbey.slots.family-plot-1.label,"Landmark name, shown when inspecting this spot on the map",[the family plot 1]
+maps.outlying-abbey.slots.family-plot-2.label,"Landmark name, shown when inspecting this spot on the map",[the family plot 2]
+maps.outlying-abbey.slots.family-plot-3.label,"Landmark name, shown when inspecting this spot on the map",[the family plot 3]
+maps.outlying-abbey.slots.manor-cellar.label,"Landmark name, shown when inspecting this spot on the map",[the manor cellar]
+maps.outlying-abbey.slots.manor-hall.label,"Landmark name, shown when inspecting this spot on the map",[the manor hall]
+maps.outlying-abbey.slots.manor-study.label,"Landmark name, shown when inspecting this spot on the map",[the manor study]
+maps.outlying-abbey.slots.well.label,"Landmark name, shown when inspecting this spot on the map",[the well]
+maps.outlying.description,"Map description, shown on the travel screen","[A manor abandoned to damp and worse. The family crypt still stands in the grounds, and someone barred its door from the outside.]"
+maps.outlying.name,"Map name, shown on the travel screen and status panel",[The Forsaken Manor]
+maps.outlying.slots.campsite.label,"Landmark name, shown when inspecting this spot on the map",[the campsite]
+maps.outlying.slots.crypt-1.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 1]
+maps.outlying.slots.crypt-2.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 2]
+maps.outlying.slots.crypt-3.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 3]
+maps.outlying.slots.crypt-4.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 4]
+maps.outlying.slots.crypt-5.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 5]
+maps.outlying.slots.crypt-6.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 6]
+maps.outlying.slots.crypt-7.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 7]
+maps.outlying.slots.crypt-8.label,"Landmark name, shown when inspecting this spot on the map",[the crypt 8]
+maps.outlying.slots.family-plot-1.label,"Landmark name, shown when inspecting this spot on the map",[the family plot 1]
+maps.outlying.slots.family-plot-2.label,"Landmark name, shown when inspecting this spot on the map",[the family plot 2]
+maps.outlying.slots.family-plot-3.label,"Landmark name, shown when inspecting this spot on the map",[the family plot 3]
+maps.outlying.slots.manor-cellar.label,"Landmark name, shown when inspecting this spot on the map",[the manor cellar]
+maps.outlying.slots.manor-hall.label,"Landmark name, shown when inspecting this spot on the map",[the manor hall]
+maps.outlying.slots.manor-study.label,"Landmark name, shown when inspecting this spot on the map",[the manor study]
+maps.outlying.slots.well.label,"Landmark name, shown when inspecting this spot on the map",[the well]
+maps.settlement-mill.description,"Map description, shown on the travel screen","[A town built either side of its own mill race. Two bridges, and a long walk if you pick the wrong one.]"
+maps.settlement-mill.name,"Map name, shown on the travel screen and status panel",[Millrace]
+maps.settlement-mill.slots.church-altar.label,"Landmark name, shown when inspecting this spot on the map",[the church altar]
+maps.settlement-mill.slots.church-candles.label,"Landmark name, shown when inspecting this spot on the map",[the church candles]
+maps.settlement-mill.slots.church-records.label,"Landmark name, shown when inspecting this spot on the map",[the church records]
+maps.settlement-mill.slots.forge.label,"Landmark name, shown when inspecting this spot on the map",[the forge]
+maps.settlement-mill.slots.grave-1.label,"Landmark name, shown when inspecting this spot on the map",[the grave 1]
+maps.settlement-mill.slots.grave-2.label,"Landmark name, shown when inspecting this spot on the map",[the grave 2]
+maps.settlement-mill.slots.grave-3.label,"Landmark name, shown when inspecting this spot on the map",[the grave 3]
+maps.settlement-mill.slots.grave-4.label,"Landmark name, shown when inspecting this spot on the map",[the grave 4]
+maps.settlement-mill.slots.grave-5.label,"Landmark name, shown when inspecting this spot on the map",[the grave 5]
+maps.settlement-mill.slots.grave-6.label,"Landmark name, shown when inspecting this spot on the map",[the grave 6]
+maps.settlement-mill.slots.graveyard-gate.label,"Landmark name, shown when inspecting this spot on the map",[the graveyard gate]
+maps.settlement-mill.slots.inn-hearth.label,"Landmark name, shown when inspecting this spot on the map",[the inn hearth]
+maps.settlement-mill.slots.kill-site.label,"Landmark name, shown when inspecting this spot on the map",[the kill site]
+maps.settlement-mill.slots.market-stall.label,"Landmark name, shown when inspecting this spot on the map",[the market stall]
+maps.settlement-mill.slots.square.label,"Landmark name, shown when inspecting this spot on the map",[the square]
+maps.settlement.description,"Map description, shown on the travel screen","[A huddle of stone and thatch around a church, a forge, and a market square. Safe by daylight. Probably.]"
+maps.settlement.name,"Map name, shown on the travel screen and status panel",[The Settlement]
+maps.settlement.slots.church-altar.label,"Landmark name, shown when inspecting this spot on the map",[the church altar]
+maps.settlement.slots.church-candles.label,"Landmark name, shown when inspecting this spot on the map",[the church candles]
+maps.settlement.slots.church-records.label,"Landmark name, shown when inspecting this spot on the map",[the church records]
+maps.settlement.slots.forge.label,"Landmark name, shown when inspecting this spot on the map",[the forge]
+maps.settlement.slots.grave-1.label,"Landmark name, shown when inspecting this spot on the map",[the grave 1]
+maps.settlement.slots.grave-2.label,"Landmark name, shown when inspecting this spot on the map",[the grave 2]
+maps.settlement.slots.grave-3.label,"Landmark name, shown when inspecting this spot on the map",[the grave 3]
+maps.settlement.slots.grave-4.label,"Landmark name, shown when inspecting this spot on the map",[the grave 4]
+maps.settlement.slots.grave-5.label,"Landmark name, shown when inspecting this spot on the map",[the grave 5]
+maps.settlement.slots.grave-6.label,"Landmark name, shown when inspecting this spot on the map",[the grave 6]
+maps.settlement.slots.graveyard-gate.label,"Landmark name, shown when inspecting this spot on the map",[the graveyard gate]
+maps.settlement.slots.inn-hearth.label,"Landmark name, shown when inspecting this spot on the map",[the inn hearth]
+maps.settlement.slots.kill-site.label,"Landmark name, shown when inspecting this spot on the map",[the kill site]
+maps.settlement.slots.market-stall.label,"Landmark name, shown when inspecting this spot on the map",[the market stall]
+maps.settlement.slots.square.label,"Landmark name, shown when inspecting this spot on the map",[the square]
+maps.wilderness-gorge.description,"Map description, shown on the travel screen","[A cleft in the moor with a beck at the bottom. One ledge path, one ford, and a great deal of rock.]"
+maps.wilderness-gorge.name,"Map name, shown on the travel screen and status panel",[The Gorge]
+maps.wilderness-gorge.slots.ambush-site.label,"Landmark name, shown when inspecting this spot on the map",[the ambush site]
+maps.wilderness-gorge.slots.herb-clearing-north.label,"Landmark name, shown when inspecting this spot on the map",[the herb clearing north]
+maps.wilderness-gorge.slots.herb-clearing-south.label,"Landmark name, shown when inspecting this spot on the map",[the herb clearing south]
+maps.wilderness-gorge.slots.mine.label,"Landmark name, shown when inspecting this spot on the map",[the mine]
+maps.wilderness-gorge.slots.standing-stones.label,"Landmark name, shown when inspecting this spot on the map",[the standing stones]
+maps.wilderness-gorge.slots.wolf-den.label,"Landmark name, shown when inspecting this spot on the map",[the wolf den]
+maps.wilderness.description,"Map description, shown on the travel screen","[Old forest pressing close on a rutted trail. The shortcut to the manor runs through here — when the road is watched, so does trouble.]"
+maps.wilderness.name,"Map name, shown on the travel screen and status panel",[The Deep Wood]
+maps.wilderness.slots.ambush-site.label,"Landmark name, shown when inspecting this spot on the map",[the ambush site]
+maps.wilderness.slots.herb-clearing-north.label,"Landmark name, shown when inspecting this spot on the map",[the herb clearing north]
+maps.wilderness.slots.herb-clearing-south.label,"Landmark name, shown when inspecting this spot on the map",[the herb clearing south]
+maps.wilderness.slots.mine.label,"Landmark name, shown when inspecting this spot on the map",[the mine]
+maps.wilderness.slots.standing-stones.label,"Landmark name, shown when inspecting this spot on the map",[the standing stones]
+maps.wilderness.slots.wolf-den.label,"Landmark name, shown when inspecting this spot on the map",[the wolf den]
+npcs.archetypes.blacksmith.description,"NPC archetype description, shown when inspecting them","[Keeps the forge hot and the settlement shod. Strong arms, short words.]"
+npcs.archetypes.blacksmith.name,"NPC archetype label, shown after their name (e.g. 'Anne, the priest')",[Blacksmith]
+npcs.archetypes.gravedigger.description,"NPC archetype description, shown when inspecting them","[Digs the graves and, lately, will not look at them.]"
+npcs.archetypes.gravedigger.name,"NPC archetype label, shown after their name (e.g. 'Anne, the priest')",[Gravedigger]
+npcs.archetypes.herbalist.description,"NPC archetype description, shown when inspecting them",[Sells simples at the market and knows older arts than she admits. The right favour opens doors no key fits.]
+npcs.archetypes.herbalist.name,"NPC archetype label, shown after their name (e.g. 'Anne, the priest')",[Herbalist]
+npcs.archetypes.innkeeper.description,"NPC archetype description, shown when inspecting them",[Hears everything said in the taproom and forgets none of it.]
+npcs.archetypes.innkeeper.name,"NPC archetype label, shown after their name (e.g. 'Anne, the priest')",[Innkeeper]
+npcs.archetypes.poacher.description,"NPC archetype description, shown when inspecting them","[Knows every trail in the wood by night. Officially, has never set foot there.]"
+npcs.archetypes.poacher.name,"NPC archetype label, shown after their name (e.g. 'Anne, the priest')",[Poacher]
+npcs.archetypes.priest.description,"NPC archetype description, shown when inspecting them",[Keeper of the church and its records. His faith is real; his accounts may not be.]
+npcs.archetypes.priest.name,"NPC archetype label, shown after their name (e.g. 'Anne, the priest')",[Priest]
+npcs.relationship-kinds.debtor.discovered-text,Log line when a relationship between two NPCs is discovered,"[{a} owes {b} a great deal of money, and both pretend otherwise in company.]"
+npcs.relationship-kinds.debtor.name,Name of a relationship between two NPCs,[Debtor and Creditor]
+npcs.relationship-kinds.kin.discovered-text,Log line when a relationship between two NPCs is discovered,"[{a} and {b} are close kin, though they do not advertise it.]"
+npcs.relationship-kinds.kin.name,Name of a relationship between two NPCs,[Kin]
+npcs.relationship-kinds.lovers.discovered-text,Log line when a relationship between two NPCs is discovered,"[{a} and {b} meet after dark, and it is not to talk business.]"
+npcs.relationship-kinds.lovers.name,Name of a relationship between two NPCs,[Secret Lovers]
+npcs.relationship-kinds.old-friends.discovered-text,Log line when a relationship between two NPCs is discovered,[{a} and {b} came up together and trust each other with anything — almost anything.]
+npcs.relationship-kinds.old-friends.name,Name of a relationship between two NPCs,[Old Friends]
+npcs.relationship-kinds.rivals.discovered-text,Log line when a relationship between two NPCs is discovered,"[{a} and {b} have hated each other for years, and it is more than habit.]"
+npcs.relationship-kinds.rivals.name,Name of a relationship between two NPCs,[Old Rivals]
+npcs.secrets.false-curse.disproof,Journal text when an NPC's secret is disproved,[The parish record is plain: the 'curse' was invented two generations back in a lawsuit over grazing rights. There is nothing in it.]
+npcs.secrets.false-curse.name,"Name of an NPC secret, shown in the journal",[The Family Curse]
+npcs.secrets.false-curse.text,Journal text when an NPC's secret is uncovered,"[They say {npc}'s line is cursed, and that the trouble in the valley follows their blood.]"
+npcs.secrets.false-witch.disproof,Journal text when an NPC's secret is disproved,"[The 'black arts' are letters: {npc} has been secretly teaching the mill-children to read, against the steward's wishes.]"
+npcs.secrets.false-witch.name,"Name of an NPC secret, shown in the journal",[Named a Witch]
+npcs.secrets.false-witch.text,Journal text when an NPC's secret is uncovered,[They whisper that {npc} works black arts by candlelight and speaks with the dead.]
+npcs.secrets.hidden-debt.name,"Name of an NPC secret, shown in the journal",[A Hidden Debt]
+npcs.secrets.hidden-debt.text,Journal text when an NPC's secret is uncovered,"[{npc} owes more coin than two good years could repay, and the creditor is losing patience.]"
+npcs.secrets.poaching-past.name,"Name of an NPC secret, shown in the journal",[A Poacher's Past]
+npcs.secrets.poaching-past.text,Journal text when an NPC's secret is uncovered,"[{npc} once took the lord's deer, and a man went to the gallows for it in their place.]"
+npcs.secrets.secret-love.name,"Name of an NPC secret, shown in the journal",[A Secret Love]
+npcs.secrets.secret-love.text,Journal text when an NPC's secret is uncovered,"[{npc} keeps a love the settlement would never forgive, and meets after dark to keep it.]"
+npcs.secrets.skimming-tithes.name,"Name of an NPC secret, shown in the journal",[Skimmed Tithes]
+npcs.secrets.skimming-tithes.text,Journal text when an NPC's secret is uncovered,"[{npc} has been thinning the tithe-box for years, a penny at a time.]"
+openings.conditions.a-soft-winter.body.1,"Valley-condition paragraph, shown as the run begins","[It is a soft winter, all mud and no frost, and the valley has the sulky look of a place that would rather be under snow.]"
+openings.conditions.already-dark.body.1,"Valley-condition paragraph, shown as the run begins","[You misjudged the road and come in well after dark, which no hunter does twice on purpose.]"
+openings.conditions.already-dark.body.2,"Valley-condition paragraph, shown as the run begins","[There is no moon worth the name. You will be working close tonight, and close is where the disadvantage is.]"
+openings.conditions.an-open-winter.body.1,"Valley-condition paragraph, shown as the run begins","[It is an open winter, the roads hard and clear and passable all the way up the valley. Whatever else this place has gone wrong at, it has not gone wrong at the weather.]"
+openings.conditions.an-open-winter.body.2,"Valley-condition paragraph, shown as the run begins",[You can get about. That is not nothing; most of this trade is getting about.]
+openings.conditions.at-dusk.body.1,"Valley-condition paragraph, shown as the run begins","[You come in at dusk, with the light going amber and then going altogether, and the valley folding itself up for the night rather faster than it needs to.]"
+openings.conditions.expected-and-provided-for.body.1,"Valley-condition paragraph, shown as the run begins","[Somebody here has done this before. There is a room held for you, and on the table in it a stoppered bottle of the right sort, put by without being asked for.]"
+openings.conditions.expected-and-provided-for.body.2,"Valley-condition paragraph, shown as the run begins","[You do not find out who. They are not taking credit for it, which tells you they expect it to be needed.]"
+openings.conditions.first-light.body.1,"Valley-condition paragraph, shown as the run begins","[You come in at first light, which is the honest hour to arrive somewhere — early enough to be seen doing it, late enough not to wake anybody.]"
+openings.conditions.fresh-from-another.body.1,"Valley-condition paragraph, shown as the run begins","[You are barely a fortnight out of the last one, and it has not finished with you yet. You still check doorways. You will do that for a while.]"
+openings.conditions.high-summer.body.1,"Valley-condition paragraph, shown as the run begins","[High summer, and too hot for the time of year. The stock are in the shade and the flies are at everything, and the smell reaches you well before {place} does.]"
+openings.conditions.incurious.body.1,"Valley-condition paragraph, shown as the run begins","[Nobody much minds that you are here. That is worse than suspicion, in its way — a valley this used to bad news has been getting it a while.]"
+openings.conditions.known-by-reputation.body.1,"Valley-condition paragraph, shown as the run begins","[Somebody here has heard of you, and has told the rest. The version that reached them is flattering and wrong, and you will be corrected out of it by about Thursday.]"
+openings.conditions.openly-glad.body.1,"Valley-condition paragraph, shown as the run begins","[They are glad to see you, openly and a little desperately, and you have learned to distrust that. Glad people expect to be saved on a schedule.]"
+openings.conditions.the-deep-of-winter.body.1,"Valley-condition paragraph, shown as the run begins","[It is the deep of winter, the part with no give in it. The ground rings when you put a heel in it and the light is gone by four.]"
+openings.conditions.the-deep-of-winter.body.2,"Valley-condition paragraph, shown as the run begins","[Everything out here is hungry, and hungry things come further down the valley than they otherwise would. You will not have the wood to yourself.]"
+openings.conditions.the-middle-of-the-day.body.1,"Valley-condition paragraph, shown as the run begins","[You come in at the flat middle of the day, when a place has nothing to hide behind and shows you exactly how it is doing. It is not doing well.]"
+openings.conditions.the-road-behind-you.body.1,"Valley-condition paragraph, shown as the run begins","[You did not come here cleanly. There is a matter two valleys back that has not been settled, and settling it involves people who are prepared to travel.]"
+openings.conditions.the-road-behind-you.body.2,"Valley-condition paragraph, shown as the run begins","[They will not come into the settlement. The roads between, though, are theirs as much as anyone's.]"
+openings.conditions.the-thaw.body.1,"Valley-condition paragraph, shown as the run begins","[The thaw is on. Everything is running — ditches, gutters, the fields themselves — and the whole valley sounds like something being poured away.]"
+openings.conditions.the-whole-day-ahead.body.1,"Valley-condition paragraph, shown as the run begins","[You come in with the whole of the day still in front of you and the light as good as it gets here, which is not very, but it is honest.]"
+openings.conditions.the-whole-day-ahead.body.2,"Valley-condition paragraph, shown as the run begins",[You will see what there is to see today. Tomorrow can look after itself.]
+openings.conditions.unwelcome.body.1,"Valley-condition paragraph, shown as the run begins","[Word went ahead of you and it was not kind. Whoever sent it did a thorough job: you are a stranger who has come to make trouble out of a run of hard luck, and they have decided that before you opened your mouth.]"
+openings.conditions.unwelcome.body.2,"Valley-condition paragraph, shown as the run begins","[Everything you want from these people, you will pay more for. Nobody will sell you so much as powder.]"
+openings.conditions.wary.body.1,"Valley-condition paragraph, shown as the run begins","[They are wary of you, which is sensible of them. Doors do not shut as you pass, but they are held, and the holding is the message.]"
+openings.conditions.wholly-unknown.body.1,"Valley-condition paragraph, shown as the run begins","[Nobody here has heard of you, which is restful. You get to be exactly as good as you turn out to be, with nothing to live up to and nothing to live down.]"
+openings.conditions.your-kit-in-order.body.1,"Valley-condition paragraph, shown as the run begins","[You came in with everything where it should be — powder dry, ball counted, nothing left behind at the last place because you were leaving it in a hurry.]"
+openings.conditions.your-kit-in-order.body.2,"Valley-condition paragraph, shown as the run begins",[It is a small thing to be pleased about. Small things are most of what a hunter gets.]
+openings.openings.gathered-while-walking.body.1,"Opening narration paragraph, shown as the run begins","[You did not come into the valley empty-handed. There had been one stop on the way in, and it had been worth making.]"
+openings.openings.given-a-direction.body.1,"Opening narration paragraph, shown as the run begins","[{npc} met you on the way in and gave you a direction, which is more than most will give a stranger and considerably less than you are going to need.]"
+openings.openings.nobody-sent-for-you.body.1,"Opening narration paragraph, shown as the run begins",[Nobody sent for you. You heard it third-hand at a market forty miles off — a valley losing people and calling it accidents — and something about the arithmetic would not leave you alone.]
+openings.openings.nobody-sent-for-you.body.2,"Opening narration paragraph, shown as the run begins","[So you have no fee, no authority, and nobody expecting you. On the other hand, whatever is here has not been warned.]"
+openings.openings.noticed-on-arrival.body.1,"Opening narration paragraph, shown as the run begins","[{clue} caught your eye on the way in — not enough to stop for long, enough to know where you will be going back to.]"
+openings.openings.passing-through.body.1,"Opening narration paragraph, shown as the run begins",[You were going somewhere else. You are not going there now.]
+openings.openings.passing-through.body.2,"Opening narration paragraph, shown as the run begins","[It was the third thing that did it: one is a story, two is a coincidence, three is a pattern, and you have never once been wrong about the third thing.]"
+openings.openings.pressed-upon-you.body.1,"Opening narration paragraph, shown as the run begins","[{npc} had business with you before you were properly arrived, and you came away from it carrying something.]"
+openings.openings.read-it-on-the-way-past.body.1,"Opening narration paragraph, shown as the run begins","[You stopped at {clue} before you were properly arrived, on the sound principle that a hunter who walks past the first strange thing will be shown the second at a worse moment.]"
+openings.openings.read-it-on-the-way-past.body.2,"Opening narration paragraph, shown as the run begins","[You had your look. What you read there is in your head now, and the valley cannot unsay it.]"
+openings.openings.sent-for.body.1,"Opening narration paragraph, shown as the run begins","[The letter reached you at Wenlock, folded twice and written in three hands, which is how a valley writes when nobody wants their name at the bottom of it.]"
+openings.openings.sent-for.body.2,"Opening narration paragraph, shown as the run begins","[It says: come. It does not say what for. That much they will tell you to your face, or not at all.]"
+openings.openings.talked-at-on-the-road.body.1,"Opening narration paragraph, shown as the run begins","[{npc} found you before you found the valley, waiting up at the ford with the look of somebody who had rehearsed it on the walk down.]"
+openings.openings.talked-at-on-the-road.body.2,"Opening narration paragraph, shown as the run begins","[It came out in a rush, and then they were away up the bank before you could ask a second question. It is not proof. But it is yours already, and nothing that happens in this valley now can take it back out of your head.]"
+openings.openings.the-last-one-left.body.1,"Opening narration paragraph, shown as the run begins","[There was a hunter here before you. The parish is vague about what became of him, in the particular way that means they know exactly.]"
+openings.openings.the-last-one-left.body.2,"Opening narration paragraph, shown as the run begins",[His kit is in the inn's back room. Nobody has touched it. Nobody will meet your eye about it either.]
+openings.openings.the-parish-pays.body.1,"Opening narration paragraph, shown as the run begins","[The parish put up the money, which means the parish has decided this is real, which means it has been real for longer than anyone will admit to your face.]"
+openings.openings.the-parish-pays.body.2,"Opening narration paragraph, shown as the run begins","[They will be polite. They will be helpful. They will not be quick, and you do not have slow.]"
+openings.openings.the-road-in.body.1,"Opening narration paragraph, shown as the run begins","[You came in along the drove road at first light, past a byre with the door off its hinges and nothing living inside it.]"
+openings.openings.the-road-in.body.2,"Opening narration paragraph, shown as the run begins",[Whatever walks here has been walking a while. You have six days. The valley has already spent some of them pretending otherwise.]
+origins.ancient-curse.counter-flavour,Flavour shown when preparing the reagent that counters this origin,"[You quench the work in hallowed water. Against a thing this old, only what the parish blessed will hold an edge.]"
+origins.ancient-curse.description,"Origin description, shown in the case report and grimoire","[The evil is old. Its signs lie in parish records, weathered stones, and dreams that are not dreams. What was cursed long ago is undone only by what was blessed long ago.]"
+origins.ancient-curse.name,"Name of a case origin, shown once proven",[An Ancient Curse]
+origins.bitter-betrayal.counter-flavour,Flavour shown when preparing the reagent that counters this origin,[You temper the work with earth from the wronged one's own plot. A debt answers to the one it was owed.]
+origins.bitter-betrayal.description,"Origin description, shown in the case report and grimoire","[The evil is fresh, born of a wrong done between the living. Its signs are grudges, whispers, and blood not yet dry. Only the soil of the wronged will settle the account.]"
+origins.bitter-betrayal.name,"Name of a case origin, shown once proven",[A Bitter Betrayal]
+origins.broken-covenant.counter-flavour,Flavour shown when preparing the reagent that counters this origin,[You bind the work with the seal of the broken compact. What was promised and withheld gives the work its bite.]
+origins.broken-covenant.description,"Origin description, shown in the case report and grimoire","[An old obligation, kept for generations and then broken in living memory. Its traces read like a curse and like a betrayal both, because it is the ruin of the one becoming the other. The compact's own seal is what answers it.]"
+origins.broken-covenant.name,"Name of a case origin, shown once proven",[A Broken Covenant]
+recipes.binding-charm.description,"Recipe description, shown when inspecting it in the crafting menu","[Sew grave-dust and moon-herb into a caul, steeped in what this evil's beginning demands, to strip the risen dead of their shadow.]"
+recipes.binding-charm.name,"Recipe name, shown in the crafting menu",[Sew a Binding Charm]
+recipes.cold-iron-pin.description,"Recipe description, shown when inspecting it in the crafting menu",[Beat bog iron out cold — never let it see the fire — and temper it against what this evil's beginning demands.]
+recipes.cold-iron-pin.name,"Recipe name, shown in the crafting menu",[Draw a Cold Iron Pin]
+recipes.iron-charm.description,"Recipe description, shown when inspecting it in the crafting menu",[Beat two pennies into a warding knot. Old wives praise it; monsters do not notice it.]
+recipes.iron-charm.name,"Recipe name, shown in the crafting menu",[Hammer an Iron Charm]
+recipes.silver-bullet.description,"Recipe description, shown when inspecting it in the crafting menu","[Melt true silver over the forge and cast it about a lead core, then quench it in what this evil's beginning demands.]"
+recipes.silver-bullet.name,"Recipe name, shown in the crafting menu",[Cast a Silver Bullet]
+recipes.wound-draught.description,"Recipe description, shown when inspecting it in the crafting menu",[Steep moon-herb with bitter-root into a physic against torn flesh.]
+recipes.wound-draught.name,"Recipe name, shown in the crafting menu",[Brew a Wound Draught]
+schemes.hidden-design.description,"Scheme description, shown in the case report and grimoire","[The deaths are not the point. The villain is assembling something, and pays desperate men to guard the work.]"
+schemes.hidden-design.major-event.name,Title of this scheme's major clock event,[Witch-light at the Manor]
+schemes.hidden-design.major-event.text,Log line when this scheme's major clock event fires,"[Witch-light burned in the old manor through the night, and something was carried out before dawn. The design nears completion.]"
+schemes.hidden-design.minor-event.name,Title of this scheme's minor clock event,[The Fouled Font]
+schemes.hidden-design.minor-event.text,Log line when this scheme's minor clock event fires,"[The church font is found fouled with grave-earth. Whatever was done here at midnight, the priest cannot meet your eye.]"
+schemes.hidden-design.name,"Name of a villain scheme, shown once proven",[A Hidden Design]
+schemes.hidden-design.preempt.blunted-text,Log line when the pre-empted scheme event fires blunted,[Witch-light guttered at the manor and went out. The figure you spoiled cannot be redrawn in a night; the design stalls.]
+schemes.hidden-design.preempt.name,Name of the opportunity that pre-empts this scheme,[Break the array]
+schemes.hidden-design.preempt.prompt,Prompt shown before taking the scheme pre-emption,"[Chalk, iron filings, and candle stubs laid out in a figure across the floor. Half-finished — and a half-finished figure can be spoiled.]"
+schemes.hidden-design.preempt.reveal,Journal text once the scheme pre-emption is taken,"[You scuff the chalk through, pocket the filings, and kick the stubs into the dark. Whatever was to be finished here must be begun again.]"
+schemes.reign-of-fear.description,"Scheme description, shown in the case report and grimoire","[The villain means to rule this valley through terror, and every death feeds its legend.]"
+schemes.reign-of-fear.major-event.name,Title of this scheme's major clock event,[Death in the Night]
+schemes.reign-of-fear.major-event.text,Log line when this scheme's major clock event fires,"[Screams in the dark. Come morning a villager lies dead behind a barred door, and the settlement is mad with fear.]"
+schemes.reign-of-fear.minor-event.name,Title of this scheme's minor clock event,[The Torn Shepherd]
+schemes.reign-of-fear.minor-event.text,Log line when this scheme's minor clock event fires,"[Word runs through the settlement: a shepherd has been found on the green, torn apart. The killer grows bolder.]"
+schemes.reign-of-fear.name,"Name of a villain scheme, shown once proven",[Reign of Fear]
+schemes.reign-of-fear.preempt.blunted-text,Log line when the pre-empted scheme event fires blunted,"[There were screams in the night — but the watch held, lanterns burned, and by morning every door still had someone behind it. The terror does not feed.]"
+schemes.reign-of-fear.preempt.name,Name of the opportunity that pre-empts this scheme,[Stand the watch]
+schemes.reign-of-fear.preempt.prompt,Prompt shown before taking the scheme pre-emption,[The settlement is frightened into its houses. Frightened people alone are prey; frightened people together are a watch.]
+schemes.reign-of-fear.preempt.reveal,Journal text once the scheme pre-emption is taken,"[You walk them through it: lanterns at the doors, men in pairs, nobody alone after dark. They will not be easy meat tonight.]"
+schemes.the-calling.description,"Scheme description, shown in the case report and grimoire","[It does not kill so much as gather. One by one the valley folk walk out of their own doors at night and do not come back, and something at the end of the road is counting them.]"
+schemes.the-calling.major-event.name,Title of this scheme's major clock event,[The Third Walker]
+schemes.the-calling.major-event.text,Log line when this scheme's major clock event fires,"[Two more gone in the night, and a shepherd swears he saw them on the high road walking abreast, in step, none of them speaking. The tally the thing is keeping is nearly made.]"
+schemes.the-calling.minor-event.name,Title of this scheme's minor clock event,[The Empty Bed]
+schemes.the-calling.minor-event.text,Log line when this scheme's minor clock event fires,"[A cottage door stands open to the weather and the bed inside has not been slept in. No struggle, no blood — only footprints leading away, unhurried, in a straight line.]"
+schemes.the-calling.name,"Name of a villain scheme, shown once proven",[The Calling]
+schemes.the-calling.preempt.blunted-text,Log line when the pre-empted scheme event fires blunted,"[Two walked out in the night — and came to themselves at the trail's edge, cold and bewildered, the road that called them gone quiet. The tally falls short.]"
+schemes.the-calling.preempt.name,Name of the opportunity that pre-empts this scheme,[Throw down the route-stones]
+schemes.the-calling.preempt.prompt,Prompt shown before taking the scheme pre-emption,"[Stones set at intervals along the trail, each scored with the same mark, each placed so the next is just in sight. A road laid for people who are not choosing to walk it.]"
+schemes.the-calling.preempt.reveal,Journal text once the scheme pre-emption is taken,[You lever the marked stones over and grind the scoring off against the trail. Whatever was reading this road as an invitation will find it goes nowhere now.]
 ui.keys.abilities,"Splash screen key-bindings table, action column",[Aim / Power Attack / Sprint (stamina)]
 ui.keys.abilities.keys,"Splash screen key-bindings table, keys column",[a / p / s]
 ui.keys.cancel,"Splash screen key-bindings table, action column",[Cancel / back]
@@ -25,3 +522,29 @@ ui.splash.intro.1,"Splash screen opening paragraph, first of three","[Something 
 ui.splash.intro.2,"Splash screen opening paragraph, second of three: the shape of a run","[You have six days. Walk the settlement, the deep wood, and the forsaken manor; trade words and watch faces; read the signs the thing cannot help but leave. Prove its name twice over, prepare its death, and take the hunt to it — or let the sixth night come, and it will take the hunt to you.]"
 ui.splash.intro.3,"Splash screen opening paragraph, third of three: what death costs","[Everything you learn, you keep. Even dying only costs you a day. Days are the one thing you cannot craft.]"
 ui.splash.title,Game title on the splash screen,[ROGUE HUNTER]
+villains.revenant.cadence.dash-telegraph,Log line when the Revenant dashes,[The revenant flows across the ground like spilled ink.]
+villains.revenant.cadence.guarded-telegraph,Log line when the Revenant guards,[Your blow passes through grave-shadow as through smoke.]
+villains.revenant.cadence.vulnerable-telegraph,Log line when the Revenant becomes vulnerable,"[The revenant's shroud of shadow thins — strike now, while it can bleed!]"
+villains.revenant.description,"Villain description, shown in the case report and grimoire","[A corpse risen with a purpose. No blade bites it, save in the moments its shroud of grave-shadow thins.]"
+villains.revenant.name,"Name of a villain archetype, shown once its identity is proven",[Revenant]
+villains.revenant.tier-behaviours.grave-chill.name,"Name of a villain tier behaviour, shown when it triggers",[Grave Chill]
+villains.revenant.tier-behaviours.grave-chill.telegraph,Log line when this villain tier behaviour triggers,[A killing cold gathers about the revenant's hands.]
+villains.revenant.tier-behaviours.spectral-speed.name,"Name of a villain tier behaviour, shown when it triggers",[Spectral Speed]
+villains.revenant.tier-behaviours.spectral-speed.telegraph,Log line when this villain tier behaviour triggers,[The revenant's stride lengthens; the dark carries it faster.]
+villains.werewolf.description,"Villain description, shown in the case report and grimoire","[By day a neighbour; by night a beast. It heals as fast as it is hurt, unless the wound is silver.]"
+villains.werewolf.name,"Name of a villain archetype, shown once its identity is proven",[Werewolf]
+villains.werewolf.pounce.telegraph,Warning line when this villain winds up to pounce,[The beast gathers itself — its eyes fix on a clear run at you!]
+villains.werewolf.regeneration.telegraph,Log line when this villain regenerates health,[Torn flesh knits closed before your eyes.]
+villains.werewolf.tier-behaviours.savage.name,"Name of a villain tier behaviour, shown when it triggers",[Savage]
+villains.werewolf.tier-behaviours.savage.telegraph,Log line when this villain tier behaviour triggers,"[Grown vast and terrible, the beast's claws strike deeper.]"
+villains.werewolf.tier-behaviours.swift-hunter.name,"Name of a villain tier behaviour, shown when it triggers",[Swift Hunter]
+villains.werewolf.tier-behaviours.swift-hunter.telegraph,Log line when this villain tier behaviour triggers,"[The beast has fed. It moves quicker now, hungrier.]"
+villains.witch.description,"Villain description, shown in the case report and grimoire","[A neighbour who kept the old compacts and asks the old prices. She walks about her day unremarked, and the hex she wears turns honest steel aside.]"
+villains.witch.name,"Name of a villain archetype, shown once its identity is proven",[Witch]
+villains.witch.tier-behaviours.bitter-word.name,"Name of a villain tier behaviour, shown when it triggers",[Bitter Word]
+villains.witch.tier-behaviours.bitter-word.telegraph,Log line when this villain tier behaviour triggers,[She has stopped pretending kindness. Every word she speaks now cuts.]
+villains.witch.tier-behaviours.deepening-hex.name,"Name of a villain tier behaviour, shown when it triggers",[Deepening Hex]
+villains.witch.tier-behaviours.deepening-hex.telegraph,Log line when this villain tier behaviour triggers,[Her working has grown. The air about her hangs heavier still.]
+villains.witch.ward.absorb-telegraph,Log line when the Witch's ward absorbs a hit,[Your blow slides away from her as if the air had thickened.]
+villains.witch.ward.break-telegraph,Log line when the Witch's ward breaks,[The hex tears with a sound like wet rope parting. She is only flesh now.]
+villains.witch.ward.reweave-telegraph,Log line when the Witch's ward reweaves itself,"[She mutters, and the air about her knits itself close again.]"

@@ -4,9 +4,9 @@
 # you work through; the abbey's are separate places you must commit to
 # reaching, with water between them and a barred undercroft at the far end.
 
-name = "Saint Ceolwulf's"
+name = "maps.outlying-abbey.name"
 role = "outlying-site"
-description = "An abbey the river took back. Roofless walls, a flooded cloister, and a crypt that has stayed dry rather longer than it should have."
+description = "maps.outlying-abbey.description"
 
 rows = [
   "################:###############",
@@ -48,13 +48,13 @@ rows = [
 id = "manor-hall"
 kind = "outlying-site"
 at = [12, 5]
-label = "the manor hall"
+label = "maps.outlying-abbey.slots.manor-hall.label"
 
 [[slots]]
 id = "manor-study"
 kind = "outlying-site"
 at = [9, 9]
-label = "the manor study"
+label = "maps.outlying-abbey.slots.manor-study.label"
 
 # The undercroft, behind its barred door: the cellar equivalent, and still
 # the one room that costs a Physical point to open.
@@ -62,86 +62,86 @@ label = "the manor study"
 id = "manor-cellar"
 kind = "outlying-site"
 at = [22, 5]
-label = "the manor cellar"
+label = "maps.outlying-abbey.slots.manor-cellar.label"
 
 # The cloister well, standing in the flood with a causeway to it.
 [[slots]]
 id = "well"
 kind = "outlying-site"
 at = [18, 11]
-label = "the well"
+label = "maps.outlying-abbey.slots.well.label"
 
 [[slots]]
 id = "campsite"
 kind = "outlying-site"
 at = [4, 16]
-label = "the campsite"
+label = "maps.outlying-abbey.slots.campsite.label"
 
 [[slots]]
 id = "family-plot-1"
 kind = "grave"
 at = [24, 14]
-label = "the family plot 1"
+label = "maps.outlying-abbey.slots.family-plot-1.label"
 
 [[slots]]
 id = "family-plot-2"
 kind = "grave"
 at = [26, 14]
-label = "the family plot 2"
+label = "maps.outlying-abbey.slots.family-plot-2.label"
 
 [[slots]]
 id = "family-plot-3"
 kind = "grave"
 at = [28, 14]
-label = "the family plot 3"
+label = "maps.outlying-abbey.slots.family-plot-3.label"
 
 [[slots]]
 id = "crypt-1"
 kind = "grave"
 at = [21, 16]
-label = "the crypt 1"
+label = "maps.outlying-abbey.slots.crypt-1.label"
 
 [[slots]]
 id = "crypt-2"
 kind = "grave"
 at = [23, 16]
-label = "the crypt 2"
+label = "maps.outlying-abbey.slots.crypt-2.label"
 
 [[slots]]
 id = "crypt-3"
 kind = "grave"
 at = [25, 16]
-label = "the crypt 3"
+label = "maps.outlying-abbey.slots.crypt-3.label"
 
 [[slots]]
 id = "crypt-4"
 kind = "grave"
 at = [27, 16]
-label = "the crypt 4"
+label = "maps.outlying-abbey.slots.crypt-4.label"
 
 [[slots]]
 id = "crypt-5"
 kind = "grave"
 at = [21, 18]
-label = "the crypt 5"
+label = "maps.outlying-abbey.slots.crypt-5.label"
 
 [[slots]]
 id = "crypt-6"
 kind = "grave"
 at = [23, 18]
-label = "the crypt 6"
+label = "maps.outlying-abbey.slots.crypt-6.label"
 
 [[slots]]
 id = "crypt-7"
 kind = "grave"
 at = [25, 18]
-label = "the crypt 7"
+label = "maps.outlying-abbey.slots.crypt-7.label"
 
 [[slots]]
 id = "crypt-8"
 kind = "grave"
 at = [27, 18]
-label = "the crypt 8"
+label = "maps.outlying-abbey.slots.crypt-8.label"
 
 [[exits]]
 to = "settlement"

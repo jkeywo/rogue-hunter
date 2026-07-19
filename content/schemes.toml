@@ -4,82 +4,82 @@
 # the scheme has been pre-empted first.
 
 [reign-of-fear]
-name = "Reign of Fear"
+name = "schemes.reign-of-fear.name"
 minion_enemy = "wolf"
-description = "The villain means to rule this valley through terror, and every death feeds its legend."
+description = "schemes.reign-of-fear.description"
 
 [reign-of-fear.minor_event]
-name = "The Torn Shepherd"
-text = "Word runs through the settlement: a shepherd has been found on the green, torn apart. The killer grows bolder."
+name = "schemes.reign-of-fear.minor-event.name"
+text = "schemes.reign-of-fear.minor-event.text"
 site_map = "settlement"
 spawn_minions = 1
 
 [reign-of-fear.major_event]
-name = "Death in the Night"
-text = "Screams in the dark. Come morning a villager lies dead behind a barred door, and the settlement is mad with fear."
+name = "schemes.reign-of-fear.major-event.name"
+text = "schemes.reign-of-fear.major-event.text"
 site_map = "settlement"
 spawn_minions = 2
 
 [reign-of-fear.preempt]
-name = "Stand the watch"
+name = "schemes.reign-of-fear.preempt.name"
 site = "npc"
 map_role = "settlement"
 pool = "social"
 cost = 1
-prompt = "The settlement is frightened into its houses. Frightened people alone are prey; frightened people together are a watch."
-reveal = "You walk them through it: lanterns at the doors, men in pairs, nobody alone after dark. They will not be easy meat tonight."
-blunted_text = "There were screams in the night — but the watch held, lanterns burned, and by morning every door still had someone behind it. The terror does not feed."
+prompt = "schemes.reign-of-fear.preempt.prompt"
+reveal = "schemes.reign-of-fear.preempt.reveal"
+blunted_text = "schemes.reign-of-fear.preempt.blunted-text"
 
 [hidden-design]
-name = "A Hidden Design"
+name = "schemes.hidden-design.name"
 minion_enemy = "bandit"
-description = "The deaths are not the point. The villain is assembling something, and pays desperate men to guard the work."
+description = "schemes.hidden-design.description"
 
 [hidden-design.minor_event]
-name = "The Fouled Font"
-text = "The church font is found fouled with grave-earth. Whatever was done here at midnight, the priest cannot meet your eye."
+name = "schemes.hidden-design.minor-event.name"
+text = "schemes.hidden-design.minor-event.text"
 site_map = "settlement"
 spawn_minions = 1
 
 [hidden-design.major_event]
-name = "Witch-light at the Manor"
-text = "Witch-light burned in the old manor through the night, and something was carried out before dawn. The design nears completion."
+name = "schemes.hidden-design.major-event.name"
+text = "schemes.hidden-design.major-event.text"
 site_map = "outlying"
 spawn_minions = 2
 
 [hidden-design.preempt]
-name = "Break the array"
+name = "schemes.hidden-design.preempt.name"
 site = "outlying-site"
 map_role = "outlying-site"
 pool = "lore"
 cost = 1
-prompt = "Chalk, iron filings, and candle stubs laid out in a figure across the floor. Half-finished — and a half-finished figure can be spoiled."
-reveal = "You scuff the chalk through, pocket the filings, and kick the stubs into the dark. Whatever was to be finished here must be begun again."
-blunted_text = "Witch-light guttered at the manor and went out. The figure you spoiled cannot be redrawn in a night; the design stalls."
+prompt = "schemes.hidden-design.preempt.prompt"
+reveal = "schemes.hidden-design.preempt.reveal"
+blunted_text = "schemes.hidden-design.preempt.blunted-text"
 
 [the-calling]
-name = "The Calling"
+name = "schemes.the-calling.name"
 minion_enemy = "thrall"
-description = "It does not kill so much as gather. One by one the valley folk walk out of their own doors at night and do not come back, and something at the end of the road is counting them."
+description = "schemes.the-calling.description"
 
 [the-calling.minor_event]
-name = "The Empty Bed"
-text = "A cottage door stands open to the weather and the bed inside has not been slept in. No struggle, no blood — only footprints leading away, unhurried, in a straight line."
+name = "schemes.the-calling.minor-event.name"
+text = "schemes.the-calling.minor-event.text"
 site_map = "settlement"
 spawn_minions = 1
 
 [the-calling.major_event]
-name = "The Third Walker"
-text = "Two more gone in the night, and a shepherd swears he saw them on the high road walking abreast, in step, none of them speaking. The tally the thing is keeping is nearly made."
+name = "schemes.the-calling.major-event.name"
+text = "schemes.the-calling.major-event.text"
 site_map = "wilderness"
 spawn_minions = 2
 
 [the-calling.preempt]
-name = "Throw down the route-stones"
+name = "schemes.the-calling.preempt.name"
 site = "wilds"
 map_role = "wilderness"
 pool = "mystic"
 cost = 1
-prompt = "Stones set at intervals along the trail, each scored with the same mark, each placed so the next is just in sight. A road laid for people who are not choosing to walk it."
-reveal = "You lever the marked stones over and grind the scoring off against the trail. Whatever was reading this road as an invitation will find it goes nowhere now."
-blunted_text = "Two walked out in the night — and came to themselves at the trail's edge, cold and bewildered, the road that called them gone quiet. The tally falls short."
+prompt = "schemes.the-calling.preempt.prompt"
+reveal = "schemes.the-calling.preempt.reveal"
+blunted_text = "schemes.the-calling.preempt.blunted-text"

@@ -190,15 +190,16 @@ pub fn build(session: &ClientSession) -> ViewModel {
                         hunter.mystic_cap,
                         hunter.physical_cap
                     );
+                    let strings = &session.catalogue.strings;
                     let signatures = hunter
                         .signatures
                         .iter()
-                        .map(|signature| signature.name.clone())
+                        .map(|signature| strings.get(&signature.name))
                         .collect::<Vec<_>>()
                         .join(", ");
                     (
-                        hunter.name.clone(),
-                        format!("{}\n{pools}\n{signatures}", hunter.title),
+                        strings.get(&hunter.name).to_owned(),
+                        format!("{}\n{pools}\n{signatures}", strings.get(&hunter.title)),
                     )
                 })
                 .collect(),
@@ -223,7 +224,12 @@ pub fn build(session: &ClientSession) -> ViewModel {
                 .catalogue
                 .grimoire
                 .iter()
-                .map(|entry| (entry.title.clone(), entry.body.clone()))
+                .map(|entry| {
+                    (
+                        session.catalogue.strings.get(&entry.title).to_owned(),
+                        session.catalogue.strings.get(&entry.body).to_owned(),
+                    )
+                })
                 .collect(),
             selected: Some(*selected),
         },
@@ -419,7 +425,7 @@ fn build_run_view(session: &ClientSession) -> RunView {
                 .catalogue
                 .items
                 .get(item)
-                .map(|def| def.name.clone())
+                .map(|def| sim.catalogue.strings.get(&def.name).to_owned())
                 .unwrap_or_else(|| item.clone());
             if *count > 1 {
                 format!("{name} x{count}")

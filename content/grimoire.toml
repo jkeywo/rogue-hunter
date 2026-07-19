@@ -4,100 +4,100 @@
 
 [[entries]]
 id = "werewolf"
-title = "Of the Werewolf"
-body = """By day it wears a neighbour's face and does a neighbour's work; you will not know it by looking. By night it is appetite in a grey hide. Its wounds close as fast as you can deal them — save one kind. Watch for the gather-and-leap: given a clear run it will cross half a field in a heartbeat, so keep a tree, a cart, a wall between you and it. Break its lane and you break its favourite trick. Two honest proofs of its day-name are enough to hunt it; one is gossip, and gossip hangs innocents."""
+title = "grimoire.entries.werewolf.title"
+body = """grimoire.entries.werewolf.body"""
 
 [[entries]]
 id = "revenant"
-title = "Of the Revenant"
-body = """A corpse that rose with unfinished business and no intention of leaving it so. It sleeps in its own grave between errands. No blade nor ball bites it while its shroud of grave-shadow holds; the shroud thins for a moment at its own slow rhythm — you will see it, and it knows you can. It flows across ground unnaturally fast when it wishes, and it wishes it mostly when retreating from your steel or closing on your throat. Consecrated ground holds the shroud open and scalds it; a binding charm pressed close does the same for a handful of breaths. Learn the rhythm, or bring the counter."""
+title = "grimoire.entries.revenant.title"
+body = """grimoire.entries.revenant.body"""
 
 [[entries]]
 id = "witch"
-title = "Of the Witch"
-body = """Not a hag on a heath — a neighbour, with a trade and a doorstep and an opinion about the weather. She keeps the old compacts and asks the old prices, and the working she wears turns honest steel aside as if the air had gone thick. You will know her by her hand: hex-work is *drawn*, cut deliberate into lintels and thresholds, and a beast cannot draw and the dead do not need to. Do not go at her with good steel and confidence. The hex has to get hold of a thing to turn it, and it can get no hold at all on cold iron — bog iron, unsmelted, never near the forge fire. Wear the hex down or cut straight through it; either way, be carrying the pin."""
+title = "grimoire.entries.witch.title"
+body = """grimoire.entries.witch.body"""
 
 [[entries]]
 id = "cold-iron-pin"
-title = "Of Cold Iron"
-body = """Iron dug from the bog and beaten cold, never once shown the fire. Every working needs purchase, some edge or surface to take hold of, and unsmelted iron offers none — a hex slides off it the way water slides off wax. Against a warded thing it is not a better blade, it is the only blade. Draw the pin at the forge like any other work, but keep it cold, and quench it in what the evil's beginning demands."""
+title = "grimoire.entries.cold-iron-pin.title"
+body = """grimoire.entries.cold-iron-pin.body"""
 
 [[entries]]
 id = "broken-covenant"
-title = "Of Broken Covenants"
-body = """The hardest kind to read, because it wears the other two like borrowed coats. An obligation kept faithfully for generations — a payment, a rite, a door left unlocked one night a year — and then, within living memory, somebody decided it was superstition and stopped. It looks like an ancient curse, because the compact is genuinely old. It looks like a bitter betrayal, because a person alive today did the breaking. What tells you the truth is the *terms*: a curse rages, a grudge accuses, but a broken covenant simply presents the account and waits. Find the ledger, find the year the line was ruled through, and you have it. What answers it is the compact's own seal."""
+title = "grimoire.entries.broken-covenant.title"
+body = """grimoire.entries.broken-covenant.body"""
 
 [[entries]]
 id = "the-calling"
-title = "Of the Calling"
-body = """It does not hunt. It invites. One by one the valley folk get up in the night, unlatch their own doors, and walk out unhurried along a road they have never chosen — and something at the far end keeps the tally. You will find no struggle and no blood, only even-strided footprints leading away, and stones set along the trail scored with the same mark and placed each within sight of the next. That is a road built to be followed by someone not deciding to follow it. Throw the route-stones down and grind the marks off, and the ones who walk out that night will come to themselves cold and bewildered at the trail's edge, and the tally will fall short."""
+title = "grimoire.entries.the-calling.title"
+body = """grimoire.entries.the-calling.body"""
 
 [[entries]]
 id = "thrall"
-title = "Of Thralls"
-body = """Those who answered the call and kept walking. They come at you steadily and without malice, and their eyes pass over your face without finding anything in it. They can be put down like anything else, and it is worth remembering while you do it that a week ago one of them sold you bread."""
+title = "grimoire.entries.thrall.title"
+body = """grimoire.entries.thrall.body"""
 
 [[entries]]
 id = "origin-reagents"
-title = "Of Quenching the Work"
-body = """A counter is only half made when it leaves the forge. Every decisive work must be quenched in something that answers *how the evil began*, and the three beginnings demand three different things. What was cursed in the deep past yields to what the parish blessed in the deep past: hallowed water from the font. What was born of a wrong done between the living yields to earth from the wronged one's own plot, because a debt answers to the one it was owed. What was a compact broken yields to the compact's own seal, the promise and the withholding together in one piece of wax. Read the beginning before you light the forge. You can carry all three and be certain — but you will pay for the certainty in daylight, and daylight is the one thing you cannot craft."""
+title = "grimoire.entries.origin-reagents.title"
+body = """grimoire.entries.origin-reagents.body"""
 
 [[entries]]
 id = "wolf"
-title = "Of Wolves"
-body = """Honest beasts, if hungry ones. They come straight on and die like anything else. When wolves grow bold near a settlement, ask what emboldened them."""
+title = "grimoire.entries.wolf.title"
+body = """grimoire.entries.wolf.body"""
 
 [[entries]]
 id = "bandit"
-title = "Of Bandits"
-body = """Desperate men with pistols and poor judgement. They keep their distance and shoot while they can; close with them, or answer in kind. Ask who pays them, for someone always does."""
+title = "grimoire.entries.bandit.title"
+body = """grimoire.entries.bandit.body"""
 
 [[entries]]
 id = "restless-dead"
-title = "Of the Restless Dead"
-body = """Corpses walked by another's will. Slow — mercifully slow — but tireless, and strong enough to matter if you let them lay hands on you. Where the restless dead shuffle, a greater dead commands."""
+title = "grimoire.entries.restless-dead.title"
+body = """grimoire.entries.restless-dead.body"""
 
 [[entries]]
 id = "ancient-curse"
-title = "Of Ancient Curses"
-body = """Some evils are inherited like debts. Where the trouble is old, its signs are old: parish records, weathered stones, dreams that repeat in different sleepers. Ask the church and the graves before you ask the living."""
+title = "grimoire.entries.ancient-curse.title"
+body = """grimoire.entries.ancient-curse.body"""
 
 [[entries]]
 id = "bitter-betrayal"
-title = "Of Bitter Betrayals"
-body = """Some evils are minted fresh from a wrong done between the living. Where the trouble is new, its signs walk about the settlement: grudges nursed, names not spoken, blood not yet dry. Ask the living, and watch their eyes."""
+title = "grimoire.entries.bitter-betrayal.title"
+body = """grimoire.entries.bitter-betrayal.body"""
 
 [[entries]]
 id = "reign-of-fear"
-title = "Of a Reign of Fear"
-body = """Some monsters kill to be feared, and grow strong on the fearing. Each outrage it lands unanswered, it swells bolder and harder to put down. Do not give it the week it wants."""
+title = "grimoire.entries.reign-of-fear.title"
+body = """grimoire.entries.reign-of-fear.body"""
 
 [[entries]]
 id = "hidden-design"
-title = "Of Hidden Designs"
-body = """Some monsters kill only as a mason chips stone: in service of a work. Watch for hired men guarding nothing worth stealing, and desecrations that look like errands. Each stage the design completes, its author grows greater."""
+title = "grimoire.entries.hidden-design.title"
+body = """grimoire.entries.hidden-design.body"""
 
 [[entries]]
 id = "silver-bullet"
-title = "Of Silver"
-body = """True silver is the old wound the curse remembers. A ball of it, cast honest over a forge, bites the beast to the quick — and what silver tears, no moon can mend. Churches keep more silver than they know; so do abandoned mines."""
+title = "grimoire.entries.silver-bullet.title"
+body = """grimoire.entries.silver-bullet.body"""
 
 [[entries]]
 id = "binding-charm"
-title = "Of Binding Charms"
-body = """Grave-dust freely given, moon-herb picked by night, sewn tight in a caul. Pressed close to the risen dead it strips their shroud of shadow for five long breaths — long enough, for a hunter who has kept her steel ready."""
+title = "grimoire.entries.binding-charm.title"
+body = """grimoire.entries.binding-charm.body"""
 
 [[entries]]
 id = "consecration"
-title = "Of Consecrated Ground"
-body = """A church may be made proof against the risen dead: a rite of one evening, if the altar is willing. On warded ground a revenant's shroud cannot close and the very floor scalds it. Against a living curse like the beast, the rite is so much candle-smoke. Choose the ground of your last stand as carefully as your weapon."""
+title = "grimoire.entries.consecration.title"
+body = """grimoire.entries.consecration.body"""
 
 [[entries]]
 id = "threat-tiers"
-title = "Of Letting Evil Wait"
-body = """Every night you spend certain-but-unready, the enemy spends feeding. An evil that lands its outrages grows in hide and cunning both. The prepared early hunt is the master's stroke; the patient hunt is the journeyman's; the hunt on the final night is the one you did not choose."""
+title = "grimoire.entries.threat-tiers.title"
+body = """grimoire.entries.threat-tiers.body"""
 
 [[entries]]
 id = "preparations"
-title = "Of Preparations"
-body = """A snare set in a doorway has killed more monsters than any sword. A draught of moon-herb has saved more hunters than any prayer. Take the hour at the forge; the grave you dodge may be your own."""
+title = "grimoire.entries.preparations.title"
+body = """grimoire.entries.preparations.body"""

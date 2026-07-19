@@ -15,122 +15,122 @@ deceased_name_pool = [
 ]
 
 [archetypes.priest]
-name = "Priest"
+name = "npcs.archetypes.priest.name"
 glyph = "P"
 name_pool = ["Father Ambrose", "Father Caleb", "Parson Grey"]
 work_slot = "church-altar"
 can_host_villain = true
 mystical = false
 secrets = ["skimming-tithes", "false-witch", "hidden-debt"]
-description = "Keeper of the church and its records. His faith is real; his accounts may not be."
+description = "npcs.archetypes.priest.description"
 
 [archetypes.blacksmith]
-name = "Blacksmith"
+name = "npcs.archetypes.blacksmith.name"
 glyph = "B"
 name_pool = ["Marta Reed", "Old Hew", "Goodman Tarn"]
 work_slot = "forge"
 can_host_villain = true
 mystical = false
 secrets = ["hidden-debt", "poaching-past", "secret-love"]
-description = "Keeps the forge hot and the settlement shod. Strong arms, short words."
+description = "npcs.archetypes.blacksmith.description"
 
 [archetypes.innkeeper]
-name = "Innkeeper"
+name = "npcs.archetypes.innkeeper.name"
 glyph = "I"
 name_pool = ["Widow Hale", "Master Pell", "Goodwife Brandy"]
 work_slot = "inn-hearth"
 can_host_villain = true
 mystical = false
 secrets = ["hidden-debt", "secret-love", "false-curse"]
-description = "Hears everything said in the taproom and forgets none of it."
+description = "npcs.archetypes.innkeeper.description"
 
 [archetypes.herbalist]
-name = "Herbalist"
+name = "npcs.archetypes.herbalist.name"
 glyph = "H"
 name_pool = ["Mother Wren", "Sylvie of the Hedge", "Old Nan"]
 work_slot = "market-stall"
 can_host_villain = false
 mystical = true
 secrets = ["false-witch", "secret-love"]
-description = "Sells simples at the market and knows older arts than she admits. The right favour opens doors no key fits."
+description = "npcs.archetypes.herbalist.description"
 
 [archetypes.gravedigger]
-name = "Gravedigger"
+name = "npcs.archetypes.gravedigger.name"
 glyph = "G"
 name_pool = ["Sexton Mould", "Digger Finch", "Quiet Tobias"]
 work_slot = "graveyard-gate"
 can_host_villain = true
 mystical = false
 secrets = ["poaching-past", "false-curse", "hidden-debt"]
-description = "Digs the graves and, lately, will not look at them."
+description = "npcs.archetypes.gravedigger.description"
 
 [archetypes.poacher]
-name = "Poacher"
+name = "npcs.archetypes.poacher.name"
 glyph = "O"
 name_pool = ["Wat Snare", "Bess Longstride", "Crooked Jem"]
 work_slot = "square"
 can_host_villain = true
 mystical = false
 secrets = ["poaching-past", "hidden-debt", "secret-love"]
-description = "Knows every trail in the wood by night. Officially, has never set foot there."
+description = "npcs.archetypes.poacher.description"
 
 # --- Secret templates -------------------------------------------------------
 
 [secrets.hidden-debt]
-name = "A Hidden Debt"
+name = "npcs.secrets.hidden-debt.name"
 false_secret = false
-text = "{npc} owes more coin than two good years could repay, and the creditor is losing patience."
+text = "npcs.secrets.hidden-debt.text"
 
 [secrets.secret-love]
-name = "A Secret Love"
+name = "npcs.secrets.secret-love.name"
 false_secret = false
-text = "{npc} keeps a love the settlement would never forgive, and meets after dark to keep it."
+text = "npcs.secrets.secret-love.text"
 
 [secrets.poaching-past]
-name = "A Poacher's Past"
+name = "npcs.secrets.poaching-past.name"
 false_secret = false
-text = "{npc} once took the lord's deer, and a man went to the gallows for it in their place."
+text = "npcs.secrets.poaching-past.text"
 
 [secrets.skimming-tithes]
-name = "Skimmed Tithes"
+name = "npcs.secrets.skimming-tithes.name"
 false_secret = false
-text = "{npc} has been thinning the tithe-box for years, a penny at a time."
+text = "npcs.secrets.skimming-tithes.text"
 
 [secrets.false-witch]
-name = "Named a Witch"
+name = "npcs.secrets.false-witch.name"
 false_secret = true
-text = "They whisper that {npc} works black arts by candlelight and speaks with the dead."
-disproof = "The 'black arts' are letters: {npc} has been secretly teaching the mill-children to read, against the steward's wishes."
+text = "npcs.secrets.false-witch.text"
+disproof = "npcs.secrets.false-witch.disproof"
 
 [secrets.false-curse]
-name = "The Family Curse"
+name = "npcs.secrets.false-curse.name"
 false_secret = true
-text = "They say {npc}'s line is cursed, and that the trouble in the valley follows their blood."
-disproof = "The parish record is plain: the 'curse' was invented two generations back in a lawsuit over grazing rights. There is nothing in it."
+text = "npcs.secrets.false-curse.text"
+disproof = "npcs.secrets.false-curse.disproof"
 
 # --- Relationship kinds -----------------------------------------------------
 
 [[relationship_kinds]]
 id = "kin"
-name = "Kin"
-discovered_text = "{a} and {b} are close kin, though they do not advertise it."
+name = "npcs.relationship-kinds.kin.name"
+discovered_text = "npcs.relationship-kinds.kin.discovered-text"
 
 [[relationship_kinds]]
 id = "rivals"
-name = "Old Rivals"
-discovered_text = "{a} and {b} have hated each other for years, and it is more than habit."
+name = "npcs.relationship-kinds.rivals.name"
+discovered_text = "npcs.relationship-kinds.rivals.discovered-text"
 
 [[relationship_kinds]]
 id = "lovers"
-name = "Secret Lovers"
-discovered_text = "{a} and {b} meet after dark, and it is not to talk business."
+name = "npcs.relationship-kinds.lovers.name"
+discovered_text = "npcs.relationship-kinds.lovers.discovered-text"
 
 [[relationship_kinds]]
 id = "debtor"
-name = "Debtor and Creditor"
-discovered_text = "{a} owes {b} a great deal of money, and both pretend otherwise in company."
+name = "npcs.relationship-kinds.debtor.name"
+discovered_text = "npcs.relationship-kinds.debtor.discovered-text"
 
 [[relationship_kinds]]
 id = "old-friends"
-name = "Old Friends"
-discovered_text = "{a} and {b} came up together and trust each other with anything — almost anything."
+name = "npcs.relationship-kinds.old-friends.name"
+discovered_text = "npcs.relationship-kinds.old-friends.discovered-text"

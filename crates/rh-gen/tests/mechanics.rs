@@ -256,7 +256,7 @@ fn every_scheme_can_be_pre_empted_somewhere_placeable() {
             "scheme '{id}' pre-emption must cost something to be a real choice"
         );
         assert!(
-            !preempt.blunted_text.is_empty(),
+            !catalogue.strings.get(&preempt.blunted_text).is_empty(),
             "scheme '{id}' must describe the blunted event"
         );
     }
@@ -280,9 +280,11 @@ fn pre_empting_the_scheme_blunts_its_event() {
         .iter()
         .map(|event| event.text.clone())
         .collect();
-    let blunted = &sim.catalogue.schemes[&sim.world.villain.scheme]
-        .preempt
-        .blunted_text;
+    let blunted = sim.catalogue.strings.get(
+        &sim.catalogue.schemes[&sim.world.villain.scheme]
+            .preempt
+            .blunted_text,
+    );
     assert!(
         logged.iter().any(|text| text == blunted),
         "a pre-empted scheme reports its blunted outcome, saw {logged:?}"
@@ -502,11 +504,13 @@ fn a_run_opens_with_its_hook_then_its_conditions() {
         .collect();
     let sim = Sim::new(cat.clone(), generated.world, generated.rng);
 
+    // The opening prose is authored as string ids now; resolve them the same
+    // way the sim does before comparing against what it logged.
     let expected: Vec<String> = hook
         .body
         .iter()
-        .cloned()
-        .chain(conditions.iter().flat_map(|c| c.body.clone()))
+        .chain(conditions.iter().flat_map(|c| c.body.iter()))
+        .map(|id| cat.strings.get(id).to_owned())
         .collect();
     let actual: Vec<String> = sim
         .state

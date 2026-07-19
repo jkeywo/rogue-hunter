@@ -6,184 +6,184 @@
 # the ignorance.
 
 [draw-hallowed-water]
-name = "Draw water from the font"
+name = "gathers.draw-hallowed-water.name"
 map = "settlement"
 slot = "church-altar"
 pool = "lore"
 cost = 1
 items = ["hallowed-water"]
 discovery = { kind = "sight" }
-prompt = "The font has stood blessed since before the register begins. What was hallowed that long ago answers what was cursed that long ago."
-reveal = "You fill a stoppered flask from the font. The priest watches and says nothing, which is its own kind of permission."
+prompt = "gathers.draw-hallowed-water.prompt"
+reveal = "gathers.draw-hallowed-water.reveal"
 
 [take-wronged-earth]
-name = "Take earth from the wronged plot"
+name = "gathers.take-wronged-earth.name"
 map = "settlement"
 slot = "graveyard-gate"
 pool = "social"
 cost = 1
 items = ["wronged-earth"]
 discovery = { kind = "sight" }
-prompt = "If a wrong was done here, the one it was done to is in this ground, and the ground remembers the debt."
-reveal = "The gravedigger walks you to the plot without being told which, and turns his back while you fill a fold of cloth."
+prompt = "gathers.take-wronged-earth.prompt"
+reveal = "gathers.take-wronged-earth.reveal"
 
 [recover-covenant-seal]
-name = "Recover the broken seal"
+name = "gathers.recover-covenant-seal.name"
 map = "outlying"
 slot = "manor-study"
 pool = "lore"
 cost = 1
 items = ["covenant-seal"]
 discovery = { kind = "sight" }
-prompt = "The compacts were kept in this room, and one of them was broken rather than ended. Broken things leave halves."
-reveal = "Under the ledgers: half a wax seal, snapped clean, the other half long gone. The promise and the withholding, in one piece of wax."
+prompt = "gathers.recover-covenant-seal.prompt"
+reveal = "gathers.recover-covenant-seal.reveal"
 
 # Each reagent has a second source on another map. Two independent certified
 # routes cannot share a node, so a reagent with one source would strand the
 # second route with no way to finish its counter.
 
 [draw-chapel-stoup]
-name = "Fill a flask at the chapel stoup"
+name = "gathers.draw-chapel-stoup.name"
 map = "outlying"
 slot = "manor-hall"
 pool = "lore"
 items = ["hallowed-water"]
 cost = 1
 discovery = { kind = "sight" }
-prompt = "The family kept a private chapel at the end of the hall, and the stoup by its door has not been emptied."
-reveal = "The water is stale and the stone is filthy, and the blessing on it is as old as the house. It will serve."
+prompt = "gathers.draw-chapel-stoup.prompt"
+reveal = "gathers.draw-chapel-stoup.reveal"
 
 [lift-family-plot-earth]
-name = "Lift earth from the family plot"
+name = "gathers.lift-family-plot-earth.name"
 map = "outlying"
 slot = "family-plot-1"
 pool = "lore"
 cost = 1
 items = ["wronged-earth"]
 discovery = { kind = "sight" }
-prompt = "The family buried their own out here, including the one nobody in the settlement will name."
-reveal = "You cut a square of turf from the plot and fold the earth away. Whatever was taken from them, the ground kept the account."
+prompt = "gathers.lift-family-plot-earth.prompt"
+reveal = "gathers.lift-family-plot-earth.reveal"
 
 [find-parish-counterpart]
-name = "Find the parish's half of the seal"
+name = "gathers.find-parish-counterpart.name"
 map = "settlement"
 slot = "church-records"
 pool = "lore"
 cost = 1
 items = ["covenant-seal"]
 discovery = { kind = "sight" }
-prompt = "A compact is sealed twice and kept in two places. The parish kept the other copy."
-reveal = "Bound into the back of the register: the parish's half of the seal, snapped along the same break. Two halves of one broken promise."
+prompt = "gathers.find-parish-counterpart.prompt"
+reveal = "gathers.find-parish-counterpart.reveal"
 
 [dig-bog-iron]
-name = "Dig bog iron from the seep"
+name = "gathers.dig-bog-iron.name"
 map = "wilderness"
 slot = "ambush-site"
 pool = "lore"
 cost = 1
 items = ["cold-iron"]
 discovery = { kind = "sight-or-clue", clue = "cold-iron-lore" }
-prompt = "The seep runs rust-red where the ground bleeds iron. Bog iron, never smelted — the kind the old women mean."
-reveal = "You dig out a double handful of bog iron, heavy and cold and never once near a fire."
+prompt = "gathers.dig-bog-iron.prompt"
+reveal = "gathers.dig-bog-iron.reveal"
 
 [dig-cellar-seep]
-name = "Dig the weeping cellar floor"
+name = "gathers.dig-cellar-seep.name"
 map = "outlying"
 slot = "manor-cellar"
 pool = "lore"
 cost = 1
 items = ["cold-iron"]
 discovery = { kind = "sight-or-clue", clue = "cold-iron-lore" }
-prompt = "The cellar floor weeps rust where the ground water comes through. The same bog, only with a house sat on top of it."
-reveal = "You break up the wet floor and pick the iron out of it, cold and unsmelted, exactly as the old women said it must be."
+prompt = "gathers.dig-cellar-seep.prompt"
+reveal = "gathers.dig-cellar-seep.reveal"
 
 [gather-herbs-north]
-name = "Gather herbs in the clearing"
+name = "gathers.gather-herbs-north.name"
 map = "wilderness"
 slot = "herb-clearing-north"
 pool = "lore"
 cost = 1
 items = ["moon-herb", "bitter-root"]
 discovery = { kind = "sight-or-clue", clue = "herbwifes-tip" }
-prompt = "Moon-herb and bitter-root grow thick where the light gets in — for eyes that know them."
-reveal = "You cut moon-herb and dig bitter-root, wrapping them against the damp."
+prompt = "gathers.gather-herbs-north.prompt"
+reveal = "gathers.gather-herbs-north.reveal"
 
 [gather-herbs-south]
-name = "Gather herbs off the trail"
+name = "gathers.gather-herbs-south.name"
 map = "wilderness"
 slot = "herb-clearing-south"
 pool = "lore"
 cost = 1
 items = ["moon-herb", "bitter-root"]
 discovery = { kind = "sight-or-clue", clue = "herbwifes-tip" }
-prompt = "A second clearing, rich with the same silver-leafed growth."
-reveal = "More moon-herb, more bitter-root. The wood provides for those who ask properly."
+prompt = "gathers.gather-herbs-south.prompt"
+reveal = "gathers.gather-herbs-south.reveal"
 
 [scavenge-candlesticks]
-name = "Scavenge the silver candlesticks"
+name = "gathers.scavenge-candlesticks.name"
 map = "settlement"
 slot = "church-candles"
 items = ["silver"]
 discovery = { kind = "revealed-by-clue", clue = "silver-candlesticks" }
-prompt = "The candlesticks are true silver, and the church owes the valley a defence."
-reveal = "Forgive me. You wrap the cold silver in cloth; the altar keeps its dignity, barely."
+prompt = "gathers.scavenge-candlesticks.prompt"
+reveal = "gathers.scavenge-candlesticks.reveal"
 
 [mine-silver]
-name = "Chip silver from the lode"
+name = "gathers.mine-silver.name"
 map = "wilderness"
 slot = "mine"
 items = ["silver"]
 discovery = { kind = "sight-or-clue", clue = "mine-lode" }
-prompt = "Past the fallen rubble, a thread of pale metal glints in the rockface."
-reveal = "Your knife and patience win a fist of true silver from the lode."
+prompt = "gathers.mine-silver.prompt"
+reveal = "gathers.mine-silver.reveal"
 
 [search-study]
-name = "Search the manor study"
+name = "gathers.search-study.name"
 map = "outlying"
 slot = "manor-study"
 items = ["coin", "coin"]
 discovery = { kind = "sight" }
-prompt = "The study was abandoned in haste. Drawers hang open; not all were emptied."
-reveal = "Under a false drawer-bottom: a purse the fleeing family never came back for."
+prompt = "gathers.search-study.prompt"
+reveal = "gathers.search-study.reveal"
 
 [search-campsite]
-name = "Pick over the campsite"
+name = "gathers.search-campsite.name"
 map = "outlying"
 slot = "campsite"
 items = ["flintlock-shot", "coin"]
 discovery = { kind = "sight" }
-prompt = "Someone camped in the manor grounds recently, and left in a hurry."
-reveal = "A spilled powder horn, a cast ball, a dropped penny. Their hurry is your gain."
+prompt = "gathers.search-campsite.prompt"
+reveal = "gathers.search-campsite.reveal"
 
 [buy-simples]
-name = "Buy simples at the market stall"
+name = "gathers.buy-simples.name"
 map = "settlement"
 slot = "market-stall"
 pool = "social"
 cost = 1
 items = ["moon-herb", "bitter-root"]
 discovery = { kind = "sight" }
-prompt = "The herb-stall sells remedies to those the seller likes the look of."
-reveal = "A little talk, a little coin, and the bundle changes hands: moon-herb and bitter-root, fresh-cut."
+prompt = "gathers.buy-simples.prompt"
+reveal = "gathers.buy-simples.reveal"
 
 [sweep-the-crypt]
-name = "Gather dust from the old niches"
+name = "gathers.sweep-the-crypt.name"
 map = "outlying"
 slot = "crypt-8"
 pool = "lore"
 cost = 1
 items = ["grave-dust"]
 discovery = { kind = "sight" }
-prompt = "The oldest niches hold dead long past all grudges. Taken with the proper words, their dust is freely given."
-reveal = "You speak the old courtesies and take a handful of consecrated dust. The crypt stays quiet. It approves."
+prompt = "gathers.sweep-the-crypt.prompt"
+reveal = "gathers.sweep-the-crypt.reveal"
 
 [draw-the-well]
-name = "Sound the old well"
+name = "gathers.draw-the-well.name"
 map = "outlying"
 slot = "well"
 pool = "lore"
 cost = 1
 items = ["bitter-root"]
 discovery = { kind = "sight" }
-prompt = "Things get thrown down wells. Some of them keep."
-reveal = "The bucket comes up with sweet water and a knot of bitter-root, still good."
+prompt = "gathers.draw-the-well.prompt"
+reveal = "gathers.draw-the-well.reveal"

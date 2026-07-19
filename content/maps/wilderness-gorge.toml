@@ -4,9 +4,9 @@
 # into the trees, the gorge does not — you are on the path or you are in the
 # water, and a thing that wants you on the path knows exactly where to wait.
 
-name = "The Gorge"
+name = "maps.wilderness-gorge.name"
 role = "wilderness"
-description = "A cleft in the moor with a beck at the bottom. One ledge path, one ford, and a great deal of rock."
+description = "maps.wilderness-gorge.description"
 
 rows = [
   "################################",
@@ -46,38 +46,38 @@ rows = [
 id = "mine"
 kind = "wilds"
 at = [9, 5]
-label = "the mine"
+label = "maps.wilderness-gorge.slots.mine.label"
 
 [[slots]]
 id = "herb-clearing-north"
 kind = "wilds"
 at = [5, 4]
-label = "the herb clearing north"
+label = "maps.wilderness-gorge.slots.herb-clearing-north.label"
 
 [[slots]]
 id = "herb-clearing-south"
 kind = "wilds"
 at = [10, 12]
-label = "the herb clearing south"
+label = "maps.wilderness-gorge.slots.herb-clearing-south.label"
 
 [[slots]]
 id = "standing-stones"
 kind = "wilds"
 at = [24, 13]
-label = "the standing stones"
+label = "maps.wilderness-gorge.slots.standing-stones.label"
 
 [[slots]]
 id = "wolf-den"
 kind = "wilds"
 at = [6, 16]
-label = "the wolf den"
+label = "maps.wilderness-gorge.slots.wolf-den.label"
 
 # The ford: the one place the beck can be crossed, and the obvious ambush.
 [[slots]]
 id = "ambush-site"
 kind = "wilds"
 at = [17, 8]
-label = "the ambush site"
+label = "maps.wilderness-gorge.slots.ambush-site.label"
 
 [[initial_enemies]]
 enemy = "wolf"

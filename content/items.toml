@@ -1,103 +1,103 @@
 # Items. Combat values are authored tuning, not code constants.
 
 [hunting-blade]
-name = "Hunting Blade"
+name = "items.hunting-blade.name"
 glyph = "/"
 kind = { kind = "melee-weapon", damage = 2 }
-description = "A long working knife, kept wickedly sharp."
+description = "items.hunting-blade.description"
 
 [flintlock]
-name = "Flintlock"
+name = "items.flintlock.name"
 glyph = "}"
 kind = { kind = "ranged-weapon", damage = 3, range = 8, ammo = "flintlock-shot" }
-description = "A horse-pistol that throws a heavy ball. Slow to trust, loud as judgement."
+description = "items.flintlock.description"
 
 [flintlock-shot]
-name = "Flintlock Shot"
+name = "items.flintlock-shot.name"
 glyph = "*"
 kind = { kind = "ammunition" }
-description = "A cast lead ball and a measure of powder."
+description = "items.flintlock-shot.description"
 
 [silver-bullet]
-name = "Silver Bullet"
+name = "items.silver-bullet.name"
 glyph = "*"
 kind = { kind = "weakness-ammunition", damage = 10, stops_regeneration = true }
-description = "A ball of true silver. Against the beast it bites to the curse's heart, and what it wounds does not heal."
+description = "items.silver-bullet.description"
 
 [wound-draught]
-name = "Wound Draught"
+name = "items.wound-draught.name"
 glyph = "!"
 kind = { kind = "draught", heal = 4 }
-description = "A bitter physic of moon-herb. Drinking it costs you the moment, but knits torn flesh."
+description = "items.wound-draught.description"
 
 [binding-charm]
-name = "Binding Charm"
+name = "items.binding-charm.name"
 glyph = "&"
 kind = { kind = "binding-charm" }
-description = "Grave-dust and moon-herb sewn in a caul. Pressed close to the risen dead, it strips their shroud of shadow for five long breaths."
+description = "items.binding-charm.description"
 
 [cold-iron-pin]
-name = "Cold Iron Pin"
+name = "items.cold-iron-pin.name"
 glyph = "|"
 kind = { kind = "weakness-blade", damage = 7 }
-description = "A long pin of unworked cold iron, never near a forge fire. A hex slides off honest steel; it cannot get a grip on this at all."
+description = "items.cold-iron-pin.description"
 
 [silver]
-name = "Raw Silver"
+name = "items.silver.name"
 glyph = "$"
 kind = { kind = "ingredient" }
-description = "A fist of pale metal, cold to the touch."
+description = "items.silver.description"
 
 [cold-iron]
-name = "Cold Iron"
+name = "items.cold-iron.name"
 glyph = "$"
 kind = { kind = "ingredient" }
-description = "Bog iron, never smelted, never blessed. The old women say the older things cannot abide it, and for once the old women are right."
+description = "items.cold-iron.description"
 
 [hallowed-water]
-name = "Hallowed Water"
+name = "items.hallowed-water.name"
 glyph = "\""
 kind = { kind = "ingredient" }
-description = "Water from the parish font, blessed at a season nobody now remembers. It answers what was cursed a long time ago."
+description = "items.hallowed-water.description"
 
 [wronged-earth]
-name = "Wronged Earth"
+name = "items.wronged-earth.name"
 glyph = "\""
 kind = { kind = "ingredient" }
-description = "A handful of soil from the plot of the one who was wronged. It carries the debt, and a debt can be made to answer."
+description = "items.wronged-earth.description"
 
 [covenant-seal]
-name = "Covenant Seal"
+name = "items.covenant-seal.name"
 glyph = "&"
 kind = { kind = "ingredient" }
-description = "Half a broken wax seal off an old compact — the promise made, and the promise withheld. What ruined the bargain can be turned against what the bargain became."
+description = "items.covenant-seal.description"
 
 [moon-herb]
-name = "Moon-herb"
+name = "items.moon-herb.name"
 glyph = "\""
 kind = { kind = "ingredient" }
-description = "A silver-leafed herb that only shows itself by night."
+description = "items.moon-herb.description"
 
 [grave-dust]
-name = "Grave-dust"
+name = "items.grave-dust.name"
 glyph = "\""
 kind = { kind = "ingredient" }
-description = "Earth from a consecrated grave, dry as old paper."
+description = "items.grave-dust.description"
 
 [bitter-root]
-name = "Bitter-root"
+name = "items.bitter-root.name"
 glyph = "\""
 kind = { kind = "ingredient" }
-description = "A twisted root that numbs the tongue and cleans a wound."
+description = "items.bitter-root.description"
 
 [coin]
-name = "Coin"
+name = "items.coin.name"
 glyph = "$"
 kind = { kind = "coin" }
-description = "Honest silver pennies. Good for trade, useless against the dark."
+description = "items.coin.description"
 
 [iron-charm]
-name = "Iron Charm"
+name = "items.iron-charm.name"
 glyph = "&"
 kind = { kind = "curio" }
-description = "A comforting trinket of cold iron. The folk swear by it. The folk are wrong."
+description = "items.iron-charm.description"

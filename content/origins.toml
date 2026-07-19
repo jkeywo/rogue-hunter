@@ -3,22 +3,22 @@
 # carry will not bite — so origin evidence is load-bearing, not flavour.
 
 [ancient-curse]
-name = "An Ancient Curse"
+name = "origins.ancient-curse.name"
 sign_sites = ["grave", "church", "wilds"]
 counter_reagent = "hallowed-water"
-counter_flavour = "You quench the work in hallowed water. Against a thing this old, only what the parish blessed will hold an edge."
-description = "The evil is old. Its signs lie in parish records, weathered stones, and dreams that are not dreams. What was cursed long ago is undone only by what was blessed long ago."
+counter_flavour = "origins.ancient-curse.counter-flavour"
+description = "origins.ancient-curse.description"
 
 [bitter-betrayal]
-name = "A Bitter Betrayal"
+name = "origins.bitter-betrayal.name"
 sign_sites = ["npc", "kill-site", "outlying-site"]
 counter_reagent = "wronged-earth"
-counter_flavour = "You temper the work with earth from the wronged one's own plot. A debt answers to the one it was owed."
-description = "The evil is fresh, born of a wrong done between the living. Its signs are grudges, whispers, and blood not yet dry. Only the soil of the wronged will settle the account."
+counter_flavour = "origins.bitter-betrayal.counter-flavour"
+description = "origins.bitter-betrayal.description"
 
 [broken-covenant]
-name = "A Broken Covenant"
+name = "origins.broken-covenant.name"
 sign_sites = ["outlying-site", "church", "grave"]
 counter_reagent = "covenant-seal"
-counter_flavour = "You bind the work with the seal of the broken compact. What was promised and withheld gives the work its bite."
-description = "An old obligation, kept for generations and then broken in living memory. Its traces read like a curse and like a betrayal both, because it is the ruin of the one becoming the other. The compact's own seal is what answers it."
+counter_flavour = "origins.broken-covenant.counter-flavour"
+description = "origins.broken-covenant.description"

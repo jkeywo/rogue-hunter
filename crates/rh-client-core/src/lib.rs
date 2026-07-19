@@ -1006,7 +1006,7 @@ impl ClientSession {
                         sim.catalogue
                             .items
                             .get(item)
-                            .map(|def| def.name.clone())
+                            .map(|def| sim.catalogue.strings.get(&def.name).to_owned())
                             .unwrap_or_else(|| item.clone())
                     })
                     .collect();

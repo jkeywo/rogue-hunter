@@ -19,22 +19,22 @@
 [[openings]]
 id = "sent-for"
 body = [
-  "The letter reached you at Wenlock, folded twice and written in three hands, which is how a valley writes when nobody wants their name at the bottom of it.",
-  "It says: come. It does not say what for. That much they will tell you to your face, or not at all.",
+  "openings.openings.sent-for.body.1",
+  "openings.openings.sent-for.body.2",
 ]
 
 [[openings]]
 id = "the-road-in"
 body = [
-  "You came in along the drove road at first light, past a byre with the door off its hinges and nothing living inside it.",
-  "Whatever walks here has been walking a while. You have six days. The valley has already spent some of them pretending otherwise.",
+  "openings.openings.the-road-in.body.1",
+  "openings.openings.the-road-in.body.2",
 ]
 
 [[openings]]
 id = "the-parish-pays"
 body = [
-  "The parish put up the money, which means the parish has decided this is real, which means it has been real for longer than anyone will admit to your face.",
-  "They will be polite. They will be helpful. They will not be quick, and you do not have slow.",
+  "openings.openings.the-parish-pays.body.1",
+  "openings.openings.the-parish-pays.body.2",
 ]
 
 # -- Person-anchored priors. Somebody got to you first. ---------------------
@@ -44,8 +44,8 @@ id = "talked-at-on-the-road"
 anchor = "npc"
 grant = "identity"
 body = [
-  "{npc} found you before you found the valley, waiting up at the ford with the look of somebody who had rehearsed it on the walk down.",
-  "It came out in a rush, and then they were away up the bank before you could ask a second question. It is not proof. But it is yours already, and nothing that happens in this valley now can take it back out of your head.",
+  "openings.openings.talked-at-on-the-road.body.1",
+  "openings.openings.talked-at-on-the-road.body.2",
 ]
 
 [[openings]]
@@ -53,7 +53,7 @@ id = "given-a-direction"
 anchor = "npc"
 grant = "lead"
 body = [
-  "{npc} met you on the way in and gave you a direction, which is more than most will give a stranger and considerably less than you are going to need.",
+  "openings.openings.given-a-direction.body.1",
 ]
 
 [[openings]]
@@ -61,7 +61,7 @@ id = "pressed-upon-you"
 anchor = "npc"
 grant = "items"
 body = [
-  "{npc} had business with you before you were properly arrived, and you came away from it carrying something.",
+  "openings.openings.pressed-upon-you.body.1",
 ]
 
 # -- Place-anchored priors. You stopped on the way past. --------------------
@@ -71,8 +71,8 @@ id = "read-it-on-the-way-past"
 anchor = "tile"
 grant = "identity"
 body = [
-  "You stopped at {clue} before you were properly arrived, on the sound principle that a hunter who walks past the first strange thing will be shown the second at a worse moment.",
-  "You had your look. What you read there is in your head now, and the valley cannot unsay it.",
+  "openings.openings.read-it-on-the-way-past.body.1",
+  "openings.openings.read-it-on-the-way-past.body.2",
 ]
 
 [[openings]]
@@ -80,7 +80,7 @@ id = "noticed-on-arrival"
 anchor = "tile"
 grant = "lead"
 body = [
-  "{clue} caught your eye on the way in — not enough to stop for long, enough to know where you will be going back to.",
+  "openings.openings.noticed-on-arrival.body.1",
 ]
 
 [[openings]]
@@ -88,28 +88,28 @@ id = "gathered-while-walking"
 anchor = "tile"
 grant = "items"
 body = [
-  "You did not come into the valley empty-handed. There had been one stop on the way in, and it had been worth making.",
+  "openings.openings.gathered-while-walking.body.1",
 ]
 
 [[openings]]
 id = "the-last-one-left"
 body = [
-  "There was a hunter here before you. The parish is vague about what became of him, in the particular way that means they know exactly.",
-  "His kit is in the inn's back room. Nobody has touched it. Nobody will meet your eye about it either.",
+  "openings.openings.the-last-one-left.body.1",
+  "openings.openings.the-last-one-left.body.2",
 ]
 
 [[openings]]
 id = "nobody-sent-for-you"
 body = [
-  "Nobody sent for you. You heard it third-hand at a market forty miles off — a valley losing people and calling it accidents — and something about the arithmetic would not leave you alone.",
-  "So you have no fee, no authority, and nobody expecting you. On the other hand, whatever is here has not been warned.",
+  "openings.openings.nobody-sent-for-you.body.1",
+  "openings.openings.nobody-sent-for-you.body.2",
 ]
 
 [[openings]]
 id = "passing-through"
 body = [
-  "You were going somewhere else. You are not going there now.",
-  "It was the third thing that did it: one is a story, two is a coincidence, three is a pattern, and you have never once been wrong about the third thing.",
+  "openings.openings.passing-through.body.1",
+  "openings.openings.passing-through.body.2",
 ]
 
 # ---------------------------------------------------------------------------
@@ -130,97 +130,97 @@ body = [
 [[conditions]]
 id = "a-soft-winter"
 axis = "season"
-body = ["It is a soft winter, all mud and no frost, and the valley has the sulky look of a place that would rather be under snow."]
+body = ["openings.conditions.a-soft-winter.body.1"]
 
 [[conditions]]
 id = "the-thaw"
 axis = "season"
-body = ["The thaw is on. Everything is running — ditches, gutters, the fields themselves — and the whole valley sounds like something being poured away."]
+body = ["openings.conditions.the-thaw.body.1"]
 
 [[conditions]]
 id = "high-summer"
 axis = "season"
-body = ["High summer, and too hot for the time of year. The stock are in the shade and the flies are at everything, and the smell reaches you well before {place} does."]
+body = ["openings.conditions.high-summer.body.1"]
 
 [[conditions]]
 id = "the-deep-of-winter"
 axis = "season"
 effect = { kind = "pressure", extra = 2 }
 body = [
-  "It is the deep of winter, the part with no give in it. The ground rings when you put a heel in it and the light is gone by four.",
-  "Everything out here is hungry, and hungry things come further down the valley than they otherwise would. You will not have the wood to yourself.",
+  "openings.conditions.the-deep-of-winter.body.1",
+  "openings.conditions.the-deep-of-winter.body.2",
 ]
 
 [[conditions]]
 id = "wary"
 axis = "reception"
-body = ["They are wary of you, which is sensible of them. Doors do not shut as you pass, but they are held, and the holding is the message."]
+body = ["openings.conditions.wary.body.1"]
 
 [[conditions]]
 id = "incurious"
 axis = "reception"
-body = ["Nobody much minds that you are here. That is worse than suspicion, in its way — a valley this used to bad news has been getting it a while."]
+body = ["openings.conditions.incurious.body.1"]
 
 [[conditions]]
 id = "openly-glad"
 axis = "reception"
-body = ["They are glad to see you, openly and a little desperately, and you have learned to distrust that. Glad people expect to be saved on a schedule."]
+body = ["openings.conditions.openly-glad.body.1"]
 
 [[conditions]]
 id = "unwelcome"
 axis = "reception"
 effect = { kind = "social-surcharge" }
 body = [
-  "Word went ahead of you and it was not kind. Whoever sent it did a thorough job: you are a stranger who has come to make trouble out of a run of hard luck, and they have decided that before you opened your mouth.",
-  "Everything you want from these people, you will pay more for. Nobody will sell you so much as powder.",
+  "openings.conditions.unwelcome.body.1",
+  "openings.conditions.unwelcome.body.2",
 ]
 
 [[conditions]]
 id = "first-light"
 axis = "hour"
-body = ["You come in at first light, which is the honest hour to arrive somewhere — early enough to be seen doing it, late enough not to wake anybody."]
+body = ["openings.conditions.first-light.body.1"]
 
 [[conditions]]
 id = "the-middle-of-the-day"
 axis = "hour"
-body = ["You come in at the flat middle of the day, when a place has nothing to hide behind and shows you exactly how it is doing. It is not doing well."]
+body = ["openings.conditions.the-middle-of-the-day.body.1"]
 
 [[conditions]]
 id = "at-dusk"
 axis = "hour"
-body = ["You come in at dusk, with the light going amber and then going altogether, and the valley folding itself up for the night rather faster than it needs to."]
+body = ["openings.conditions.at-dusk.body.1"]
 
 [[conditions]]
 id = "already-dark"
 axis = "hour"
 effect = { kind = "short-sight", tiles = 3 }
 body = [
-  "You misjudged the road and come in well after dark, which no hunter does twice on purpose.",
-  "There is no moon worth the name. You will be working close tonight, and close is where the disadvantage is.",
+  "openings.conditions.already-dark.body.1",
+  "openings.conditions.already-dark.body.2",
 ]
 
 [[conditions]]
 id = "fresh-from-another"
 axis = "provenance"
-body = ["You are barely a fortnight out of the last one, and it has not finished with you yet. You still check doorways. You will do that for a while."]
+body = ["openings.conditions.fresh-from-another.body.1"]
 
 [[conditions]]
 id = "wholly-unknown"
 axis = "provenance"
-body = ["Nobody here has heard of you, which is restful. You get to be exactly as good as you turn out to be, with nothing to live up to and nothing to live down."]
+body = ["openings.conditions.wholly-unknown.body.1"]
 
 [[conditions]]
 id = "known-by-reputation"
 axis = "provenance"
-body = ["Somebody here has heard of you, and has told the rest. The version that reached them is flattering and wrong, and you will be corrected out of it by about Thursday."]
+body = ["openings.conditions.known-by-reputation.body.1"]
 
 [[conditions]]
 id = "the-road-behind-you"
 axis = "provenance"
 effect = { kind = "ambush", percent = 20 }
 body = [
-  "You did not come here cleanly. There is a matter two valleys back that has not been settled, and settling it involves people who are prepared to travel.",
-  "They will not come into the settlement. The roads between, though, are theirs as much as anyone's.",
+  "openings.conditions.the-road-behind-you.body.1",
+  "openings.conditions.the-road-behind-you.body.2",
 ]
 
 # -- The boons. One axis supplies one of these each run. --------------------
@@ -230,8 +230,8 @@ id = "an-open-winter"
 axis = "season"
 effect = { kind = "quiet-roads", percent = 15 }
 body = [
-  "It is an open winter, the roads hard and clear and passable all the way up the valley. Whatever else this place has gone wrong at, it has not gone wrong at the weather.",
-  "You can get about. That is not nothing; most of this trade is getting about.",
+  "openings.conditions.an-open-winter.body.1",
+  "openings.conditions.an-open-winter.body.2",
 ]
 
 [[conditions]]
@@ -239,8 +239,8 @@ id = "expected-and-provided-for"
 axis = "reception"
 effect = { kind = "well-supplied", item = "wound-draught" }
 body = [
-  "Somebody here has done this before. There is a room held for you, and on the table in it a stoppered bottle of the right sort, put by without being asked for.",
-  "You do not find out who. They are not taking credit for it, which tells you they expect it to be needed.",
+  "openings.conditions.expected-and-provided-for.body.1",
+  "openings.conditions.expected-and-provided-for.body.2",
 ]
 
 [[conditions]]
@@ -248,8 +248,8 @@ id = "the-whole-day-ahead"
 axis = "hour"
 effect = { kind = "long-sight", tiles = 2 }
 body = [
-  "You come in with the whole of the day still in front of you and the light as good as it gets here, which is not very, but it is honest.",
-  "You will see what there is to see today. Tomorrow can look after itself.",
+  "openings.conditions.the-whole-day-ahead.body.1",
+  "openings.conditions.the-whole-day-ahead.body.2",
 ]
 
 [[conditions]]
@@ -257,6 +257,6 @@ id = "your-kit-in-order"
 axis = "provenance"
 effect = { kind = "well-supplied", item = "flintlock-shot" }
 body = [
-  "You came in with everything where it should be — powder dry, ball counted, nothing left behind at the last place because you were leaving it in a hurry.",
-  "It is a small thing to be pleased about. Small things are most of what a hunter gets.",
+  "openings.conditions.your-kit-in-order.body.1",
+  "openings.conditions.your-kit-in-order.body.2",
 ]

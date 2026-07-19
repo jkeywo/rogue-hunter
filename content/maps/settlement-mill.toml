@@ -5,9 +5,9 @@
 # the church side and the market side is a bottleneck someone can watch, and
 # a fight on a bridge has nowhere to give ground.
 
-name = "Millrace"
+name = "maps.settlement-mill.name"
 role = "settlement"
-description = "A town built either side of its own mill race. Two bridges, and a long walk if you pick the wrong one."
+description = "maps.settlement-mill.description"
 
 rows = [
   "################################",
@@ -51,92 +51,92 @@ rows = [
 id = "church-altar"
 kind = "church"
 at = [24, 2]
-label = "the church altar"
+label = "maps.settlement-mill.slots.church-altar.label"
 
 [[slots]]
 id = "church-candles"
 kind = "church"
 at = [27, 2]
-label = "the church candles"
+label = "maps.settlement-mill.slots.church-candles.label"
 
 [[slots]]
 id = "church-records"
 kind = "church"
 at = [22, 3]
-label = "the church records"
+label = "maps.settlement-mill.slots.church-records.label"
 
 [[slots]]
 id = "forge"
 kind = "workstation"
 at = [5, 1]
-label = "the forge"
+label = "maps.settlement-mill.slots.forge.label"
 
 [[slots]]
 id = "grave-1"
 kind = "grave"
 at = [25, 12]
-label = "the grave 1"
+label = "maps.settlement-mill.slots.grave-1.label"
 
 [[slots]]
 id = "grave-2"
 kind = "grave"
 at = [26, 12]
-label = "the grave 2"
+label = "maps.settlement-mill.slots.grave-2.label"
 
 [[slots]]
 id = "grave-3"
 kind = "grave"
 at = [27, 12]
-label = "the grave 3"
+label = "maps.settlement-mill.slots.grave-3.label"
 
 [[slots]]
 id = "grave-4"
 kind = "grave"
 at = [25, 14]
-label = "the grave 4"
+label = "maps.settlement-mill.slots.grave-4.label"
 
 [[slots]]
 id = "grave-5"
 kind = "grave"
 at = [26, 14]
-label = "the grave 5"
+label = "maps.settlement-mill.slots.grave-5.label"
 
 [[slots]]
 id = "grave-6"
 kind = "grave"
 at = [27, 14]
-label = "the grave 6"
+label = "maps.settlement-mill.slots.grave-6.label"
 
 [[slots]]
 id = "graveyard-gate"
 kind = "npc"
 at = [24, 13]
-label = "the graveyard gate"
+label = "maps.settlement-mill.slots.graveyard-gate.label"
 
 # The body was found at the water's edge, where the race runs fastest.
 [[slots]]
 id = "kill-site"
 kind = "kill-site"
 at = [9, 9]
-label = "the kill site"
+label = "maps.settlement-mill.slots.kill-site.label"
 
 [[slots]]
 id = "market-stall"
 kind = "npc"
 at = [5, 8]
-label = "the market stall"
+label = "maps.settlement-mill.slots.market-stall.label"
 
 [[slots]]
 id = "square"
 kind = "npc"
 at = [6, 11]
-label = "the square"
+label = "maps.settlement-mill.slots.square.label"
 
 [[slots]]
 id = "inn-hearth"
 kind = "npc"
 at = [23, 18]
-label = "the inn hearth"
+label = "maps.settlement-mill.slots.inn-hearth.label"
 
 [[exits]]
 to = "wilderness"

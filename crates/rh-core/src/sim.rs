@@ -4,7 +4,9 @@
 //! mouse, replay, browser) funnels through it, and every rejection carries a
 //! player-readable reason so blocked actions are explained, never hidden.
 
-use rh_content::{Catalogue, ItemKind, ManoeuvreEffect, PoolKind, SignatureEffect, Terrain};
+use rh_content::{
+    Catalogue, ItemKind, ManoeuvreEffect, PoolKind, SignatureEffect, StringId, Terrain,
+};
 
 use crate::command::{Command, Rejection, Target};
 use crate::events::{EventKind, LogEvent};
@@ -102,7 +104,10 @@ impl Sim {
             .into_iter()
             .chain(conditions.iter().flat_map(|c| c.body.clone()));
         for line in prose {
-            let text = line
+            let text = self
+                .catalogue
+                .strings
+                .get(&line)
                 .replace("{npc}", &npc_name)
                 .replace("{clue}", &prior_name)
                 .replace("{place}", &place);
@@ -221,6 +226,17 @@ impl Sim {
             kind,
             text,
         });
+    }
+
+    /// Log a line of authored content, resolved through the string table.
+    pub(crate) fn log_id(&mut self, kind: EventKind, id: &StringId) {
+        let text = self.catalogue.strings.get(id).to_owned();
+        self.log(kind, text);
+    }
+
+    /// The English behind an id.
+    pub(crate) fn text(&self, id: &StringId) -> &str {
+        self.catalogue.strings.get(id)
     }
 
     // -- Movement and combat ---------------------------------------------------
@@ -389,7 +405,10 @@ impl Sim {
                 self.state.hunter.sure_shot = true;
                 self.log(
                     EventKind::Combat,
-                    format!("You take a long breath and {}.", def.name.to_lowercase()),
+                    format!(
+                        "You take a long breath and {}.",
+                        self.text(&def.name).to_lowercase()
+                    ),
                 );
             }
             ManoeuvreEffect::MeleeDamageMultiplier { numerator } => {
@@ -768,8 +787,8 @@ impl Sim {
                         format!(
                             "That settles what it is working toward: {}. It can be interrupted — \
                              {}.",
-                            scheme.name,
-                            scheme.preempt.name.to_lowercase()
+                            self.text(&scheme.name),
+                            self.text(&scheme.preempt.name).to_lowercase()
                         ),
                     );
                 }
@@ -985,7 +1004,7 @@ impl Sim {
                     });
                 }
                 return Err(Rejection::MissingIngredients {
-                    recipe: recipe.name.clone(),
+                    recipe: self.text(&recipe.name).to_owned(),
                 });
             }
         }
@@ -999,7 +1018,7 @@ impl Sim {
             let flavour = self.catalogue.origins[&self.world.villain.origin]
                 .counter_flavour
                 .clone();
-            self.log(EventKind::Item, flavour);
+            self.log_id(EventKind::Item, &flavour);
         }
         self.end_action();
         Ok(())
@@ -1181,10 +1200,12 @@ impl Sim {
     }
 
     fn item_name(&self, id: &str) -> String {
+        // Falling back to the raw id keeps an unknown item legible in the log
+        // rather than blank.
         self.catalogue
             .items
             .get(id)
-            .map(|def| def.name.clone())
+            .map(|def| self.text(&def.name).to_owned())
             .unwrap_or_else(|| id.to_owned())
     }
 
@@ -1259,7 +1280,7 @@ impl Sim {
                 .npcs
                 .archetypes
                 .get(&spec.archetype)
-                .map(|def| def.name.clone())
+                .map(|def| self.text(&def.name))
                 .unwrap_or_default();
             self.log(
                 EventKind::Social,
@@ -1535,7 +1556,7 @@ impl Sim {
             let vulnerable = self.villain_is_vulnerable(id);
             if let Some(cadence) = &def.cadence {
                 if !vulnerable && !was_dormant {
-                    self.log(EventKind::Telegraph, cadence.guarded_telegraph.clone());
+                    self.log_id(EventKind::Telegraph, &cadence.guarded_telegraph);
                     return;
                 }
                 // Blows land twice as deep in a vulnerability window. The
@@ -1563,7 +1584,7 @@ impl Sim {
                         } else {
                             ward.absorb_telegraph.clone()
                         };
-                        self.log(EventKind::Telegraph, telegraph);
+                        self.log_id(EventKind::Telegraph, &telegraph);
                     }
                 }
             }
@@ -1659,9 +1680,9 @@ impl Sim {
                 .catalogue
                 .enemies
                 .get(enemy)
-                .map(|def| def.name.clone())
+                .map(|def| self.text(&def.name).to_owned())
                 .unwrap_or_else(|| enemy.clone()),
-            ActorKind::Villain => self.villain_def().name.clone(),
+            ActorKind::Villain => self.text(&self.villain_def().name).to_owned(),
         }
     }
 
@@ -1780,7 +1801,7 @@ impl Sim {
         // A scheme pre-empted in time still stirs, but its escalation fails:
         // no tier gained, no fresh minions.
         if major && self.state.scheme_preempted {
-            self.log(EventKind::Clock, scheme.preempt.blunted_text.clone());
+            self.log_id(EventKind::Clock, &scheme.preempt.blunted_text);
             return;
         }
         let event = if major {
@@ -1788,7 +1809,7 @@ impl Sim {
         } else {
             &scheme.minor_event
         };
-        self.log(EventKind::Clock, event.text.clone());
+        self.log_id(EventKind::Clock, &event.text);
 
         // Threat tier up: +health and the next enhanced behaviour.
         let def = self.villain_def().clone();
@@ -1796,7 +1817,7 @@ impl Sim {
             (self.state.villain.tier + 1).min(def.tier_behaviours.len() as u8);
         let tier = self.state.villain.tier;
         if let Some(behaviour) = def.tier_behaviours.get(usize::from(tier) - 1) {
-            self.log(EventKind::Telegraph, behaviour.telegraph.clone());
+            self.log_id(EventKind::Telegraph, &behaviour.telegraph);
         }
         if let Some(actor_id) = self.state.villain.actor {
             if let Some(actor) = self.state.actor_mut(actor_id) {

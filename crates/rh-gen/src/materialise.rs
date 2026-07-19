@@ -100,6 +100,14 @@ impl<'a> Builder<'a> {
         )
     }
 
+    /// The English behind an authored id. `World` stores resolved text: it
+    /// already holds fully-substituted prose, it is never persisted, and
+    /// keeping ids here would force every UI call site to carry the
+    /// substitution arguments too.
+    fn text(&self, id: &rh_content::StringId) -> &str {
+        self.catalogue.strings.get(id)
+    }
+
     fn next_opportunity_id(&self) -> OpportunityId {
         OpportunityId(self.opportunities.len() as u16)
     }
@@ -209,7 +217,7 @@ impl<'a> Builder<'a> {
                         id: feature_id,
                         at,
                         kind: FeatureKind::Landmark,
-                        name: slot.label.clone(),
+                        name: self.catalogue.strings.get(&slot.label).to_owned(),
                     });
                     self.next_feature += 1;
                 }
@@ -282,7 +290,7 @@ impl<'a> Builder<'a> {
 
         Ok(WorldMap {
             template: template_id.to_owned(),
-            name: template.name.clone(),
+            name: self.text(&template.name).to_owned(),
             role: template.role,
             tiles,
             exits,
@@ -325,8 +333,8 @@ impl<'a> Builder<'a> {
                     NpcLink {
                         to: NpcId(other as u8),
                         kind: kind_id.clone(),
-                        discovered_text: kind
-                            .discovered_text
+                        discovered_text: self
+                            .text(&kind.discovered_text)
                             .replace("{a}", &self.cast.members[*a].name)
                             .replace("{b}", &self.cast.members[*b].name),
                     }
@@ -342,11 +350,11 @@ impl<'a> Builder<'a> {
                 trades: member.trades,
                 secret: NpcSecret {
                     template: member.secret_template.clone(),
-                    text: secret_def.text.replace("{npc}", &member.name),
+                    text: self.text(&secret_def.text).replace("{npc}", &member.name),
                     disproof: secret_def
                         .disproof
                         .as_ref()
-                        .map(|text| text.replace("{npc}", &member.name)),
+                        .map(|id| self.text(id).replace("{npc}", &member.name)),
                 },
                 links,
                 map,
@@ -641,7 +649,7 @@ impl<'a> Builder<'a> {
         self.opportunities.push(OpportunitySpec {
             id,
             source: template_id.to_owned(),
-            name: template.name.clone(),
+            name: self.text(&template.name).to_owned(),
             map,
             anchor,
             pool: Some(template.pool),
@@ -655,8 +663,8 @@ impl<'a> Builder<'a> {
                 template.action,
                 OpportunityAction::Spy | OpportunityAction::Examine | OpportunityAction::Track
             ),
-            prompt: fill(&template.prompt),
-            reveal: fill(&template.reveal),
+            prompt: fill(self.text(&template.prompt)),
+            reveal: fill(self.text(&template.reveal)),
         });
         Ok(id)
     }
@@ -826,7 +834,7 @@ impl<'a> Builder<'a> {
             self.opportunities.push(OpportunitySpec {
                 id,
                 source: gather_id.clone(),
-                name: gather.name.clone(),
+                name: self.text(&gather.name).to_owned(),
                 map,
                 anchor: OpportunityAnchor::Tile(at),
                 pool: gather.pool,
@@ -839,8 +847,8 @@ impl<'a> Builder<'a> {
                 requires,
                 clears_terrain: false,
                 covert: false,
-                prompt: gather.prompt.clone(),
-                reveal: gather.reveal.clone(),
+                prompt: self.text(&gather.prompt).to_owned(),
+                reveal: self.text(&gather.reveal).to_owned(),
             });
         }
         Ok(())
@@ -884,7 +892,7 @@ impl<'a> Builder<'a> {
         self.opportunities.push(OpportunitySpec {
             id,
             source: format!("preempt:{}", self.combo.scheme),
-            name: preempt.name.clone(),
+            name: self.text(&preempt.name).to_owned(),
             map,
             anchor: OpportunityAnchor::Tile(at),
             pool: Some(preempt.pool),
@@ -895,8 +903,8 @@ impl<'a> Builder<'a> {
             requires,
             clears_terrain: false,
             covert: false,
-            prompt: preempt.prompt.clone(),
-            reveal: preempt.reveal.clone(),
+            prompt: self.text(&preempt.prompt).to_owned(),
+            reveal: self.text(&preempt.reveal).to_owned(),
         });
         Ok(())
     }

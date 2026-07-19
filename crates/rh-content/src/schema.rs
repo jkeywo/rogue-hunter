@@ -102,9 +102,9 @@ pub struct VisionBalance {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct HunterDef {
-    pub name: String,
+    pub name: StringId,
     /// One line placing this hunter in the valley, shown at selection.
-    pub title: String,
+    pub title: StringId,
     pub glyph: char,
     pub health: u16,
     pub lore_cap: u8,
@@ -123,10 +123,10 @@ pub struct HunterDef {
 #[serde(deny_unknown_fields)]
 pub struct ManoeuvreDef {
     pub id: String,
-    pub name: String,
+    pub name: StringId,
     pub stamina_cost: u8,
     pub effect: ManoeuvreEffect,
-    pub description: String,
+    pub description: StringId,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
@@ -145,10 +145,10 @@ pub enum ManoeuvreEffect {
 #[serde(deny_unknown_fields)]
 pub struct SignatureDef {
     pub id: String,
-    pub name: String,
+    pub name: StringId,
     pub physical_cost: u8,
     pub effect: SignatureEffect,
-    pub description: String,
+    pub description: StringId,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
@@ -173,7 +173,7 @@ pub enum SignatureEffect {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct EnemyDef {
-    pub name: String,
+    pub name: StringId,
     pub glyph: char,
     pub health: u16,
     pub melee_damage: u16,
@@ -186,7 +186,7 @@ pub struct EnemyDef {
     pub unnatural: bool,
     /// Optional ranged attack (bandits).
     pub ranged: Option<EnemyRanged>,
-    pub description: String,
+    pub description: StringId,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
@@ -215,7 +215,7 @@ pub struct EnemyRanged {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct VillainDef {
-    pub name: String,
+    pub name: StringId,
     pub glyph: char,
     pub health: u16,
     pub melee_damage: u16,
@@ -235,7 +235,7 @@ pub struct VillainDef {
     pub weakness_item: String,
     /// Whether the church consecration rite affects this villain.
     pub affected_by_consecration: bool,
-    pub description: String,
+    pub description: StringId,
 }
 
 /// A standing hex-ward: it soaks a number of blows before collapsing, and
@@ -249,19 +249,19 @@ pub struct WardDef {
     pub leak_damage: u16,
     /// Encounter turns after breaking before the ward is rewoven.
     pub reweave_turns: u8,
-    pub absorb_telegraph: String,
-    pub break_telegraph: String,
-    pub reweave_telegraph: String,
+    pub absorb_telegraph: StringId,
+    pub break_telegraph: StringId,
+    pub reweave_telegraph: StringId,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct TierBehaviour {
     pub id: String,
-    pub name: String,
+    pub name: StringId,
     pub effect: TierEffect,
     /// Event-log telegraph shown when the tier activates.
-    pub telegraph: String,
+    pub telegraph: StringId,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
@@ -298,7 +298,7 @@ pub struct PounceDef {
     pub range: u8,
     /// Encounter turns between pounces.
     pub cooldown: u8,
-    pub telegraph: String,
+    pub telegraph: StringId,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -306,7 +306,7 @@ pub struct PounceDef {
 pub struct RegenerationDef {
     /// Health regained per encounter turn until stopped by the weakness item.
     pub per_turn: u16,
-    pub telegraph: String,
+    pub telegraph: StringId,
 }
 
 /// Revenant-style shared vulnerability/dash cadence.
@@ -321,9 +321,9 @@ pub struct CadenceDef {
     pub bound_vulnerable_turns: u8,
     /// Ongoing damage per turn while on consecrated ground.
     pub consecrated_damage_per_turn: u16,
-    pub vulnerable_telegraph: String,
-    pub dash_telegraph: String,
-    pub guarded_telegraph: String,
+    pub vulnerable_telegraph: StringId,
+    pub dash_telegraph: StringId,
+    pub guarded_telegraph: StringId,
 }
 
 // ---------------------------------------------------------------------------
@@ -336,15 +336,15 @@ pub struct CadenceDef {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct OriginDef {
-    pub name: String,
+    pub name: StringId,
     /// Clue-site kinds this origin emphasises when placing identity clues.
     pub sign_sites: Vec<SiteKind>,
     /// Item id every decisive counter recipe additionally requires in a case
     /// of this origin. This is what makes reading the origin load-bearing.
     pub counter_reagent: String,
     /// Shown when a counter is crafted with this origin's reagent.
-    pub counter_flavour: String,
-    pub description: String,
+    pub counter_flavour: StringId,
+    pub description: StringId,
 }
 
 /// A scheme controls the timed events, the minion family, and the one
@@ -352,14 +352,14 @@ pub struct OriginDef {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct SchemeDef {
-    pub name: String,
+    pub name: StringId,
     /// Enemy id of the minion family this scheme fields.
     pub minion_enemy: String,
     pub minor_event: SchemeEvent,
     pub major_event: SchemeEvent,
     /// The act that, taken before the major event, blunts this scheme.
     pub preempt: SchemePreempt,
-    pub description: String,
+    pub description: StringId,
 }
 
 /// Disrupting a scheme before its major event: an authored, placeable act
@@ -367,25 +367,25 @@ pub struct SchemeDef {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct SchemePreempt {
-    pub name: String,
+    pub name: StringId,
     /// Where the act can be performed.
     pub site: SiteKind,
     /// Map template role the site must belong to.
     pub map_role: MapRole,
     pub pool: PoolKind,
     pub cost: u8,
-    pub prompt: String,
-    pub reveal: String,
+    pub prompt: StringId,
+    pub reveal: StringId,
     /// Logged when the major event fires already blunted.
-    pub blunted_text: String,
+    pub blunted_text: StringId,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct SchemeEvent {
-    pub name: String,
+    pub name: StringId,
     /// Event-log text when the event fires.
-    pub text: String,
+    pub text: StringId,
     /// Map id on which the event leaves a visible mark (kill site, etc.).
     pub site_map: String,
     /// Minions spawned on the marked map when the event fires.
@@ -399,10 +399,10 @@ pub struct SchemeEvent {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ItemDef {
-    pub name: String,
+    pub name: StringId,
     pub glyph: char,
     pub kind: ItemKind,
-    pub description: String,
+    pub description: StringId,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
@@ -441,7 +441,7 @@ pub enum ItemKind {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct RecipeDef {
-    pub name: String,
+    pub name: StringId,
     /// Item ids consumed (duplicates allowed for quantities).
     pub inputs: Vec<String>,
     /// Item id produced.
@@ -451,7 +451,7 @@ pub struct RecipeDef {
     /// has been read correctly.
     #[serde(default)]
     pub requires_origin_reagent: bool,
-    pub description: String,
+    pub description: StringId,
 }
 
 // ---------------------------------------------------------------------------
@@ -462,7 +462,7 @@ pub struct RecipeDef {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ClueTemplate {
-    pub name: String,
+    pub name: StringId,
     pub category: ClueCategory,
     /// Evidence claim on this category's axis: the values the sign is
     /// consistent with. Empty means "consistent with anything on the axis".
@@ -498,9 +498,9 @@ pub struct ClueTemplate {
     #[serde(default)]
     pub grants_items: Vec<String>,
     /// Opportunity text shown before the clue is taken.
-    pub prompt: String,
+    pub prompt: StringId,
     /// Event-log / journal text once revealed.
-    pub reveal: String,
+    pub reveal: StringId,
 }
 
 impl ClueTemplate {
@@ -648,7 +648,7 @@ pub struct NpcCatalogue {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct NpcArchetype {
-    pub name: String,
+    pub name: StringId,
     pub glyph: char,
     /// Names the generator draws from for this archetype.
     pub name_pool: Vec<String>,
@@ -660,27 +660,27 @@ pub struct NpcArchetype {
     pub mystical: bool,
     /// Secret template ids this archetype can carry.
     pub secrets: Vec<String>,
-    pub description: String,
+    pub description: StringId,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct SecretTemplate {
-    pub name: String,
+    pub name: StringId,
     /// A false secret must be optional and falsifiable via its disproof text.
     pub false_secret: bool,
-    pub text: String,
+    pub text: StringId,
     /// Present iff `false_secret`; revealed by the disproving opportunity.
-    pub disproof: Option<String>,
+    pub disproof: Option<StringId>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct RelationshipKind {
     pub id: String,
-    pub name: String,
+    pub name: StringId,
     /// Text used when the link is discovered, with {a} and {b} placeholders.
-    pub discovered_text: String,
+    pub discovered_text: StringId,
 }
 
 // ---------------------------------------------------------------------------
@@ -690,7 +690,7 @@ pub struct RelationshipKind {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct MapTemplate {
-    pub name: String,
+    pub name: StringId,
     pub role: MapRole,
     /// Exactly 20 rows of exactly 32 glyphs each.
     pub rows: Vec<String>,
@@ -705,7 +705,7 @@ pub struct MapTemplate {
     /// Baseline enemies present from the start of a run.
     #[serde(default)]
     pub initial_enemies: Vec<InitialEnemy>,
-    pub description: String,
+    pub description: StringId,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -783,7 +783,7 @@ pub struct SlotDef {
     /// Display name for a landmark placed here. Authored rather than derived
     /// from `id`, so the structural id stays free to change and the prose
     /// stays free to be rewritten or translated.
-    pub label: String,
+    pub label: StringId,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -809,7 +809,7 @@ pub struct CoverPocket {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct GatherDef {
-    pub name: String,
+    pub name: StringId,
     /// Map template id the anchor slot belongs to.
     pub map: String,
     /// Slot id the opportunity sits on.
@@ -821,8 +821,8 @@ pub struct GatherDef {
     /// Item ids granted (duplicates encode quantity).
     pub items: Vec<String>,
     pub discovery: GatherDiscovery,
-    pub prompt: String,
-    pub reveal: String,
+    pub prompt: StringId,
+    pub reveal: StringId,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
@@ -844,9 +844,9 @@ pub enum GatherDiscovery {
 #[serde(deny_unknown_fields)]
 pub struct GrimoireEntry {
     pub id: String,
-    pub title: String,
+    pub title: StringId,
     /// Fictional prose; numeric rules stay out of the grimoire by design.
-    pub body: String,
+    pub body: StringId,
 }
 
 // ---------------------------------------------------------------------------
@@ -873,7 +873,7 @@ pub struct ConditionDef {
     /// Absent means cosmetic.
     #[serde(default)]
     pub effect: Option<ConditionEffect>,
-    pub body: Vec<String>,
+    pub body: Vec<StringId>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
@@ -974,7 +974,7 @@ pub struct OpeningDef {
     #[serde(default)]
     pub grant: Option<OpeningGrant>,
     /// Prose paragraphs; `{npc}`, `{clue}`, and `{place}` are substituted.
-    pub body: Vec<String>,
+    pub body: Vec<StringId>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]

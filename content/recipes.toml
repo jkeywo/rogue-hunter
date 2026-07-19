@@ -2,34 +2,34 @@
 # ingredients is the real cost. Useless recipes are deliberate texture.
 
 [silver-bullet]
-name = "Cast a Silver Bullet"
+name = "recipes.silver-bullet.name"
 inputs = ["silver", "flintlock-shot"]
 output = "silver-bullet"
 requires_origin_reagent = true
-description = "Melt true silver over the forge and cast it about a lead core, then quench it in what this evil's beginning demands."
+description = "recipes.silver-bullet.description"
 
 [cold-iron-pin]
-name = "Draw a Cold Iron Pin"
+name = "recipes.cold-iron-pin.name"
 inputs = ["cold-iron"]
 output = "cold-iron-pin"
 requires_origin_reagent = true
-description = "Beat bog iron out cold — never let it see the fire — and temper it against what this evil's beginning demands."
+description = "recipes.cold-iron-pin.description"
 
 [wound-draught]
-name = "Brew a Wound Draught"
+name = "recipes.wound-draught.name"
 inputs = ["moon-herb", "bitter-root"]
 output = "wound-draught"
-description = "Steep moon-herb with bitter-root into a physic against torn flesh."
+description = "recipes.wound-draught.description"
 
 [binding-charm]
-name = "Sew a Binding Charm"
+name = "recipes.binding-charm.name"
 inputs = ["grave-dust", "moon-herb"]
 output = "binding-charm"
 requires_origin_reagent = true
-description = "Sew grave-dust and moon-herb into a caul, steeped in what this evil's beginning demands, to strip the risen dead of their shadow."
+description = "recipes.binding-charm.description"
 
 [iron-charm]
-name = "Hammer an Iron Charm"
+name = "recipes.iron-charm.name"
 inputs = ["coin", "coin"]
 output = "iron-charm"
-description = "Beat two pennies into a warding knot. Old wives praise it; monsters do not notice it."
+description = "recipes.iron-charm.description"

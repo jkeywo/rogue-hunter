@@ -2,7 +2,7 @@
 # tier_bonus_health and unlocks the next tier behaviour in order.
 
 [werewolf]
-name = "Werewolf"
+name = "villains.werewolf.name"
 glyph = "W"
 health = 18
 melee_damage = 3
@@ -11,31 +11,31 @@ tier_bonus_health = 3
 concealment = "npc-host"
 weakness_item = "silver-bullet"
 affected_by_consecration = false
-description = "By day a neighbour; by night a beast. It heals as fast as it is hurt, unless the wound is silver."
+description = "villains.werewolf.description"
 
 [werewolf.pounce]
 range = 6
 cooldown = 3
-telegraph = "The beast gathers itself — its eyes fix on a clear run at you!"
+telegraph = "villains.werewolf.pounce.telegraph"
 
 [werewolf.regeneration]
 per_turn = 1
-telegraph = "Torn flesh knits closed before your eyes."
+telegraph = "villains.werewolf.regeneration.telegraph"
 
 [[werewolf.tier_behaviours]]
 id = "swift-hunter"
-name = "Swift Hunter"
+name = "villains.werewolf.tier-behaviours.swift-hunter.name"
 effect = { kind = "pounce-cooldown", turns = 2 }
-telegraph = "The beast has fed. It moves quicker now, hungrier."
+telegraph = "villains.werewolf.tier-behaviours.swift-hunter.telegraph"
 
 [[werewolf.tier_behaviours]]
 id = "savage"
-name = "Savage"
+name = "villains.werewolf.tier-behaviours.savage.name"
 effect = { kind = "bonus-melee-damage", amount = 1 }
-telegraph = "Grown vast and terrible, the beast's claws strike deeper."
+telegraph = "villains.werewolf.tier-behaviours.savage.telegraph"
 
 [revenant]
-name = "Revenant"
+name = "villains.revenant.name"
 glyph = "R"
 health = 20
 melee_damage = 3
@@ -44,31 +44,31 @@ tier_bonus_health = 3
 concealment = "dormant-grave"
 weakness_item = "binding-charm"
 affected_by_consecration = true
-description = "A corpse risen with a purpose. No blade bites it, save in the moments its shroud of grave-shadow thins."
+description = "villains.revenant.description"
 
 [revenant.cadence]
 period = 5
 dash_tiles = 4
 bound_vulnerable_turns = 5
 consecrated_damage_per_turn = 1
-vulnerable_telegraph = "The revenant's shroud of shadow thins — strike now, while it can bleed!"
-dash_telegraph = "The revenant flows across the ground like spilled ink."
-guarded_telegraph = "Your blow passes through grave-shadow as through smoke."
+vulnerable_telegraph = "villains.revenant.cadence.vulnerable-telegraph"
+dash_telegraph = "villains.revenant.cadence.dash-telegraph"
+guarded_telegraph = "villains.revenant.cadence.guarded-telegraph"
 
 [[revenant.tier_behaviours]]
 id = "spectral-speed"
-name = "Spectral Speed"
+name = "villains.revenant.tier-behaviours.spectral-speed.name"
 effect = { kind = "dash-cooldown", turns = 4 }
-telegraph = "The revenant's stride lengthens; the dark carries it faster."
+telegraph = "villains.revenant.tier-behaviours.spectral-speed.telegraph"
 
 [[revenant.tier_behaviours]]
 id = "grave-chill"
-name = "Grave Chill"
+name = "villains.revenant.tier-behaviours.grave-chill.name"
 effect = { kind = "bonus-melee-damage", amount = 1 }
-telegraph = "A killing cold gathers about the revenant's hands."
+telegraph = "villains.revenant.tier-behaviours.grave-chill.telegraph"
 
 [witch]
-name = "Witch"
+name = "villains.witch.name"
 glyph = "H"
 health = 16
 melee_damage = 3
@@ -77,24 +77,24 @@ tier_bonus_health = 3
 concealment = "npc-host"
 weakness_item = "cold-iron-pin"
 affected_by_consecration = false
-description = "A neighbour who kept the old compacts and asks the old prices. She walks about her day unremarked, and the hex she wears turns honest steel aside."
+description = "villains.witch.description"
 
 [witch.ward]
 charges = 3
 leak_damage = 1
 reweave_turns = 4
-absorb_telegraph = "Your blow slides away from her as if the air had thickened."
-break_telegraph = "The hex tears with a sound like wet rope parting. She is only flesh now."
-reweave_telegraph = "She mutters, and the air about her knits itself close again."
+absorb_telegraph = "villains.witch.ward.absorb-telegraph"
+break_telegraph = "villains.witch.ward.break-telegraph"
+reweave_telegraph = "villains.witch.ward.reweave-telegraph"
 
 [[witch.tier_behaviours]]
 id = "deepening-hex"
-name = "Deepening Hex"
+name = "villains.witch.tier-behaviours.deepening-hex.name"
 effect = { kind = "ward-charges", amount = 2 }
-telegraph = "Her working has grown. The air about her hangs heavier still."
+telegraph = "villains.witch.tier-behaviours.deepening-hex.telegraph"
 
 [[witch.tier_behaviours]]
 id = "bitter-word"
-name = "Bitter Word"
+name = "villains.witch.tier-behaviours.bitter-word.name"
 effect = { kind = "bonus-melee-damage", amount = 1 }
-telegraph = "She has stopped pretending kindness. Every word she speaks now cuts."
+telegraph = "villains.witch.tier-behaviours.bitter-word.telegraph"
