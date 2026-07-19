@@ -2,8 +2,10 @@
 //!
 //! Certifies generated worlds by exhaustively searching the clue graph under
 //! the authored budgets: an early hunt-ready route by turn 3 (obscure actions
-//! allowed) and an independent, more obvious fallback by turn 5 that reuses
-//! none of the early route's opportunities or NPCs. Both must clear the
+//! allowed) and an independent, more obvious fallback by turn 5. The rule is
+//! not that the routes share no node, but that they share no *losable* one:
+//! structural ops stay cleared once forced, and a node banked before play
+//! began cannot be taken away by fallout either. Both must clear the
 //! combat-viability threshold, stay within travel and weighted-effort bounds,
 //! and never rely on lucky combat drops (the planner simply has no such
 //! action). At most one certified route may lean on the mystical favour.
@@ -75,11 +77,24 @@ pub enum OpGrant {
     Items(Vec<usize>),
 }
 
+/// The outcome of certifying a candidate world.
+pub struct Certification {
+    /// `[early, fallback]`, in that order.
+    pub routes: Vec<CertifiedRoute>,
+    /// Index into `ctx.ops` of the node banked before play, if one was needed
+    /// to make the pair independent.
+    pub opening: Option<usize>,
+}
+
 pub struct PlannerConfig {
     pub deadline: u8,
     pub forbidden: u64,
     pub obscurity_budget: Option<u16>,
     pub allow_favour: bool,
+    /// A node the hunter already resolved before play began, if any. Both
+    /// routes may lean on it, because a thing already known cannot be lost to
+    /// fallout the way an informant can.
+    pub pre_resolved: Option<usize>,
     pub label: String,
 }
 
@@ -159,13 +174,97 @@ struct Ctx<'a> {
 
 /// Certify both routes for a candidate world, or explain why not.
 ///
-/// The two routes must be fully independent: no shared opportunity nodes and
-/// no shared NPCs, so losing any single informant to fallout leaves one
-/// certified route intact. The pairing is searched in both orders (penalise
+/// The two routes must be independent: losing any single informant to fallout
+/// must leave one certified route intact. The pairing is searched in both orders (penalise
 /// early then find the obvious fallback, and the reverse assignment) so a
 /// greedy first route cannot starve the second of its only viable nodes.
-pub fn certify(catalogue: &Catalogue, world: &World) -> Result<Vec<CertifiedRoute>, String> {
+///
+/// If no independent pair exists, one node may be *banked*: treated as already
+/// resolved before play begins, and therefore usable by both routes. That is
+/// safe for the same reason structural ops are exempt — the rule is not "no
+/// shared node" but "no shared *losable* node", and knowledge the hunter walked
+/// in with cannot be taken away by fallout.
+pub fn certify(catalogue: &Catalogue, world: &World) -> Result<Certification, String> {
     let ctx = build_ctx(catalogue, world)?;
+    let mut contested = 0u64;
+    let strict = certify_pairing(&ctx, None, &mut contested);
+    let strict_reason = match strict {
+        Ok((early, fallback)) => {
+            return Ok(Certification {
+                routes: vec![early, fallback],
+                opening: None,
+            })
+        }
+        Err(reason) => reason,
+    };
+    // Only a node some route actually wanted while its partner starved can be
+    // the bottleneck, so the contested set is the whole candidate space.
+    for candidate in opening_candidates(&ctx, contested) {
+        let mut ignored = 0u64;
+        if let Ok((early, fallback)) = certify_pairing(&ctx, Some(candidate), &mut ignored) {
+            return Ok(Certification {
+                routes: vec![early, fallback],
+                opening: Some(candidate),
+            });
+        }
+    }
+    Err(format!(
+        "{strict_reason}; no single banked node rescued the pairing"
+    ))
+}
+
+/// How many banked candidates to try before giving up and rejecting the world.
+const MAX_OPENING_ATTEMPTS: usize = 6;
+
+/// Nodes that may be banked before play, best first.
+///
+/// Excluded on principle rather than convenience: structural ops are already
+/// exempt from the penalty so banking one buys nothing; the mystical favour is
+/// read back off the resolved bitmask to decide which route leaned on it, so
+/// banking it would flag both; a gated node cannot honestly have been resolved
+/// while its door is still barred; and a discriminating identity clue is the
+/// one that rules alternatives out, so starting with it would leave a single
+/// ambiguous sign between the player and the villain's name.
+fn opening_candidates(ctx: &Ctx, contested: u64) -> Vec<usize> {
+    let mut candidates: Vec<usize> = (0..ctx.ops.len())
+        .filter(|index| contested & (1 << index) != 0)
+        .filter(|index| {
+            let op = &ctx.ops[*index];
+            !op.structural
+                && op.revealed_by.is_none()
+                && op.requires.is_none()
+                && !matches!(
+                    op.grants,
+                    OpGrant::Favour
+                        | OpGrant::Identity {
+                            discriminating: true
+                        }
+                )
+        })
+        .collect();
+    candidates.sort_by_key(|index| {
+        let op = &ctx.ops[*index];
+        // Least given away first, then least economy forgiven.
+        let spoiler = match op.grants {
+            OpGrant::Items(_) => 0u8,
+            OpGrant::Lead => 1,
+            OpGrant::Identity { .. } => 2,
+            OpGrant::Favour => 3,
+        };
+        (spoiler, op.cost, *index)
+    });
+    candidates.truncate(MAX_OPENING_ATTEMPTS);
+    candidates
+}
+
+/// One full pairing attempt. `contested` accumulates the nodes a route
+/// consumed while its partner starved.
+fn certify_pairing(
+    ctx: &Ctx,
+    opening: Option<usize>,
+    contested: &mut u64,
+) -> Result<(CertifiedRoute, CertifiedRoute), String> {
+    let catalogue = ctx.catalogue;
     let generator = &catalogue.balance.generator;
 
     let early_cfg = |forbidden: u64, allow_favour: bool| PlannerConfig {
@@ -173,6 +272,7 @@ pub fn certify(catalogue: &Catalogue, world: &World) -> Result<Vec<CertifiedRout
         forbidden,
         obscurity_budget: None,
         allow_favour,
+        pre_resolved: opening,
         label: "early hunt".to_owned(),
     };
     let fallback_cfg = |forbidden: u64, allow_favour: bool| PlannerConfig {
@@ -180,6 +280,7 @@ pub fn certify(catalogue: &Catalogue, world: &World) -> Result<Vec<CertifiedRout
         forbidden,
         obscurity_budget: Some(generator.fallback_obscurity_budget),
         allow_favour,
+        pre_resolved: opening,
         label: "obvious fallback".to_owned(),
     };
 
@@ -192,24 +293,27 @@ pub fn certify(catalogue: &Catalogue, world: &World) -> Result<Vec<CertifiedRout
         let mut last_reason = String::new();
         for _ in 0..4 {
             let cfg = fallback_cfg(alternatives_forbidden, true);
-            let fallback = match search(&ctx, &cfg) {
-                Ok(route) => minimise(&ctx, &cfg, route),
+            let fallback = match search(ctx, &cfg) {
+                Ok(route) => minimise(ctx, &cfg, route),
                 Err(reason) => {
                     last_reason = format!("fallback: {reason}");
                     break;
                 }
             };
-            let forbidden = route_penalty(&ctx, &fallback);
+            let forbidden = route_penalty(ctx, &fallback);
             let cfg = early_cfg(forbidden, !fallback.uses_mystic_favour);
-            match search(&ctx, &cfg) {
+            match search(ctx, &cfg) {
                 Ok(route) => {
-                    let early = minimise(&ctx, &cfg, route);
+                    let early = minimise(ctx, &cfg, route);
                     return Ok((early, fallback));
                 }
                 Err(reason) => {
                     last_reason = format!("early after fallback: {reason}");
+                    // This fallback's nodes are exactly what the early route
+                    // went without, so they are the contested ones.
+                    *contested |= route_penalty(ctx, &fallback);
                     // Force a structurally different fallback next round.
-                    alternatives_forbidden |= route_penalty(&ctx, &fallback);
+                    alternatives_forbidden |= route_penalty(ctx, &fallback);
                 }
             }
         }
@@ -221,27 +325,29 @@ pub fn certify(catalogue: &Catalogue, world: &World) -> Result<Vec<CertifiedRout
             // Reverse assignment: early route first, penalise it, then the
             // obvious fallback from what remains.
             let cfg = early_cfg(0, true);
-            let early_raw = search(&ctx, &cfg).map_err(|reason| {
+            let early_raw = search(ctx, &cfg).map_err(|reason| {
                 format!(
                     "no early hunt-ready route by turn {}: {reason} \
                      (fallback-first also failed: {first_reason})",
                     generator.early_route_deadline
                 )
             })?;
-            let early = minimise(&ctx, &cfg, early_raw);
-            let forbidden = route_penalty(&ctx, &early);
+            let early = minimise(ctx, &cfg, early_raw);
+            let forbidden = route_penalty(ctx, &early);
             let cfg = fallback_cfg(forbidden, !early.uses_mystic_favour);
-            let fallback_raw = search(&ctx, &cfg).map_err(|reason| {
+            let fallback_raw = search(ctx, &cfg).map_err(|reason| {
+                // The early route's nodes are what the fallback went without.
+                *contested |= forbidden;
                 format!(
                     "no independent obvious fallback by turn {}: {reason}",
                     generator.fallback_route_deadline
                 )
             })?;
-            let fallback = minimise(&ctx, &cfg, fallback_raw);
+            let fallback = minimise(ctx, &cfg, fallback_raw);
             (early, fallback)
         }
     };
-    Ok(vec![early, fallback])
+    Ok((early, fallback))
 }
 
 /// Shrink a found route to a minimal node set: repeatedly re-search with one
@@ -267,6 +373,7 @@ fn minimise(ctx: &Ctx, base_cfg: &PlannerConfig, mut route: CertifiedRoute) -> C
                 deadline: base_cfg.deadline,
                 forbidden: base_cfg.forbidden | (everything & !trial_allowed),
                 obscurity_budget: base_cfg.obscurity_budget,
+                pre_resolved: base_cfg.pre_resolved,
                 allow_favour: base_cfg.allow_favour,
                 label: base_cfg.label.clone(),
             };
@@ -340,6 +447,7 @@ pub(crate) fn debug_certify(catalogue: &Catalogue, world: &World) -> String {
         forbidden: 0,
         obscurity_budget: Some(generator.fallback_obscurity_budget),
         allow_favour: true,
+        pre_resolved: None,
         label: "fallback".to_owned(),
     };
     let fallback = search(&ctx, &fallback_cfg).map(|route| minimise(&ctx, &fallback_cfg, route));
@@ -353,6 +461,7 @@ pub(crate) fn debug_certify(catalogue: &Catalogue, world: &World) -> String {
                 deadline,
                 forbidden: route_penalty(&ctx, fallback),
                 obscurity_budget: None,
+                pre_resolved: None,
                 allow_favour: !fallback.uses_mystic_favour,
                 label: "early".to_owned(),
             };
@@ -684,7 +793,7 @@ fn search(ctx: &Ctx, cfg: &PlannerConfig) -> Result<CertifiedRoute, String> {
     for (index, count) in items.iter_mut().enumerate() {
         *count = (*count).min(ITEM_CAP[index]);
     }
-    let start = PState {
+    let mut start = PState {
         turn: 0,
         map: SETTLEMENT,
         min_op: 0,
@@ -702,6 +811,18 @@ fn search(ctx: &Ctx, cfg: &PlannerConfig) -> Result<CertifiedRoute, String> {
         obscurity: 0,
         legs: 0,
     };
+    // A node banked before play is already resolved and its grants already in
+    // hand. It costs this run nothing — no pool, no effort, no obscurity, and
+    // no `min_op` change — because it was not an action taken this run.
+    if let Some(index) = cfg.pre_resolved {
+        start.resolved |= 1 << index;
+        if let OpGrant::Items(items) = &ctx.ops[index].grants {
+            for item in items {
+                start.items[*item] = (start.items[*item] + 1).min(ITEM_CAP[*item]);
+            }
+        }
+    }
+    let start = start;
     // Iterative deepening on the deadline: minimal-turn routes live in far
     // smaller search spaces, so find them before opening the full tree.
     // Each iteration gets its own node budget so the final, full-deadline
@@ -714,6 +835,7 @@ fn search(ctx: &Ctx, cfg: &PlannerConfig) -> Result<CertifiedRoute, String> {
             forbidden: cfg.forbidden,
             obscurity_budget: cfg.obscurity_budget,
             allow_favour: cfg.allow_favour,
+            pre_resolved: cfg.pre_resolved,
             label: cfg.label.clone(),
         };
         let mut memo: HashSet<MemoKey> = HashSet::new();
@@ -1092,4 +1214,13 @@ fn apply_action(
             )
         }
     }
+}
+
+/// The `OpportunityId` behind a planner op index, for recording a banked node
+/// on the world. The planner works in its own index space, which is narrower
+/// than the world's opportunity list.
+pub fn op_id_at(catalogue: &Catalogue, world: &World, index: usize) -> Option<OpportunityId> {
+    build_ctx(catalogue, world)
+        .ok()
+        .and_then(|ctx| ctx.ops.get(index).map(|op| op.id))
 }

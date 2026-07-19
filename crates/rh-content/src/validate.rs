@@ -26,6 +26,7 @@ pub fn validate(cat: &Catalogue) -> Vec<String> {
     check_gathers(cat, &mut issues);
     check_grimoire(cat, &mut issues);
     check_ui(cat, &mut issues);
+    check_openings(cat, &mut issues);
     issues
 }
 
@@ -870,4 +871,86 @@ pub fn is_opaque(terrain: Terrain) -> bool {
         terrain,
         Terrain::Wall | Terrain::Tree | Terrain::Rubble | Terrain::BarredDoor
     )
+}
+
+/// Openings must cover every kind of node that can be banked before play, or
+/// generation could produce a run whose opening it cannot narrate.
+fn check_openings(cat: &Catalogue, issues: &mut Vec<String>) {
+    let mut ids: Vec<&str> = Vec::new();
+    for opening in &cat.openings {
+        if opening.id.trim().is_empty() {
+            issues.push("openings: an entry has an empty id".into());
+        }
+        ids.push(opening.id.as_str());
+        if opening.body.is_empty() {
+            issues.push(format!("openings: '{}' has no prose", opening.id));
+        }
+        for line in &opening.body {
+            if line.trim().is_empty() {
+                issues.push(format!("openings: '{}' has an empty paragraph", opening.id));
+            }
+        }
+        // Half-keyed entries would match nodes their prose does not fit.
+        if opening.anchor.is_some() != opening.grant.is_some() {
+            issues.push(format!(
+                "openings: '{}' sets only one of anchor/grant; an opening is keyed on both or \
+                 on neither",
+                opening.id
+            ));
+        }
+        // A person's name has nowhere to come from in a place-anchored opening.
+        let mentions_npc = opening.body.iter().any(|line| line.contains("{npc}"));
+        if mentions_npc && opening.anchor != Some(OpeningAnchor::Npc) {
+            issues.push(format!(
+                "openings: '{}' uses {{npc}} but is not anchored on a person",
+                opening.id
+            ));
+        }
+        for line in &opening.body {
+            let mut rest = line.as_str();
+            while let Some(start) = rest.find('{') {
+                let Some(end) = rest[start..].find('}') else {
+                    break;
+                };
+                let placeholder = &rest[start..start + end + 1];
+                if !matches!(placeholder, "{npc}" | "{clue}" | "{place}") {
+                    issues.push(format!(
+                        "openings: '{}' uses unknown placeholder '{placeholder}'",
+                        opening.id
+                    ));
+                }
+                rest = &rest[start + end + 1..];
+            }
+        }
+    }
+    ids.sort_unstable();
+    let unique = ids.len();
+    ids.dedup();
+    if ids.len() != unique {
+        issues.push("openings: ids must be unique".into());
+    }
+
+    let generic = cat.openings.iter().filter(|o| o.is_generic()).count();
+    if generic < 2 {
+        issues.push(format!(
+            "openings: only {generic} generic hook(s); most runs bank nothing, so they need \
+             more than one way to begin"
+        ));
+    }
+    // Every bankable node kind needs prose. The planner will not bank anything
+    // outside this set, so this is the whole space.
+    for anchor in [OpeningAnchor::Tile, OpeningAnchor::Npc] {
+        for grant in [
+            OpeningGrant::Items,
+            OpeningGrant::Lead,
+            OpeningGrant::Identity,
+        ] {
+            if !cat.openings.iter().any(|o| o.matches(anchor, grant)) {
+                issues.push(format!(
+                    "openings: nothing narrates a {anchor:?}-anchored {grant:?} node banked \
+                     before play"
+                ));
+            }
+        }
+    }
 }

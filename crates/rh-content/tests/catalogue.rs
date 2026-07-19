@@ -91,3 +91,48 @@ fn catalogue_rejects_missing_files() {
     let error = rh_content::Catalogue::from_sources(&[("balance.toml", "")]);
     assert!(error.is_err());
 }
+
+#[test]
+fn openings_cover_every_bankable_node_kind() {
+    let catalogue = rh_content::load_embedded().expect("embedded content");
+    use rh_content::{OpeningAnchor, OpeningGrant};
+
+    // Generation may bank any of these, so all must be narratable.
+    for anchor in [OpeningAnchor::Tile, OpeningAnchor::Npc] {
+        for grant in [
+            OpeningGrant::Items,
+            OpeningGrant::Lead,
+            OpeningGrant::Identity,
+        ] {
+            assert!(
+                catalogue.openings.iter().any(|o| o.matches(anchor, grant)),
+                "nothing narrates a {anchor:?}-anchored {grant:?} node banked before play"
+            );
+        }
+    }
+    // Most runs bank nothing, so they need more than one way to begin.
+    assert!(catalogue.openings.iter().filter(|o| o.is_generic()).count() >= 2);
+}
+
+#[test]
+fn a_half_keyed_opening_is_rejected() {
+    // An opening keyed on anchor but not grant would match nodes its prose
+    // does not fit, so validation must refuse it.
+    let mut sources: Vec<(&str, String)> = rh_content::embedded_sources()
+        .iter()
+        .map(|(name, text)| (*name, (*text).to_owned()))
+        .collect();
+    for (name, text) in sources.iter_mut() {
+        if *name == "openings.toml" {
+            text.push_str(
+                "\n[[openings]]\nid = \"half-keyed\"\nanchor = \"npc\"\nbody = [\"A line.\"]\n",
+            );
+        }
+    }
+    let borrowed: Vec<(&str, &str)> = sources
+        .iter()
+        .map(|(name, text)| (*name, text.as_str()))
+        .collect();
+    let error = rh_content::Catalogue::from_sources(&borrowed);
+    assert!(error.is_err(), "a half-keyed opening must not validate");
+}

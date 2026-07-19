@@ -34,6 +34,9 @@ pub struct GenReport {
     pub hunter: String,
     /// Template chosen for each role this run, in role order.
     pub templates: Vec<String>,
+    /// The opening entry id, and the node banked before play if any.
+    pub opening: String,
+    pub banked_node: Option<String>,
     pub villain: String,
     pub origin: String,
     pub scheme: String,
@@ -103,8 +106,12 @@ pub fn generate(seed: u64, catalogue: &Catalogue) -> Result<Generated, GenError>
             }
         };
         match planner::certify(catalogue, &world) {
-            Ok(routes) => {
-                world.certified_routes = routes;
+            Ok(certification) => {
+                let prior = certification
+                    .opening
+                    .and_then(|index| planner::op_id_at(catalogue, &world, index));
+                world.certified_routes = certification.routes;
+                world.opening = pick_opening(catalogue, &world, prior, &mut rng);
                 if let Err(reason) = final_validation(catalogue, &world) {
                     attempts.push(AttemptReport {
                         attempt,
@@ -118,7 +125,13 @@ pub fn generate(seed: u64, catalogue: &Catalogue) -> Result<Generated, GenError>
                     outcome: "accepted".to_owned(),
                 });
                 let nodes = planner::node_report(catalogue, &world);
-                let templates = world.maps.iter().map(|m| m.template.clone()).collect();
+                let templates: Vec<String> =
+                    world.maps.iter().map(|m| m.template.clone()).collect();
+                let opening_id = world.opening.opening.clone();
+                let banked_node = world
+                    .opening
+                    .prior
+                    .map(|id| world.opportunity(id).name.clone());
                 return Ok(Generated {
                     world,
                     rng,
@@ -126,6 +139,8 @@ pub fn generate(seed: u64, catalogue: &Catalogue) -> Result<Generated, GenError>
                         seed,
                         hunter: catalogue.hunter_id.clone(),
                         templates,
+                        opening: opening_id,
+                        banked_node,
                         villain: combo.villain.clone(),
                         origin: combo.origin.clone(),
                         scheme: combo.scheme.clone(),
@@ -274,7 +289,94 @@ fn final_validation(catalogue: &Catalogue, world: &World) -> Result<(), String> 
     if world.certified_routes.len() < 2 {
         return Err("certified routes were not recorded".to_owned());
     }
+    // The opening must be nameable, and anything banked before play must be a
+    // node it is honest to have already resolved.
+    if !catalogue
+        .openings
+        .iter()
+        .any(|opening| opening.id == world.opening.opening)
+    {
+        return Err(format!(
+            "opening '{}' is not in openings.toml",
+            world.opening.opening
+        ));
+    }
+    if let Some(id) = world.opening.prior {
+        let spec = world.opportunity(id);
+        if spec.clears_terrain {
+            return Err("a banked node must not be one that forces terrain".to_owned());
+        }
+        if spec.requires.is_some() {
+            return Err("a banked node must not sit behind a gate".to_owned());
+        }
+        match spec.grants {
+            OpportunityGrant::IdentityClue {
+                discriminating: true,
+            } => {
+                return Err(
+                    "a discriminating identity clue must never be banked: it would leave one                      ambiguous sign between the player and the villain's name"
+                        .to_owned(),
+                )
+            }
+            OpportunityGrant::MysticFavour => {
+                return Err("the mystical favour must not be banked".to_owned())
+            }
+            _ => {}
+        }
+    }
     Ok(())
+}
+
+/// Choose how the run opens: prose that explains the banked node, or a generic
+/// hook when nothing was banked.
+fn pick_opening(
+    catalogue: &Catalogue,
+    world: &World,
+    prior: Option<rh_core::world::OpportunityId>,
+    rng: &mut SimRng,
+) -> rh_core::world::OpeningSituation {
+    use rh_content::{OpeningAnchor, OpeningGrant};
+    use rh_core::world::{OpeningSituation, OpportunityAnchor, OpportunityGrant};
+
+    let keyed = prior.and_then(|id| {
+        let spec = world.opportunity(id);
+        let anchor = match spec.anchor {
+            OpportunityAnchor::Npc(_) => OpeningAnchor::Npc,
+            OpportunityAnchor::Tile(_) => OpeningAnchor::Tile,
+        };
+        let grant = match spec.grants {
+            OpportunityGrant::Items { .. } => Some(OpeningGrant::Items),
+            OpportunityGrant::Lead => Some(OpeningGrant::Lead),
+            OpportunityGrant::IdentityClue { .. } => Some(OpeningGrant::Identity),
+            _ => None,
+        }?;
+        Some((anchor, grant))
+    });
+
+    let pool: Vec<&rh_content::OpeningDef> = match keyed {
+        Some((anchor, grant)) => catalogue
+            .openings
+            .iter()
+            .filter(|opening| opening.matches(anchor, grant))
+            .collect(),
+        None => catalogue
+            .openings
+            .iter()
+            .filter(|opening| opening.is_generic())
+            .collect(),
+    };
+    // Content validation guarantees both pools are non-empty; falling back to
+    // a generic hook keeps a content slip from panicking a run.
+    let chosen = if pool.is_empty() {
+        catalogue.openings.first()
+    } else {
+        pool.get(rng.index(pool.len())).copied()
+    };
+    OpeningSituation {
+        opening: chosen.map(|o| o.id.clone()).unwrap_or_default(),
+        // Only bank the node if its kind is one the prose can narrate.
+        prior: keyed.and(prior),
+    }
 }
 
 #[cfg(test)]

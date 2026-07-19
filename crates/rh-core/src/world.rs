@@ -33,6 +33,23 @@ pub struct World {
     pub ambush_percent: u8,
     /// Solver-certified routes, kept for the inspector and the case report.
     pub certified_routes: Vec<CertifiedRoute>,
+    /// How the run opens.
+    pub opening: OpeningSituation,
+}
+
+/// The situation a run begins in.
+///
+/// Most runs open on a generic hook that frames the hunt and banks nothing.
+/// The rest open having already resolved one node — `prior` — which is what
+/// lets both certified routes lean on it: independence exists so that losing
+/// an informant cannot strand a run, and a thing already known before play
+/// began cannot be lost.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OpeningSituation {
+    /// Entry id in `openings.toml`.
+    pub opening: String,
+    /// The node already resolved when play begins.
+    pub prior: Option<OpportunityId>,
 }
 
 impl World {

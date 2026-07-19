@@ -30,6 +30,8 @@ pub struct Catalogue {
     pub maps: BTreeMap<String, MapTemplate>,
     pub gathers: BTreeMap<String, GatherDef>,
     pub grimoire: Vec<GrimoireEntry>,
+    /// How runs open: generic hooks, and prose for a banked node.
+    pub openings: Vec<OpeningDef>,
     pub ui: UiText,
 }
 
@@ -93,6 +95,7 @@ impl Catalogue {
             .ok_or_else(|| ContentError::MissingFile("hunters/*.toml".to_owned()))?;
 
         let grimoire_file: GrimoireFile = parse("grimoire.toml", text("grimoire.toml")?)?;
+        let openings_file: OpeningsFile = parse("openings.toml", text("openings.toml")?)?;
         let catalogue = Self {
             balance: parse("balance.toml", text("balance.toml")?)?,
             hunter: default_hunter,
@@ -109,6 +112,7 @@ impl Catalogue {
             maps,
             gathers: parse("gathers.toml", text("gathers.toml")?)?,
             grimoire: grimoire_file.entries,
+            openings: openings_file.openings,
             ui: parse("ui.toml", text("ui.toml")?)?,
         };
 

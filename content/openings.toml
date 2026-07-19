@@ -1,0 +1,92 @@
+# How a run opens.
+#
+# Every run begins with one of these. Most draw from the generic hooks, which
+# frame the hunt and claim nothing about the case. The rest explain the one
+# thing the hunter is already holding when play begins: certification may let
+# both routes lean on a single node, but only when that node was resolved
+# before the run started, because a thing already known cannot be lost to
+# fallout the way an informant can.
+#
+# Openings are keyed on the kind of node only — where it sits (a place or a
+# person) and what it gave — never on the villain or the scheme. An opening
+# must never be able to telegraph the answer.
+#
+# Placeholders: {npc} in person-anchored entries, {clue} in place-anchored
+# ones, {place} anywhere.
+
+# -- Generic hooks. No claim about the case. --------------------------------
+
+[[openings]]
+id = "sent-for"
+body = [
+  "The letter reached you at Wenlock, folded twice and written in three hands, which is how a valley writes when nobody wants their name at the bottom of it.",
+  "It says: come. It does not say what for. That much they will tell you to your face, or not at all.",
+]
+
+[[openings]]
+id = "the-road-in"
+body = [
+  "You came in along the drove road at first light, past a byre with the door off its hinges and nothing living inside it.",
+  "Whatever walks here has been walking a while. You have six days. The valley has already spent some of them pretending otherwise.",
+]
+
+[[openings]]
+id = "the-parish-pays"
+body = [
+  "The parish put up the money, which means the parish has decided this is real, which means it has been real for longer than anyone will admit to your face.",
+  "They will be polite. They will be helpful. They will not be quick, and you do not have slow.",
+]
+
+# -- Person-anchored priors. Somebody got to you first. ---------------------
+
+[[openings]]
+id = "talked-at-on-the-road"
+anchor = "npc"
+grant = "identity"
+body = [
+  "{npc} found you before you found the valley, waiting up at the ford with the look of somebody who had rehearsed it on the walk down.",
+  "It came out in a rush, and then they were away up the bank before you could ask a second question. It is not proof. But it is yours already, and nothing that happens in this valley now can take it back out of your head.",
+]
+
+[[openings]]
+id = "given-a-direction"
+anchor = "npc"
+grant = "lead"
+body = [
+  "{npc} met you on the way in and gave you a direction, which is more than most will give a stranger and considerably less than you are going to need.",
+]
+
+[[openings]]
+id = "pressed-upon-you"
+anchor = "npc"
+grant = "items"
+body = [
+  "{npc} had business with you before you were properly arrived, and you came away from it carrying something.",
+]
+
+# -- Place-anchored priors. You stopped on the way past. --------------------
+
+[[openings]]
+id = "read-it-on-the-way-past"
+anchor = "tile"
+grant = "identity"
+body = [
+  "You stopped at {clue} before you were properly arrived, on the sound principle that a hunter who walks past the first strange thing will be shown the second at a worse moment.",
+  "You had your look. What you read there is in your head now, and the valley cannot unsay it.",
+]
+
+[[openings]]
+id = "noticed-on-arrival"
+anchor = "tile"
+grant = "lead"
+body = [
+  "{clue} caught your eye on the way in — not enough to stop for long, enough to know where you will be going back to.",
+]
+
+[[openings]]
+id = "gathered-while-walking"
+anchor = "tile"
+grant = "items"
+body = [
+  "You did not come into the valley empty-handed. There had been one stop on the way in, and it had been worth making.",
+]

@@ -59,6 +59,12 @@ pub fn build_world(
         opportunities: builder.opportunities,
         ambush_percent,
         certified_routes: Vec::new(),
+        // Filled in at the acceptance point, once certification has said
+        // whether a node must be banked.
+        opening: rh_core::world::OpeningSituation {
+            opening: String::new(),
+            prior: None,
+        },
     })
 }
 

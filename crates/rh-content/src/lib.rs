@@ -17,6 +17,12 @@ pub use schema::*;
 ///
 /// Every consumer (generator, simulation, clients, CI checks) goes through
 /// this single entry point so all builds agree on content byte-for-byte.
+/// The embedded content sources, for tests that need to perturb one file and
+/// check that validation refuses the result.
+pub fn embedded_sources() -> &'static [(&'static str, &'static str)] {
+    embedded::SOURCES
+}
+
 pub fn load_embedded() -> Result<Catalogue, ContentError> {
     Catalogue::from_sources(embedded::SOURCES)
 }

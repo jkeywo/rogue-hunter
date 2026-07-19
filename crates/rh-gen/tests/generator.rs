@@ -208,3 +208,99 @@ fn every_role_template_gets_used_and_selection_is_deterministic() {
         }
     }
 }
+
+#[test]
+fn every_run_opens_somewhere_and_banked_nodes_are_honest() {
+    let base = catalogue();
+    let mut banked = 0u32;
+    let mut generic = 0u32;
+
+    for hunter in base.hunters.keys() {
+        let cat = base.clone().with_hunter(hunter).expect("hunter");
+        for seed in 0..64u64 {
+            let Ok(result) = rh_gen::generate(seed, &cat) else {
+                continue;
+            };
+            let opening = &result.world.opening;
+            assert!(
+                cat.openings.iter().any(|o| o.id == opening.opening),
+                "{hunter} seed {seed}: opening '{}' is not authored",
+                opening.opening
+            );
+
+            let Some(prior) = opening.prior else {
+                generic += 1;
+                assert!(
+                    cat.openings
+                        .iter()
+                        .any(|o| o.id == opening.opening && o.is_generic()),
+                    "{hunter} seed {seed}: banked nothing but used a keyed opening"
+                );
+                continue;
+            };
+            banked += 1;
+            let spec = result.world.opportunity(prior);
+
+            // A banked node must be one it is honest to have already resolved.
+            assert!(
+                !spec.clears_terrain,
+                "{hunter} seed {seed}: banked a forced door"
+            );
+            assert!(
+                spec.requires.is_none(),
+                "{hunter} seed {seed}: banked a gated node"
+            );
+            assert!(
+                !matches!(
+                    spec.grants,
+                    rh_core::world::OpportunityGrant::IdentityClue {
+                        discriminating: true
+                    }
+                ),
+                "{hunter} seed {seed}: banked a discriminating identity clue, which would leave \
+                 one ambiguous sign between the player and the villain's name"
+            );
+            assert!(
+                !matches!(spec.grants, rh_core::world::OpportunityGrant::MysticFavour),
+                "{hunter} seed {seed}: banked the mystical favour"
+            );
+
+            // The whole point: it belongs to neither route, because it was
+            // resolved before either began.
+            for route in &result.world.certified_routes {
+                assert!(
+                    !route
+                        .steps
+                        .iter()
+                        .any(|step| step.opportunity == Some(prior)),
+                    "{hunter} seed {seed}: the banked node still appears in route '{}'",
+                    route.label
+                );
+            }
+        }
+    }
+
+    assert!(generic > 0, "no run opened on a generic hook");
+    assert!(
+        banked > 0,
+        "no run banked a node, so the in-media-res path was never exercised"
+    );
+}
+
+#[test]
+fn banking_lets_the_occultist_be_given_every_seed() {
+    // These seeds could not be certified for her before nodes could be banked.
+    let cat = catalogue().with_hunter("occultist").expect("occultist");
+    let mut failures = Vec::new();
+    for seed in 0..48u64 {
+        if let Err(error) = rh_gen::generate(seed, &cat) {
+            failures.push(format!("{seed}: {error}"));
+        }
+    }
+    assert!(
+        failures.is_empty(),
+        "the Occultist was refused {} seeds:\n{}",
+        failures.len(),
+        failures.join("\n")
+    );
+}

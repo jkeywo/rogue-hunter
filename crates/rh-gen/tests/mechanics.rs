@@ -288,3 +288,74 @@ fn pre_empting_the_scheme_blunts_its_event() {
         "a pre-empted scheme reports its blunted outcome, saw {logged:?}"
     );
 }
+
+#[test]
+fn a_banked_node_is_already_in_hand_when_play_begins() {
+    let base = catalogue();
+    let cat = base.clone().with_hunter("occultist").expect("occultist");
+    // Find a seed whose case opens in media res.
+    let mut found = None;
+    for seed in 0..64u64 {
+        let Ok(generated) = rh_gen::generate(seed, &cat) else {
+            continue;
+        };
+        if generated.world.opening.prior.is_some() {
+            found = Some(generated);
+            break;
+        }
+    }
+    let generated = found.expect("some seed banks a node");
+    let prior = generated.world.opening.prior.expect("banked node");
+    let spec = generated.world.opportunity(prior).clone();
+    let sim = Sim::new(cat.clone(), generated.world, generated.rng);
+
+    // Already known, and so not offerable again.
+    assert!(sim.state.resolved.contains(&prior));
+    assert!(sim.state.discovered.contains(&prior));
+
+    // Its knowledge is banked, which is exactly why both routes may lean on it:
+    // fallout can take an informant, but not something already learned.
+    match &spec.grants {
+        rh_core::world::OpportunityGrant::IdentityClue { .. } => {
+            assert!(sim.state.identity_clues.contains(&prior));
+        }
+        rh_core::world::OpportunityGrant::Items { items } => {
+            for item in items {
+                assert!(sim.state.hunter.item_count(item) > 0, "missing {item}");
+            }
+        }
+        _ => {}
+    }
+
+    // It cost the run nothing: it happened before play.
+    assert_eq!(sim.state.clock, 0);
+    assert_eq!(sim.state.local_turn, 0);
+    assert_eq!(sim.state.hunter.lore, cat.hunter.lore_cap);
+    assert_eq!(sim.state.hunter.social, cat.hunter.social_cap);
+
+    // The opening was narrated before anything else.
+    assert!(!sim.state.log.is_empty(), "the run should open with prose");
+}
+
+#[test]
+fn a_banked_node_cannot_be_taken_again() {
+    let cat = catalogue().with_hunter("occultist").expect("occultist");
+    for seed in 0..64u64 {
+        let Ok(generated) = rh_gen::generate(seed, &cat) else {
+            continue;
+        };
+        let Some(prior) = generated.world.opening.prior else {
+            continue;
+        };
+        let mut sim = Sim::new(cat.clone(), generated.world, generated.rng);
+        assert!(
+            matches!(
+                sim.apply(&Command::Interact(prior)),
+                Err(Rejection::AlreadyResolved)
+            ),
+            "seed {seed}: a node banked before play must not be offered again"
+        );
+        return;
+    }
+    panic!("no seed banked a node");
+}

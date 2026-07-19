@@ -335,3 +335,27 @@ entities:
       title: Authored maps that no seed can draw are treated as a bug
       summary: A generator test sweeps seeds and asserts every authored template is chosen by at least one of them. This caught a real defect immediately - the materialiser was recording the role label where the template id belonged, so both new templates were being built and then reported as the originals, and no test that only checked determinism or certification would have noticed. Dead content that no player will ever see is a bug, not a spare.
       references: [paired-regional-template-selection, milestone-two-variety-validation]
+
+  - decision: in-media-res-opening
+    core:
+      status: accepted
+      confidence: confirmed
+      title: One node may be shared if the run opens already holding it
+      summary: Certification may let both routes lean on a single node, on the condition that the run begins with that node already resolved - the hunter was told on the road in, or stopped on the way past. The rule independence actually protects is not "no shared node" but "no shared losable node" - it exists so that losing an informant to fallout cannot strand a run, and knowledge banked before play began cannot be lost. This is the same exemption structural ops already had, arrived at from the other side - a forced door stays forced, and a thing already learned stays learned. It removed the Occultist's refusals entirely, from fourteen seeds in a hundred and twenty to none.
+      references: [occultist-refusals-are-true-negatives, two-independent-routes-is-the-binding-constraint, route-certification-strategy, seed-rejection-for-uncertifiable-worlds]
+
+  - decision: what-may-never-be-banked
+    core:
+      status: accepted
+      confidence: confirmed
+      title: What a run may never open already knowing
+      summary: A discriminating identity clue is never banked. It is the clue that rules alternatives out, so starting with it would leave a single ambiguous sign between the player and the villain's name, and half the mystery would be over before the first turn. Candidates are items, leads, and soft identity signs only, ordered least-revealing first. Also excluded - the mystical favour, because which route leaned on it is read back off the resolved bitmask and banking it would flag both; gated nodes, because a thing cannot honestly have been resolved while its door is still barred; and structural ops, which were already exempt and so gain nothing. Generation refuses a world that violates any of these rather than trusting the planner to have been careful.
+      references: [in-media-res-opening, ambiguous-but-decisive-evidence, naming-requires-a-discriminator]
+
+  - decision: banking-forgives-the-pool-cost-too
+    core:
+      status: accepted
+      confidence: confirmed
+      title: A banked node is a small gift of economy as well as position
+      summary: A banked node costs the run nothing - no pool point, no effort, no obscurity, no turn - because it was not an action taken this run. That forgives its investigation cost as well as its position, which is a second and quieter gift than the one being asked for. Charging it was rejected - deducting from turn-zero pools contradicts the fiction of having already done the thing, and can underflow - so instead the candidate ordering breaks ties on cost, which keeps the gift small. Recorded as a known concession rather than left as a leak.
+      references: [in-media-res-opening, investigation-pools]

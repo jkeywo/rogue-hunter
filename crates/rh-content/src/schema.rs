@@ -819,6 +819,66 @@ pub struct GrimoireEntry {
     pub body: String,
 }
 
+// ---------------------------------------------------------------------------
+// openings.toml
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct OpeningsFile {
+    pub openings: Vec<OpeningDef>,
+}
+
+/// How a run opens. A generic hook frames the hunt and claims nothing about
+/// the case; a keyed one explains the single node the hunter already holds
+/// when play begins.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct OpeningDef {
+    pub id: String,
+    /// Where the banked node sits. Absent means a generic hook.
+    #[serde(default)]
+    pub anchor: Option<OpeningAnchor>,
+    /// What the banked node gave. Absent means a generic hook.
+    #[serde(default)]
+    pub grant: Option<OpeningGrant>,
+    /// Prose paragraphs; `{npc}`, `{clue}`, and `{place}` are substituted.
+    pub body: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum OpeningAnchor {
+    /// Anchored on a place: the hunter stopped on the way past.
+    Tile,
+    /// Anchored on a person: somebody got to the hunter first.
+    Npc,
+}
+
+/// The kinds of node that may be banked before play. Deliberately narrower
+/// than `OpportunityGrant`: a discriminating identity clue is the one that
+/// rules alternatives out, and starting with it would leave a single
+/// ambiguous sign between the player and the villain's name.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum OpeningGrant {
+    Items,
+    Lead,
+    /// A soft identity sign, never a discriminating one.
+    Identity,
+}
+
+impl OpeningDef {
+    /// Whether this opening frames the hunt without explaining a banked node.
+    pub fn is_generic(&self) -> bool {
+        self.anchor.is_none() && self.grant.is_none()
+    }
+
+    pub fn matches(&self, anchor: OpeningAnchor, grant: OpeningGrant) -> bool {
+        self.anchor == Some(anchor) && self.grant == Some(grant)
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct UiText {

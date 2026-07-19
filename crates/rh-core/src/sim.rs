@@ -41,6 +41,7 @@ impl Sim {
             world,
             state,
         };
+        sim.apply_opening();
         sim.log(
             EventKind::System,
             format!(
@@ -51,6 +52,58 @@ impl Sim {
         );
         sim.refresh_senses();
         sim
+    }
+
+    /// Put the run in the situation it opens in.
+    ///
+    /// Most runs open on a hook that frames the hunt and banks nothing. The
+    /// rest open already holding one node: the hunter was told, or stopped on
+    /// the way past, before play began. That is construction rather than
+    /// action — it costs no clock, no pool and no turn, and it never enters
+    /// the command log, because the log must replay to the same state and this
+    /// is already a function of the seed.
+    fn apply_opening(&mut self) {
+        let situation = self.world.opening.clone();
+        let body = self
+            .catalogue
+            .openings
+            .iter()
+            .find(|opening| opening.id == situation.opening)
+            .map(|opening| opening.body.clone())
+            .unwrap_or_default();
+        let prior_name = situation
+            .prior
+            .map(|id| self.world.opportunity(id).name.clone())
+            .unwrap_or_default();
+        let npc_name = situation
+            .prior
+            .and_then(|id| match self.world.opportunity(id).anchor {
+                OpportunityAnchor::Npc(npc) => Some(self.world.npc(npc).name.clone()),
+                OpportunityAnchor::Tile(_) => None,
+            })
+            .unwrap_or_default();
+        let place = self.world.map(self.state.current_map).name.clone();
+        for line in body {
+            let text = line
+                .replace("{npc}", &npc_name)
+                .replace("{clue}", &prior_name)
+                .replace("{place}", &place);
+            self.log(EventKind::System, text);
+        }
+
+        let Some(id) = situation.prior else {
+            return;
+        };
+        let spec = self.world.opportunity(id).clone();
+        debug_assert!(
+            !spec.clears_terrain,
+            "a banked node must not be one that forces terrain"
+        );
+        self.state.discovered.insert(id);
+        self.state.resolved.insert(id);
+        self.log(EventKind::Clue, spec.reveal.clone());
+        self.apply_grant(&spec);
+        self.cascade_discovery(id);
     }
 
     /// Apply one semantic command. On success the event log grew by whatever
