@@ -13,7 +13,7 @@ mod validate;
 
 pub use catalogue::{Catalogue, ContentError};
 pub use schema::*;
-pub use strings::{StringId, StringRow, StringTable};
+pub use strings::{is_term, StringId, StringRow, StringTable};
 pub use validate::referenced_ids as referenced_string_ids;
 
 /// Load and validate the embedded content catalogue.

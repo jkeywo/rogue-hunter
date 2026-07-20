@@ -27,6 +27,30 @@ use crate::catalogue::ContentError;
 #[serde(transparent)]
 pub struct StringId(pub String);
 
+/// Whether a string names something rather than says something: one word,
+/// one placeholder, or a one-word label in front of a placeholder.
+///
+/// The distinction is what the placeholder-copy gate is narrowed to. A term
+/// has nothing in it for a writer to review, and several are substituted
+/// into other strings, where marking them nested the brackets one inside
+/// another -- "[Controls: [Numpad]]".
+pub fn is_term(text: &str) -> bool {
+    fn word(s: &str) -> bool {
+        !s.is_empty()
+            && s.chars()
+                .all(|c| c.is_alphanumeric() || matches!(c, '-' | '\'' | '\u{2019}'))
+    }
+    fn placeholder(s: &str) -> bool {
+        s.strip_prefix('{')
+            .and_then(|s| s.strip_suffix('}'))
+            .is_some_and(|inner| word(inner.trim_matches('_')))
+    }
+    match text.split_once(": ") {
+        Some((label, value)) => word(label) && placeholder(value),
+        None => word(text) || placeholder(text),
+    }
+}
+
 impl StringId {
     pub fn as_str(&self) -> &str {
         &self.0

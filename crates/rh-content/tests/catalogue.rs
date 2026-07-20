@@ -174,11 +174,17 @@ fn the_string_table_is_outside_the_content_fingerprint() {
 
 #[test]
 fn every_string_is_bracketed_placeholder_copy() {
-    // Every line in the table was written by an agent, and brackets are how we
-    // say so. As real copy lands, delete the brackets and narrow this test --
-    // it is a gate on unreviewed prose, not on the format.
+    // Every line of prose in the table was written by an agent, and brackets
+    // are how we say so. As real copy lands, delete the brackets and narrow
+    // this test -- it is a gate on unreviewed prose, not on the format.
+    //
+    // Terms are exempt, per `is_term`: naming a thing is not prose, and a
+    // marked term nested its brackets inside whatever substituted it.
     let catalogue = rh_content::load_embedded().expect("embedded content");
     for (id, row) in catalogue.strings.rows() {
+        if rh_content::is_term(&row.english) {
+            continue;
+        }
         assert!(
             row.english.starts_with('[') && row.english.ends_with(']'),
             "'{id}' is not marked as placeholder copy: {:?}",

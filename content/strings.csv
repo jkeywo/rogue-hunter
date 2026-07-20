@@ -123,13 +123,13 @@ clues.wrongness-in-the-air.name,"Clue name, shown in the journal and on the oppo
 clues.wrongness-in-the-air.prompt,Opportunity text shown before this clue is taken,[The old stones sit in a silence that presses on the ears.]
 clues.wrongness-in-the-air.reveal,Journal and event-log text once this clue is revealed,"[The vision is only weight and appetite and something walking. Whatever is loose here is old and it is hungry, and that is all the stones will commit to.]"
 enemies.bandit.description,"Enemy description, shown when inspecting it",[A road-thief with a short pistol and no scruples. Keeps distance while it can.]
-enemies.bandit.name,"Name of an ordinary enemy, shown when you fight or inspect it",[Bandit]
+enemies.bandit.name,"Name of an ordinary enemy, shown when you fight or inspect it",Bandit
 enemies.restless-dead.description,"Enemy description, shown when inspecting it","[A corpse that did not stay put. Slow, patient, and terribly strong when it closes.]"
 enemies.restless-dead.name,"Name of an ordinary enemy, shown when you fight or inspect it",[Restless Dead]
 enemies.thrall.description,"Enemy description, shown when inspecting it","[A villager who answered the call and kept walking. Their eyes track you without recognition, and they will not be reasoned with — but they are still, underneath, only a frightened neighbour.]"
-enemies.thrall.name,"Name of an ordinary enemy, shown when you fight or inspect it",[Thrall]
+enemies.thrall.name,"Name of an ordinary enemy, shown when you fight or inspect it",Thrall
 enemies.wolf.description,"Enemy description, shown when inspecting it","[A lean grey wolf, bolder than it should be. It runs straight at what it means to kill.]"
-enemies.wolf.name,"Name of an ordinary enemy, shown when you fight or inspect it",[Wolf]
+enemies.wolf.name,"Name of an ordinary enemy, shown when you fight or inspect it",Wolf
 events.contested-cache.body,"Mission event, logged on arrival","[Under the third stone of the fallen wall, exactly where a careful man would leave it: powder, shot, and a little money nobody living has a claim to.]"
 events.frightened-flock.body,"Mission event, logged on arrival","[The flock comes down the lane at a run with no shepherd behind it. Sheep are fools, but they are honest fools, and they are running from something.]"
 events.old-signs.body,"Mission event, logged on arrival","[Something has been through here since you last looked, and it was not careful.]"
@@ -267,11 +267,11 @@ guide.the-shape-of-it.title,"Guide entry title, listed on the guide screen",[The
 guide.what-it-is-working-toward.body,"Guide entry body, shown when the entry is selected","[The thing in the valley is not merely feeding; it is doing something, and on the fourth day it will do more of it. Find the sign that says which, and you will know where to go to blunt it before it lands.|Pre-empting costs you a trip and a point. Not pre-empting costs you a stronger quarry on the last night. Neither is wrong, but choose on purpose.]"
 guide.what-it-is-working-toward.title,"Guide entry title, listed on the guide screen",[What It Is Working Toward]
 hunters.huntress.manoeuvres.aim.description,"Manoeuvre description, shown when inspecting the action",[Steady the flintlock. Your next ranged shot this encounter cannot miss.]
-hunters.huntress.manoeuvres.aim.name,"Name of a hunter manoeuvre, shown in the action list",[Aim]
+hunters.huntress.manoeuvres.aim.name,"Name of a hunter manoeuvre, shown in the action list",Aim
 hunters.huntress.manoeuvres.power-attack.description,"Manoeuvre description, shown when inspecting the action",[Put your weight behind the next blow. Your next melee strike deals half again its damage.]
 hunters.huntress.manoeuvres.power-attack.name,"Name of a hunter manoeuvre, shown in the action list",[Power Attack]
 hunters.huntress.manoeuvres.sprint.description,"Manoeuvre description, shown when inspecting the action","[Move two tiles in a single direction, in one action.]"
-hunters.huntress.manoeuvres.sprint.name,"Name of a hunter manoeuvre, shown in the action list",[Sprint]
+hunters.huntress.manoeuvres.sprint.name,"Name of a hunter manoeuvre, shown in the action list",Sprint
 hunters.huntress.name,"Hunter's name, shown on the hunter-select screen and status panel",[The Huntress]
 hunters.huntress.signatures.killing-blow.description,"Signature ability description, shown when inspecting the action","[A single perfect strike for double damage, against a foe that is held fast or already gravely wounded.]"
 hunters.huntress.signatures.killing-blow.name,"Name of a hunter signature ability, shown in the action list",[Killing Blow]
@@ -279,9 +279,9 @@ hunters.huntress.signatures.set-snare.description,"Signature ability description
 hunters.huntress.signatures.set-snare.name,"Name of a hunter signature ability, shown in the action list",[Set Snare]
 hunters.huntress.title,"Hunter's title, shown under their name on the hunter-select screen","[A hunter of beasts, who has learned that some beasts wear faces]"
 hunters.occultist.manoeuvres.aim.description,"Manoeuvre description, shown when inspecting the action",[Steady the flintlock. Your next ranged shot this encounter cannot miss.]
-hunters.occultist.manoeuvres.aim.name,"Name of a hunter manoeuvre, shown in the action list",[Aim]
+hunters.occultist.manoeuvres.aim.name,"Name of a hunter manoeuvre, shown in the action list",Aim
 hunters.occultist.manoeuvres.sprint.description,"Manoeuvre description, shown when inspecting the action","[Move two tiles in a single direction, in one action.]"
-hunters.occultist.manoeuvres.sprint.name,"Name of a hunter manoeuvre, shown in the action list",[Sprint]
+hunters.occultist.manoeuvres.sprint.name,"Name of a hunter manoeuvre, shown in the action list",Sprint
 hunters.occultist.name,"Hunter's name, shown on the hunter-select screen and status panel",[The Occultist]
 hunters.occultist.signatures.read-the-sign.description,"Signature ability description, shown when inspecting the action",[Sit with a sign you have already found and read it properly. One ambiguous proof you are carrying becomes decisive: it stops agreeing with your suspicion and starts ruling out the alternatives.]
 hunters.occultist.signatures.read-the-sign.name,"Name of a hunter signature ability, shown in the action list",[Read the Sign]
@@ -291,9 +291,9 @@ hunters.occultist.title,"Hunter's title, shown under their name on the hunter-se
 items.binding-charm.description,"Item description, shown when inspecting it in the pack","[Grave-dust and moon-herb sewn in a caul. Pressed close to the risen dead, it strips their shroud of shadow for five long breaths.]"
 items.binding-charm.name,"Item name, shown in the pack and in loot messages",[Binding Charm]
 items.bitter-root.description,"Item description, shown when inspecting it in the pack",[A twisted root that numbs the tongue and cleans a wound.]
-items.bitter-root.name,"Item name, shown in the pack and in loot messages",[Bitter-root]
+items.bitter-root.name,"Item name, shown in the pack and in loot messages",Bitter-root
 items.coin.description,"Item description, shown when inspecting it in the pack","[Honest silver pennies. Good for trade, useless against the dark.]"
-items.coin.name,"Item name, shown in the pack and in loot messages",[Coin]
+items.coin.name,"Item name, shown in the pack and in loot messages",Coin
 items.cold-iron-pin.description,"Item description, shown when inspecting it in the pack","[A long pin of unworked cold iron, never near a forge fire. A hex slides off honest steel; it cannot get a grip on this at all.]"
 items.cold-iron-pin.name,"Item name, shown in the pack and in loot messages",[Cold Iron Pin]
 items.cold-iron.description,"Item description, shown when inspecting it in the pack","[Bog iron, never smelted, never blessed. The old women say the older things cannot abide it, and for once the old women are right.]"
@@ -303,9 +303,9 @@ items.covenant-seal.name,"Item name, shown in the pack and in loot messages",[Co
 items.flintlock-shot.description,"Item description, shown when inspecting it in the pack",[A cast lead ball and a measure of powder.]
 items.flintlock-shot.name,"Item name, shown in the pack and in loot messages",[Flintlock Shot]
 items.flintlock.description,"Item description, shown when inspecting it in the pack","[A horse-pistol that throws a heavy ball. Slow to trust, loud as judgement.]"
-items.flintlock.name,"Item name, shown in the pack and in loot messages",[Flintlock]
+items.flintlock.name,"Item name, shown in the pack and in loot messages",Flintlock
 items.grave-dust.description,"Item description, shown when inspecting it in the pack","[Earth from a consecrated grave, dry as old paper.]"
-items.grave-dust.name,"Item name, shown in the pack and in loot messages",[Grave-dust]
+items.grave-dust.name,"Item name, shown in the pack and in loot messages",Grave-dust
 items.hallowed-water.description,"Item description, shown when inspecting it in the pack","[Water from the parish font, blessed at a season nobody now remembers. It answers what was cursed a long time ago.]"
 items.hallowed-water.name,"Item name, shown in the pack and in loot messages",[Hallowed Water]
 items.hunting-blade.description,"Item description, shown when inspecting it in the pack","[A long working knife, kept wickedly sharp.]"
@@ -313,7 +313,7 @@ items.hunting-blade.name,"Item name, shown in the pack and in loot messages",[Hu
 items.iron-charm.description,"Item description, shown when inspecting it in the pack",[A comforting trinket of cold iron. The folk swear by it. The folk are wrong.]
 items.iron-charm.name,"Item name, shown in the pack and in loot messages",[Iron Charm]
 items.moon-herb.description,"Item description, shown when inspecting it in the pack",[A silver-leafed herb that only shows itself by night.]
-items.moon-herb.name,"Item name, shown in the pack and in loot messages",[Moon-herb]
+items.moon-herb.name,"Item name, shown in the pack and in loot messages",Moon-herb
 items.silver-bullet.description,"Item description, shown when inspecting it in the pack","[A ball of true silver. Against the beast it bites to the curse's heart, and what it wounds does not heal.]"
 items.silver-bullet.name,"Item name, shown in the pack and in loot messages",[Silver Bullet]
 items.silver.description,"Item description, shown when inspecting it in the pack","[A fist of pale metal, cold to the touch.]"
@@ -452,7 +452,7 @@ maps.outlying.slots.manor-hall.label,"Landmark name, shown when inspecting this 
 maps.outlying.slots.manor-study.label,"Landmark name, shown when inspecting this spot on the map",[the manor study]
 maps.outlying.slots.well.label,"Landmark name, shown when inspecting this spot on the map",[the well]
 maps.settlement-mill.description,"Map description, shown on the travel screen","[A town built either side of its own mill race. Two bridges, and a long walk if you pick the wrong one.]"
-maps.settlement-mill.name,"Map name, shown on the travel screen and status panel",[Millrace]
+maps.settlement-mill.name,"Map name, shown on the travel screen and status panel",Millrace
 maps.settlement-mill.packs.race-in-spate.label,"Variation-pack note, logged the first time the hunter arrives on this map",[The race is in spate and over its banks; the east path is under a hand of brown water.]
 maps.settlement-mill.packs.wool-fair.label,"Variation-pack note, logged the first time the hunter arrives on this map","[The wool fair is on, and the stalls have shifted up toward the forge, where the buyers are.]"
 maps.settlement-mill.slots.church-altar.label,"Landmark name, shown when inspecting this spot on the map",[the church altar]
@@ -510,32 +510,32 @@ maps.wilderness.slots.mine.label,"Landmark name, shown when inspecting this spot
 maps.wilderness.slots.standing-stones.label,"Landmark name, shown when inspecting this spot on the map",[the standing stones]
 maps.wilderness.slots.wolf-den.label,"Landmark name, shown when inspecting this spot on the map",[the wolf den]
 npcs.archetypes.blacksmith.description,"NPC archetype description, shown when inspecting them","[Keeps the forge hot and the settlement shod. Strong arms, short words.]"
-npcs.archetypes.blacksmith.name,"NPC archetype label, shown after their name (e.g. 'Anne, the priest')",[Blacksmith]
+npcs.archetypes.blacksmith.name,"NPC archetype label, shown after their name (e.g. 'Anne, the priest')",Blacksmith
 npcs.archetypes.blacksmith.name-pool.1,"A villager's name, drawn for this archetype when the valley is populated",[Marta Reed]
 npcs.archetypes.blacksmith.name-pool.2,"A villager's name, drawn for this archetype when the valley is populated",[Old Hew]
 npcs.archetypes.blacksmith.name-pool.3,"A villager's name, drawn for this archetype when the valley is populated",[Goodman Tarn]
 npcs.archetypes.gravedigger.description,"NPC archetype description, shown when inspecting them","[Digs the graves and, lately, will not look at them.]"
-npcs.archetypes.gravedigger.name,"NPC archetype label, shown after their name (e.g. 'Anne, the priest')",[Gravedigger]
+npcs.archetypes.gravedigger.name,"NPC archetype label, shown after their name (e.g. 'Anne, the priest')",Gravedigger
 npcs.archetypes.gravedigger.name-pool.1,"A villager's name, drawn for this archetype when the valley is populated",[Sexton Mould]
 npcs.archetypes.gravedigger.name-pool.2,"A villager's name, drawn for this archetype when the valley is populated",[Digger Finch]
 npcs.archetypes.gravedigger.name-pool.3,"A villager's name, drawn for this archetype when the valley is populated",[Quiet Tobias]
 npcs.archetypes.herbalist.description,"NPC archetype description, shown when inspecting them",[Sells simples at the market and knows older arts than she admits. The right favour opens doors no key fits.]
-npcs.archetypes.herbalist.name,"NPC archetype label, shown after their name (e.g. 'Anne, the priest')",[Herbalist]
+npcs.archetypes.herbalist.name,"NPC archetype label, shown after their name (e.g. 'Anne, the priest')",Herbalist
 npcs.archetypes.herbalist.name-pool.1,"A villager's name, drawn for this archetype when the valley is populated",[Mother Wren]
 npcs.archetypes.herbalist.name-pool.2,"A villager's name, drawn for this archetype when the valley is populated",[Sylvie of the Hedge]
 npcs.archetypes.herbalist.name-pool.3,"A villager's name, drawn for this archetype when the valley is populated",[Old Nan]
 npcs.archetypes.innkeeper.description,"NPC archetype description, shown when inspecting them",[Hears everything said in the taproom and forgets none of it.]
-npcs.archetypes.innkeeper.name,"NPC archetype label, shown after their name (e.g. 'Anne, the priest')",[Innkeeper]
+npcs.archetypes.innkeeper.name,"NPC archetype label, shown after their name (e.g. 'Anne, the priest')",Innkeeper
 npcs.archetypes.innkeeper.name-pool.1,"A villager's name, drawn for this archetype when the valley is populated",[Widow Hale]
 npcs.archetypes.innkeeper.name-pool.2,"A villager's name, drawn for this archetype when the valley is populated",[Master Pell]
 npcs.archetypes.innkeeper.name-pool.3,"A villager's name, drawn for this archetype when the valley is populated",[Goodwife Brandy]
 npcs.archetypes.poacher.description,"NPC archetype description, shown when inspecting them","[Knows every trail in the wood by night. Officially, has never set foot there.]"
-npcs.archetypes.poacher.name,"NPC archetype label, shown after their name (e.g. 'Anne, the priest')",[Poacher]
+npcs.archetypes.poacher.name,"NPC archetype label, shown after their name (e.g. 'Anne, the priest')",Poacher
 npcs.archetypes.poacher.name-pool.1,"A villager's name, drawn for this archetype when the valley is populated",[Wat Snare]
 npcs.archetypes.poacher.name-pool.2,"A villager's name, drawn for this archetype when the valley is populated",[Bess Longstride]
 npcs.archetypes.poacher.name-pool.3,"A villager's name, drawn for this archetype when the valley is populated",[Crooked Jem]
 npcs.archetypes.priest.description,"NPC archetype description, shown when inspecting them",[Keeper of the church and its records. His faith is real; his accounts may not be.]
-npcs.archetypes.priest.name,"NPC archetype label, shown after their name (e.g. 'Anne, the priest')",[Priest]
+npcs.archetypes.priest.name,"NPC archetype label, shown after their name (e.g. 'Anne, the priest')",Priest
 npcs.archetypes.priest.name-pool.1,"A villager's name, drawn for this archetype when the valley is populated",[Father Ambrose]
 npcs.archetypes.priest.name-pool.2,"A villager's name, drawn for this archetype when the valley is populated",[Father Caleb]
 npcs.archetypes.priest.name-pool.3,"A villager's name, drawn for this archetype when the valley is populated",[Parson Grey]
@@ -550,7 +550,7 @@ npcs.deceased-name-pool.8,"A dead villager's name, drawn for a grave",[Prudence 
 npcs.relationship-kinds.debtor.discovered-text,Log line when a relationship between two NPCs is discovered,"[{a} owes {b} a great deal of money, and both pretend otherwise in company.]"
 npcs.relationship-kinds.debtor.name,Name of a relationship between two NPCs,[Debtor and Creditor]
 npcs.relationship-kinds.kin.discovered-text,Log line when a relationship between two NPCs is discovered,"[{a} and {b} are close kin, though they do not advertise it.]"
-npcs.relationship-kinds.kin.name,Name of a relationship between two NPCs,[Kin]
+npcs.relationship-kinds.kin.name,Name of a relationship between two NPCs,Kin
 npcs.relationship-kinds.lovers.discovered-text,Log line when a relationship between two NPCs is discovered,"[{a} and {b} meet after dark, and it is not to talk business.]"
 npcs.relationship-kinds.lovers.name,Name of a relationship between two NPCs,[Secret Lovers]
 npcs.relationship-kinds.old-friends.discovered-text,Log line when a relationship between two NPCs is discovered,[{a} and {b} came up together and trust each other with anything — almost anything.]
@@ -657,14 +657,14 @@ ui.action.binding-charm,Action panel: press a binding charm on an adjacent reven
 ui.action.buy-ammunition,Action-menu label for buying powder and ball from a trader,[Buy powder and ball from {npc} [2 coin]]
 ui.action.consecrate,"Menu entry: consecrate the ground, costing a day",[Perform the consecration rite (spends a day)]
 ui.action.cost-suffix,Suffix on an action label showing what it costs,[ [{cost} {pool}]]
-ui.action.craft,Action-menu label for crafting a recipe at a workstation,[Craft: {recipe}]
+ui.action.craft,Action-menu label for crafting a recipe at a workstation,Craft: {recipe}
 ui.action.dossier,Action-panel row: open the case dossier,[The case]
 ui.action.draught,Action panel: drink a healing draught,[Drink Wound Draught]
 ui.action.faces,Action panel: open the faces and relationships screen,[Faces & ties]
 ui.action.fire-flintlock,Action panel: fire the flintlock,[Fire flintlock]
 ui.action.fire-silver,Action panel: fire a silver bullet,[Fire silver bullet]
-ui.action.grimoire,Action panel: open the grimoire,[Grimoire]
-ui.action.interact,Action panel: interact with whatever is here,[Interact]
+ui.action.grimoire,Action panel: open the grimoire,Grimoire
+ui.action.interact,Action panel: interact with whatever is here,Interact
 ui.action.killing-blow,Action panel: finish a wounded or held enemy,[Killing Blow]
 ui.action.look,Action panel: enter look mode,[Look around]
 ui.action.name-quarry,"Menu entry: accuse, combining the proofs gathered",[Name your quarry (combine the proofs)]
@@ -678,7 +678,7 @@ ui.action.sprint,Action panel: sprint several tiles in one action,[Sprint (move 
 ui.action.talk,Action-menu label for talking to a villager,[Talk with {npc}]
 ui.action.travel,Interact-menu row for taking the road out of a map,[Take the road to {place} — it spends a day]
 ui.action.valley,Action panel: open the region map,[The Valley (map)]
-ui.action.wait,Action panel: pass a turn,[Wait]
+ui.action.wait,Action panel: pass a turn,Wait
 ui.action.walk-to,Action-panel row: walk to the tile the cursor is on,[Walk to the mark]
 ui.blocked.already-opened,Why a feature cannot be opened: it already has been,[Already opened.]
 ui.blocked.already-warded,Why the consecration rite is unavailable: ground already warded,[This ground is already warded.]
@@ -698,12 +698,12 @@ ui.blocked.out-of-shot,Why firing is unavailable: no ammunition left,[out of sho
 ui.blocked.stamina,Why an action is unavailable: not enough stamina,[{cost} stamina]
 ui.clock.day,Record screen heading for one day of the run,[Day {day} of {total}]
 ui.clock.final-night,Clock line on the last day of a run,[The final night]
-ui.confirm.no,Row that backs out of a confirmed action,[Stay]
+ui.confirm.no,Row that backs out of a confirmed action,Stay
 ui.confirm.travel,Confirmation asked before travelling: says what the day costs,[Take the road to {place}? It spends a day; it will be day {day} of {total}.]
 ui.confirm.travel-event,Added to the travel confirmation when the quarry's scheme moves that day,[Something of the quarry's comes due that day.]
 ui.confirm.travel-final,Added to the travel confirmation when the day spent begins the final hunt,[There will be no days left after it. The hunt begins.]
-ui.confirm.yes,Row that goes ahead with a confirmed action,[Go]
-ui.controls.numpad,"Name of the numpad control scheme, shown on the splash",[Numpad]
+ui.confirm.yes,Row that goes ahead with a confirmed action,Go
+ui.controls.numpad,"Name of the numpad control scheme, shown on the splash",Numpad
 ui.controls.numpad.steer,Splash key-bindings table: how the numpad scheme steers,[Arrows / numpad]
 ui.controls.roguelike,"Name of the roguelike control scheme, shown on the splash",[Roguelike (hjkl)]
 ui.controls.roguelike.steer,Splash key-bindings table: how the roguelike scheme steers,[Arrows / numpad / hjkl+yubn]
@@ -725,7 +725,7 @@ ui.dossier.prep.reagent-held,Dossier line when the hunter is carrying the reagen
 ui.dossier.prep.reagent-known,Dossier line naming the reagent every counter must be quenched with,[Every counter must be quenched with {reagent}.]
 ui.dossier.prep.reagent-unknown,Dossier line when the origin is unpinned so no reagent is known,[Until the origin is pinned there is no telling what to quench a counter with.]
 ui.dossier.prep.reagent-wanted,Dossier line when the hunter is not carrying the reagent,[You do not have it.]
-ui.dossier.prep.title,Dossier section heading: what the hunter is carrying,[Preparations]
+ui.dossier.prep.title,Dossier section heading: what the hunter is carrying,Preparations
 ui.dossier.prep.unconsecrated,Dossier line when the church ground is unwarded,[The church ground is unwarded.]
 ui.dossier.quarry.can-name,Dossier line when the proofs are enough to name the quarry,[The proofs agree. You can name it.]
 ui.dossier.quarry.cannot-name,Dossier line when there are not yet enough proofs,[Two proofs are wanted before you can name it.]
@@ -764,14 +764,14 @@ ui.hunter-select.pools,Stat line on the hunter-selection screen,[Health {health}
 ui.hunter-select.title,Title of the hunter-selection screen,[Who Takes the Case]
 ui.inspect.actor-health,"Inspect line for a creature, with its remaining health",[{name} ({hp}/{max} health)]
 ui.inspect.hunter,Inspect line when the player points at their own tile,[{hunter} (you)]
-ui.inspect.lead,Inspect line listing a lead available at this spot or person,[Lead: {what}]
+ui.inspect.lead,Inspect line listing a lead available at this spot or person,Lead: {what}
 ui.inspect.road,Inspect line for a road tile leading to another map,[Road to {place}]
 ui.inspect.snare,Inspect line for your own snare,"[Your snare, set and waiting]"
 ui.inspect.unexplored,Inspect line for a tile never seen,[Unexplored darkness.]
 ui.keys.abilities,"Splash screen key-bindings table, action column",[Aim / Power Attack / Sprint (stamina)]
 ui.keys.abilities.keys,"Splash screen key-bindings table, keys column",[a / p / s]
 ui.keys.cancel,"Splash screen key-bindings table, action column",[Cancel / back]
-ui.keys.cancel.keys,"Splash screen key-bindings table, keys column",[Esc]
+ui.keys.cancel.keys,"Splash screen key-bindings table, keys column",Esc
 ui.keys.consume,"Splash screen key-bindings table, action column",[Drink a wound draught / press a binding charm]
 ui.keys.consume.keys,"Splash screen key-bindings table, keys column",[q / c]
 ui.keys.fire,"Splash screen key-bindings table, action column",[Fire the flintlock / fire a silver bullet]
@@ -781,13 +781,13 @@ ui.keys.interact.keys,"Splash screen key-bindings table, keys column",[e / Enter
 ui.keys.look,"Splash screen key-bindings table, action column",[Look mode: detach a cursor to examine any tile]
 ui.keys.look.keys,"Splash screen key-bindings table, keys column",[;]
 ui.keys.mouse,"Splash screen key-bindings table, action column",[Hover any tile to inspect it; click the map or an action to act]
-ui.keys.mouse.keys,"Splash screen key-bindings table, keys column",[Mouse]
+ui.keys.mouse.keys,"Splash screen key-bindings table, keys column",Mouse
 ui.keys.move,"Splash screen key-bindings table, action column",[Move (8 directions) / melee an adjacent enemy]
-ui.keys.move.keys,"Splash screen key-bindings table, keys column",[{steer}]
+ui.keys.move.keys,"Splash screen key-bindings table, keys column",{steer}
 ui.keys.screens,"Splash screen key-bindings table, action column",[The Case / Grimoire / How to Hunt / Faces / the Valley / the Record]
 ui.keys.screens.keys,"Splash screen key-bindings table, keys column",[d / g / i / r / v / {log}]
 ui.keys.sight,"Splash screen key-bindings table, action column",[Put the cursor on the next thing in sight]
-ui.keys.sight.keys,"Splash screen key-bindings table, keys column",[Tab]
+ui.keys.sight.keys,"Splash screen key-bindings table, keys column",Tab
 ui.keys.tactics,"Splash screen key-bindings table, action column",[Set Snare / Killing Blow (Physical)]
 ui.keys.tactics.keys,"Splash screen key-bindings table, keys column",[x / {killing}]
 ui.keys.wait,"Splash screen key-bindings table, action column",[Wait a turn]
@@ -795,27 +795,27 @@ ui.keys.wait.keys,"Splash screen key-bindings table, keys column",[Space / .]
 ui.keys.walk,"Splash screen key-bindings table, action column","[Walk to the look cursor, stopping if anything happens]"
 ui.keys.walk.keys,"Splash screen key-bindings table, keys column",[Enter / click the map]
 ui.npc.dead-by-your-hand,"Shown on an NPC you killed, in the faces list",[Dead by your hand.]
-ui.npc.disposition,"How an NPC regards you, in the faces list",[Disposition: {disposition}]
+ui.npc.disposition,"How an NPC regards you, in the faces list",Disposition: {disposition}
 ui.npc.fled,"Shown on an NPC who has fled, in the faces list",[Fled.]
 ui.npc.name-and-role,How a villager is introduced: their name and what they do,"[{name}, the {role}]"
 ui.outcome.defeat,Case report headline after a loss,[THE DARK KEEPS THE VALLEY. The hunter fell on the final night.]
 ui.outcome.ongoing,Case report headline while the run is still going,[The run continues...]
 ui.outcome.victory,Case report headline after a win,[THE VALLEY IS DELIVERED. The villain is destroyed.]
-ui.panel.actions,Title of the actions overlay,[Actions]
+ui.panel.actions,Title of the actions overlay,Actions
 ui.panel.case-report,Panel title: the end-of-run case report,[Case Report]
-ui.panel.detail,Panel title: detail on the selected thing,[Detail]
+ui.panel.detail,Panel title: detail on the selected thing,Detail
 ui.panel.hunter,Panel title: the hunter's status,[The Hunter]
 ui.panel.in-sight,Heading of the panel listing everything currently visible,[In Sight]
 ui.panel.in-sight-empty,Shown in the in-sight panel when nothing is visible,[Nothing stirs.]
-ui.panel.look,Look panel heading when not pointing at anything,[Look]
+ui.panel.look,Look panel heading when not pointing at anything,Look
 ui.panel.look-cursor,Look panel heading while the keyboard cursor is out,[Look (cursor)]
 ui.panel.look-hover,Look panel heading while pointing with the mouse,[Look (hover)]
-ui.panel.pack,Panel title: carried items,[Pack]
+ui.panel.pack,Panel title: carried items,Pack
 ui.panel.record,Panel title: the running event log,[The Record]
-ui.pool.lore,"Name of the Lore pool, shown in costs and blocked reasons",[Lore]
-ui.pool.mystic,"Name of the Mystic pool, shown in costs and blocked reasons",[Mystic]
-ui.pool.physical,"Name of the Physical pool, shown in costs and blocked reasons",[Physical]
-ui.pool.social,"Name of the Social pool, shown in costs and blocked reasons",[Social]
+ui.pool.lore,"Name of the Lore pool, shown in costs and blocked reasons",Lore
+ui.pool.mystic,"Name of the Mystic pool, shown in costs and blocked reasons",Mystic
+ui.pool.physical,"Name of the Physical pool, shown in costs and blocked reasons",Physical
+ui.pool.social,"Name of the Social pool, shown in costs and blocked reasons",Social
 ui.region-map.title,Title of the region map screen,[The Valley]
 ui.region.outlying,Outlying-site blurb on the region map,[The forsaken manor and its crypt.]
 ui.region.settlement,Settlement blurb on the region map,[Hearth and rumour. Safe by daylight.]
@@ -836,17 +836,17 @@ ui.report.preparations-title,Case-report section heading for what the hunter car
 ui.report.reagent,Case-report line naming the reagent the counter needed,[The counter wanted {reagent}.]
 ui.report.route-step,"Case report: one route step line, with its taken/missed mark and turn",[{mark} t{turn}: {what}]
 ui.report.step-missed,Marker on a certified route step the hunter never did,[not done]
-ui.report.step-neutral,Marker on a certified route step that resolves no lead,[--]
-ui.report.step-taken,Marker on a certified route step the hunter actually did,[done]
+ui.report.step-neutral,Marker on a certified route step that resolves no lead,--
+ui.report.step-taken,Marker on a certified route step the hunter actually did,done
 ui.report.tier,Case-report line giving the tier the quarry reached,[The quarry reached tier {tier}.]
 ui.report.unconsecrated,Case-report line when the church ground was never warded,[The church ground was never warded.]
 ui.report.villain,"Case report: the villain line, its name and the title it wore",[{name} — {title}]
 ui.report.weakness-held,Case-report line when the hunter held the thing that bites,[You were carrying {item}.]
 ui.report.weakness-missing,Case-report line when the hunter lacked the thing that bites,[You never carried {item}.]
 ui.route.consecrate,"Case report: the route step that consecrates the church, which costs a day",[Perform the consecration rite (one day)]
-ui.route.craft,Case report: a route step that crafts an item at a workstation,[Craft: {recipe}]
+ui.route.craft,Case report: a route step that crafts an item at a workstation,Craft: {recipe}
 ui.route.initiate-hunt,"Case report: the final route step, with the odds it was planned against",[Initiate the hunt ({viability}‰ viability at threat tier {tier})]
-ui.route.resolve,Case report: a route step that resolves an opportunity,[Resolve: {what}]
+ui.route.resolve,Case report: a route step that resolves an opportunity,Resolve: {what}
 ui.route.travel,Case report: a route step that travels to another map,[Travel to {place}]
 ui.seed-entry.prompt,Instruction on the seed-entry screen,"[Type a number, then confirm.]"
 ui.seed-entry.title,Title of the seed-entry screen,[Enter Seed]
@@ -856,7 +856,7 @@ ui.sight.vulnerable,Appended in the in-sight panel when the villain can be wound
 ui.splash.intro.1,"Splash screen opening paragraph, first of three","[Something is killing the valley folk, and the valley has sent for you.]"
 ui.splash.intro.2,"Splash screen opening paragraph, second of three: the shape of a run","[You have six days. Walk the settlement, the deep wood, and the forsaken manor; trade words and watch faces; read the signs the thing cannot help but leave. Prove its name twice over, prepare its death, and take the hunt to it — or let the sixth night come, and it will take the hunt to you.]"
 ui.splash.intro.3,"Splash screen opening paragraph, third of three: what death costs","[Everything you learn, you keep. Even dying only costs you a day. Days are the one thing you cannot craft.]"
-ui.splash.option.controls,Splash screen menu option: cycle the control scheme; {scheme} is the current one,[Controls: {scheme}]
+ui.splash.option.controls,Splash screen menu option: cycle the control scheme; {scheme} is the current one,Controls: {scheme}
 ui.splash.option.enter-seed,Splash screen menu option: start a run from a typed seed,[Enter Seed]
 ui.splash.option.new-run,Splash screen menu option: start a fresh run,[New Run]
 ui.splash.option.paste-code,Splash screen menu option: restore a run from a share code,[Paste Replay Code]
@@ -886,35 +886,35 @@ ui.target.silver-shot,Prompt while choosing a target for a silver bullet,[Silver
 ui.terrain.altar,"Terrain noun, shown when inspecting a tile",[the altar]
 ui.terrain.barred-door,"Terrain noun, shown when inspecting a tile",[a barred door]
 ui.terrain.door,"Terrain noun, shown when inspecting a tile",[a door]
-ui.terrain.floor,"Terrain noun, shown when inspecting a tile",[flagstones]
+ui.terrain.floor,"Terrain noun, shown when inspecting a tile",flagstones
 ui.terrain.grass,"Terrain noun, shown when inspecting a tile",[open ground]
 ui.terrain.grave,"Terrain noun, shown when inspecting a tile",[a grave]
 ui.terrain.road,"Terrain noun, shown when inspecting a tile",[the road]
 ui.terrain.rubble,"Terrain noun, shown when inspecting a tile",[fallen rubble]
 ui.terrain.tree,"Terrain noun, shown when inspecting a tile",[dense growth]
 ui.terrain.wall,"Terrain noun, shown when inspecting a tile",[a wall]
-ui.terrain.water,"Terrain noun, shown when inspecting a tile",[water]
+ui.terrain.water,"Terrain noun, shown when inspecting a tile",water
 ui.terrain.workstation,"Terrain noun, shown when inspecting a tile",[the workbench]
 ui.travel.ambush-route,"Travel menu: a road that runs through ambush country, with the chance","[{place} (ambush country, {percent}%)]"
 villains.revenant.cadence.dash-telegraph,Log line when the Revenant dashes,[The revenant flows across the ground like spilled ink.]
 villains.revenant.cadence.guarded-telegraph,Log line when the Revenant guards,[Your blow passes through grave-shadow as through smoke.]
 villains.revenant.cadence.vulnerable-telegraph,Log line when the Revenant becomes vulnerable,"[The revenant's shroud of shadow thins — strike now, while it can bleed!]"
 villains.revenant.description,"Villain description, shown in the case report and grimoire","[A corpse risen with a purpose. No blade bites it, save in the moments its shroud of grave-shadow thins.]"
-villains.revenant.name,"Name of a villain archetype, shown once its identity is proven",[Revenant]
+villains.revenant.name,"Name of a villain archetype, shown once its identity is proven",Revenant
 villains.revenant.tier-behaviours.grave-chill.name,"Name of a villain tier behaviour, shown when it triggers",[Grave Chill]
 villains.revenant.tier-behaviours.grave-chill.telegraph,Log line when this villain tier behaviour triggers,[A killing cold gathers about the revenant's hands.]
 villains.revenant.tier-behaviours.spectral-speed.name,"Name of a villain tier behaviour, shown when it triggers",[Spectral Speed]
 villains.revenant.tier-behaviours.spectral-speed.telegraph,Log line when this villain tier behaviour triggers,[The revenant's stride lengthens; the dark carries it faster.]
 villains.werewolf.description,"Villain description, shown in the case report and grimoire","[By day a neighbour; by night a beast. It heals as fast as it is hurt, unless the wound is silver.]"
-villains.werewolf.name,"Name of a villain archetype, shown once its identity is proven",[Werewolf]
+villains.werewolf.name,"Name of a villain archetype, shown once its identity is proven",Werewolf
 villains.werewolf.pounce.telegraph,Warning line when this villain winds up to pounce,[The beast gathers itself — its eyes fix on a clear run at you!]
 villains.werewolf.regeneration.telegraph,Log line when this villain regenerates health,[Torn flesh knits closed before your eyes.]
-villains.werewolf.tier-behaviours.savage.name,"Name of a villain tier behaviour, shown when it triggers",[Savage]
+villains.werewolf.tier-behaviours.savage.name,"Name of a villain tier behaviour, shown when it triggers",Savage
 villains.werewolf.tier-behaviours.savage.telegraph,Log line when this villain tier behaviour triggers,"[Grown vast and terrible, the beast's claws strike deeper.]"
 villains.werewolf.tier-behaviours.swift-hunter.name,"Name of a villain tier behaviour, shown when it triggers",[Swift Hunter]
 villains.werewolf.tier-behaviours.swift-hunter.telegraph,Log line when this villain tier behaviour triggers,"[The beast has fed. It moves quicker now, hungrier.]"
 villains.witch.description,"Villain description, shown in the case report and grimoire","[A neighbour who kept the old compacts and asks the old prices. She walks about her day unremarked, and the hex she wears turns honest steel aside.]"
-villains.witch.name,"Name of a villain archetype, shown once its identity is proven",[Witch]
+villains.witch.name,"Name of a villain archetype, shown once its identity is proven",Witch
 villains.witch.tier-behaviours.bitter-word.name,"Name of a villain tier behaviour, shown when it triggers",[Bitter Word]
 villains.witch.tier-behaviours.bitter-word.telegraph,Log line when this villain tier behaviour triggers,[She has stopped pretending kindness. Every word she speaks now cuts.]
 villains.witch.tier-behaviours.deepening-hex.name,"Name of a villain tier behaviour, shown when it triggers",[Deepening Hex]

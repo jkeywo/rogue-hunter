@@ -482,7 +482,10 @@ fn the_dossier_synthesises_what_is_known() {
                 "the quarry, the leads, the preparations, the pack"
             );
             for (heading, body) in &entries {
-                assert!(heading.starts_with('['), "unbracketed heading: {heading}");
+                assert!(
+                    heading.starts_with('[') || rh_content::is_term(heading),
+                    "unbracketed heading: {heading}"
+                );
                 assert!(!body.is_empty(), "{heading} should say something");
             }
             // The quarry section is the one that carries the clock and the
@@ -560,11 +563,12 @@ fn the_case_report_marks_the_certified_routes_against_what_was_done() {
                 for line in route.lines().skip(1) {
                     // The whole step line composes through the table now, so
                     // its own placeholder brackets wrap the mark's: a line
-                    // reads "[[not done] t0: [Resolve: ...]]".
+                    // reads "[[not done] t0: [Resolve: ...]]". The neutral
+                    // mark is a term and so carries no brackets of its own.
                     assert!(
                         line.starts_with("[[done]")
                             || line.starts_with("[[not done]")
-                            || line.starts_with("[[--]"),
+                            || line.starts_with("[--"),
                         "unmarked route step: {line}"
                     );
                 }
@@ -714,7 +718,7 @@ fn splash_text_comes_from_the_string_table() {
                 "unresolved string id in the bindings table: {text:?}"
             );
             assert!(
-                text.starts_with('[') && text.ends_with(']'),
+                (text.starts_with('[') && text.ends_with(']')) || rh_content::is_term(text),
                 "unbracketed binding text: {text:?}"
             );
         }
@@ -878,7 +882,10 @@ fn the_guide_says_how_a_hunt_is_solved() {
             assert_eq!(title, "[How a Hunt Is Solved]");
             assert!(entries.len() >= 6, "the guide should cover the whole hunt");
             for (heading, body) in &entries {
-                assert!(heading.starts_with('['), "unbracketed heading: {heading}");
+                assert!(
+                    heading.starts_with('[') || rh_content::is_term(heading),
+                    "unbracketed heading: {heading}"
+                );
                 assert!(!body.is_empty(), "{heading} should say something");
             }
         }
