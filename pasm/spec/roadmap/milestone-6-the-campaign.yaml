@@ -1,0 +1,84 @@
+entities:
+  - milestone: milestone-6-the-campaign
+    core:
+      status: proposed
+      confidence: provisional
+      title: Milestone 6 - The campaign, and what winning is worth
+      summary: Lift the game from one case to a journey of them. A hunter travels village to village, carrying what she has learned and what she failed to finish; the threat escalates as she goes, and the road ends in a final showdown that a single case could not have staged. This is also where the game answers what it has so far left open - a binary Victory or Defeat, and no notion of a harder run - by giving a case a quality and a campaign an ambition.
+      goals:
+        - "Persistent journeying: a hunter, a road, and a sequence of cases that know about each other."
+        - Escalating threat across the campaign, ending in a showdown the early cases were preparation for.
+        - Replace the bare Victory or Defeat with a reading of how well a case was solved.
+        - Give a player a way to ask for a harder run, and a reason to.
+      rationale:
+        - A case is currently a complete and closed thing; nothing a player does in one is worth anything in the next.
+        - Difficulty and score were deliberately left open until there was a structure to hang them on, and a campaign is that structure.
+      references: [replayable-folk-horror-cases, travel-clock, command-replay, share-code-format, final-hunt-rules]
+
+  - component: campaign-journey
+    core:
+      status: proposed
+      confidence: provisional
+      title: Village to village, carrying what you learned
+      summary: A campaign is a sequence of cases joined by a hunter who persists between them - her pack, her knowledge, her reputation, and the marks left by whatever she failed to finish. Each case is generated and certified exactly as it is today, so the guarantee is per-case and the campaign is a frame around it rather than a new thing to certify. What crosses the boundary between cases is a deliberately small, authored vocabulary, because everything that crosses is something the next case's certification must account for.
+      goals:
+        - Carry a defined, small set of state from one case to the next.
+        - Keep per-case certification intact, with carried state as an input to generation rather than a complication of it.
+        - Extend the share code to a campaign, so a whole journey is reproducible and shareable.
+      rationale:
+        - Per-case certification is the guarantee everything rests on; a campaign must be built so as not to weaken it.
+        - The share code already carries a hunter and a content fingerprint, so a campaign code is an extension of a solved problem rather than a new one.
+      references: [milestone-6-the-campaign, share-code-format, replay-save-persistence, command-replay, hunter-selection-and-certification]
+    architecture:
+      owner: authoritative-run-state
+      reads: [seeded-mystery-generator]
+      validates: [clue-graph-validator]
+    implementation:
+      status: declared
+      target_paths: [crates/rh-core/src/state.rs, crates/rh-replay/src/lib.rs, crates/rh-client-core/src/lib.rs, crates/rh-gen/src/lib.rs]
+      tests: [crates/rh-replay/tests/golden.rs, crates/rh-client-core/tests/session.rs]
+
+  - component: escalating-threat-and-showdown
+    core:
+      status: proposed
+      confidence: provisional
+      title: The road gets worse, and then it ends
+      summary: "Threat escalates as a campaign proceeds - later cases are harder, stranger, and increasingly the work of one thing rather than many - and the campaign ends in a showdown that draws on what the journey established. The escalation is authored and legible rather than a difficulty multiplier: a player should be able to say what got worse and why, and the final confrontation should be one the early cases were visibly preparing for."
+      goals:
+        - Escalate through composition and stakes, not through multiplied numbers.
+        - Make the campaign's throughline discoverable in play, case by case.
+        - Stage a final showdown that a single case could not have staged.
+      rationale:
+        - A scaling multiplier is invisible to a player and therefore not a story; a legible escalation is both.
+        - The game already knows how to make a case legible; a campaign should be legible the same way.
+      references: [milestone-6-the-campaign, campaign-journey, villain-composition, final-hunt-rules, ambiguous-but-decisive-evidence]
+    architecture:
+      owner: seeded-mystery-generator
+      reads: [authored-content-catalogue]
+      validates: [clue-graph-validator]
+    implementation:
+      status: declared
+      target_paths: [content, crates/rh-gen/src/lib.rs, crates/rh-gen/src/materialise.rs, crates/rh-core/src/sim.rs]
+      tests: [crates/rh-gen/tests/generator.rs, crates/rh-replay/tests/golden.rs]
+
+  - component: case-quality-and-chosen-difficulty
+    core:
+      status: proposed
+      confidence: provisional
+      title: How well you solved it, and how hard you asked for it
+      summary: "A case currently ends in Victory or Defeat and nothing else, which says nothing about a hunt won on the sixth night by luck against one named on the third and prepared for properly. Give the case report a reading of quality - days spent, proofs gathered, innocents unharmed, preparation made - and give a player a way to ask for a harder campaign, expressed in terms the game already speaks: a shorter clock, thinner supply, a higher corroboration demand. Difficulty is chosen and declared, never silently adjusted, and it is carried in the share code so a claimed result is checkable."
+      goals:
+        - Report how well a case was solved, in terms drawn from what the player actually did.
+        - Offer chosen difficulty expressed as authored tuning, not as hidden scaling.
+        - Carry the chosen difficulty in the share code, so results are comparable and reproducible.
+      rationale:
+        - Binary outcome was a defensible answer while there was one case; across a campaign it wastes everything the player did well.
+        - Anything the rules branch on is authored tuning, and a difficulty setting is exactly that.
+      references: [milestone-6-the-campaign, campaign-journey, corroboration-threshold-is-authored-tuning, travel-clock, share-code-format, innocent-fallout-model]
+    architecture:
+      owner: authoritative-run-state
+      reads: [authored-content-catalogue]
+    implementation:
+      status: declared
+      target_paths: [content/balance.toml, crates/rh-core/src/state.rs, crates/rh-client-core/src/view.rs, crates/rh-replay/src/lib.rs]
+      tests: [crates/rh-client-core/tests/session.rs, crates/rh-replay/tests/golden.rs]

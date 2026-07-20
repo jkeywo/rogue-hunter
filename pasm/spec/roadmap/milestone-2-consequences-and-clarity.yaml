@@ -1,8 +1,8 @@
 entities:
   - milestone: milestone-2-consequences-and-clarity
     core:
-      status: proposed
-      confidence: provisional
+      status: accepted
+      confidence: confirmed
       title: Milestone 2 - Consequences and clarity
       summary: Extend the MVP into a replayable case generator with two selectable hunter types, three villains, three origins, three schemes, two authored templates for each regional scenario role, modular map variation, and deterministic optional mission machines and events. A seed must remain inspectable and solver-certified for the selected hunter.
       goals:
@@ -18,8 +18,8 @@ entities:
 
   - component: three-by-three-case-composition
     core:
-      status: proposed
-      confidence: provisional
+      status: accepted
+      confidence: confirmed
       title: Three villains, three origins, and three schemes
       summary: Add the Witch as a third villain, a Broken Covenant as a third origin, and the Calling as a third scheme. The generator supports and certifies every combination of the three values on each axis, producing twenty-seven possible case compositions before map-template and event variation.
       rationale:
@@ -33,14 +33,14 @@ entities:
       validates: [clue-graph-validator]
       produces: [three-map-world]
     implementation:
-      status: declared
+      status: confirmed
       target_paths: [content, crates/rh-content/src/schema.rs, crates/rh-gen/src/materialise.rs, crates/rh-gen/src/planner.rs, crates/rh-core/src/ai.rs, crates/rh-core/src/sim.rs, crates/rh-core/src/viability.rs]
       tests: [crates/rh-content/tests/catalogue.rs, crates/rh-gen/tests/generator.rs, crates/rh-core/src/viability.rs, crates/rh-replay/tests/golden.rs]
 
   - component: ambiguous-but-decisive-evidence
     core:
-      status: proposed
-      confidence: provisional
+      status: accepted
+      confidence: confirmed
       title: Ambiguous signs with decisive corroboration
       summary: Each case seeds overlapping soft signs and at least two reachable discriminating clues for each selected axis. A soft sign may support several villains, origins, or schemes; a discriminating clue must rule out at least one plausible alternative in its own axis. Certified early and fallback routes to the final hunt require two corroborating villain-identity clues, with at least one discriminating clue, and must expose a reachable discriminator for the selected origin and scheme before the relevant clock event when those values affect a decision.
       goals:
@@ -55,14 +55,14 @@ entities:
       reads: [seeded-mystery-generator]
       validates: [three-map-world]
     implementation:
-      status: declared
+      status: confirmed
       target_paths: [content/clues.toml, crates/rh-content/src/schema.rs, crates/rh-gen/src/planner.rs, crates/rh-gen/src/materialise.rs, crates/rh-cli/src/main.rs]
       tests: [crates/rh-gen/tests/generator.rs, tests/replays]
 
   - role: occultist-hunter
     core:
-      status: proposed
-      confidence: provisional
+      status: accepted
+      confidence: confirmed
       title: The Occultist hunter
       summary: A second selectable hunter whose stronger Lore and usable Mystic pool reveal, reinterpret, and redirect supernatural threats, in exchange for less health, Physical force, and direct finishing power than the Huntress.
       rationale:
@@ -73,14 +73,14 @@ entities:
       player_verbs: [investigate-opportunity, craft-countermeasure, initiate-early-hunt]
       intended_player_effect: "Trade robust physical control for foresight, information conversion, and temporary wards that alter a tactical lane."
     implementation:
-      status: declared
+      status: confirmed
       target_paths: [content, crates/rh-content/src/schema.rs, crates/rh-gen/src/planner.rs, crates/rh-core/src/sim.rs, crates/rh-client-core/src/view.rs]
       tests: [crates/rh-content/tests/catalogue.rs, crates/rh-gen/tests/generator.rs, crates/rh-replay/tests/golden.rs]
 
   - component: hunter-selection-and-certification
     core:
-      status: proposed
-      confidence: provisional
+      status: accepted
+      confidence: confirmed
       title: Hunter selection and per-hunter route certification
       summary: A new run selects either the Huntress or the Occultist before generation. The planner, viability model, content validation, user interface, replay share code, and case report use that selected profile; neither profile may rely on the other profile's exclusive ability for a required route.
       references: [milestone-2-consequences-and-clarity, occultist-hunter, mvp-hunter, clue-graph-validator, command-replay, case-report]
@@ -89,28 +89,28 @@ entities:
       reads: [authored-content-catalogue]
       validates: [clue-graph-validator]
     implementation:
-      status: declared
+      status: confirmed
       target_paths: [content, crates/rh-content/src/catalogue.rs, crates/rh-gen/src/planner.rs, crates/rh-core/src/state.rs, crates/rh-replay/src/codec.rs, crates/rh-client-core/src/lib.rs]
       tests: [crates/rh-gen/tests/generator.rs, crates/rh-replay/tests/golden.rs, crates/rh-client-core/tests/session.rs]
 
   - component: paired-regional-scenario-library
     core:
-      status: proposed
-      confidence: provisional
+      status: accepted
+      confidence: confirmed
       title: Two-template scenario library for every regional role
       summary: Settlement, wilderness, and outlying-site roles each gain one new authored map template, for two templates per role. The new templates must retain the three-map travel contract and provide the role's required anchors while presenting a different investigation geography and combat topology from the MVP template.
       rationale:
         - A role's second map should be recognisably the same kind of place but ask different positional and investigative questions.
       references: [milestone-2-consequences-and-clarity, three-map-world, seeded-mystery-generator, paired-regional-template-selection]
     implementation:
-      status: declared
+      status: confirmed
       target_paths: [content/maps, crates/rh-content/src/schema.rs, crates/rh-gen/src/materialise.rs]
       tests: [crates/rh-content/tests/catalogue.rs, crates/rh-gen/tests/generator.rs]
 
   - component: paired-regional-template-selection
     core:
-      status: proposed
-      confidence: provisional
+      status: accepted
+      confidence: confirmed
       title: Deterministic regional template selection
       summary: Before materialisation, generation deterministically chooses one compatible template for each of the settlement, wilderness, and outlying-site roles. It binds template anchors to the clue graph and rejects a combination that cannot meet its exits, mandatory route nodes, cover contract, or selected hunter's certified routes.
       references: [paired-regional-scenario-library, seeded-mystery-generator, clue-graph-validator, three-map-world, combat-viability-threshold]
@@ -120,14 +120,14 @@ entities:
       validates: [clue-graph-validator]
       produces: [three-map-world]
     implementation:
-      status: declared
+      status: confirmed
       target_paths: [crates/rh-gen/src/lib.rs, crates/rh-gen/src/materialise.rs, crates/rh-gen/src/planner.rs, crates/rh-content/src/schema.rs]
       tests: [crates/rh-gen/tests/generator.rs]
 
   - component: regional-variation-packs
     core:
-      status: proposed
-      confidence: provisional
+      status: accepted
+      confidence: confirmed
       title: Variation packs within each scenario role
       summary: Each regional template carries authored, compatible variation packs for at least its opportunity anchors, cover and blocked-lane geometry, ordinary enemy pressure, and incidental fiction. Generation chooses a non-conflicting pack set after route certification and records every choice in the inspector and replay state.
       rationale:
@@ -140,14 +140,14 @@ entities:
       validates: [clue-graph-validator]
       produces: [three-map-world]
     implementation:
-      status: declared
+      status: confirmed
       target_paths: [content/maps, content, crates/rh-content/src/schema.rs, crates/rh-gen/src/materialise.rs, crates/rh-gen/src/planner.rs, crates/rh-cli/src/main.rs]
       tests: [crates/rh-gen/tests/generator.rs, crates/rh-replay/tests/golden.rs]
 
   - component: mission-machine-library
     core:
-      status: proposed
-      confidence: provisional
+      status: accepted
+      confidence: confirmed
       title: Mission-machine library
       summary: Add authored optional machines that can be embedded in compatible regional templates. Each machine declares a visible initial state, a nearby lever or counter, one or more resulting world changes, and a payoff. Initial machines should include a flooded mill race with a sluice lever, a bell tower whose rope can draw or scatter local enemies, a blocked smuggler passage with a tool or alternate approach, and a ritual site whose ward can be redirected.
       goals:
@@ -162,14 +162,14 @@ entities:
       accepts: [semantic-command-boundary]
       renders: [terminal-client, web-client]
     implementation:
-      status: declared
+      status: confirmed
       target_paths: [content, crates/rh-content/src/schema.rs, crates/rh-gen/src/materialise.rs, crates/rh-core/src/command.rs, crates/rh-core/src/sim.rs, crates/rh-core/src/world.rs, crates/rh-client-core/src/view.rs]
       tests: [crates/rh-core/src/sim.rs, crates/rh-gen/tests/generator.rs, crates/rh-replay/tests/golden.rs]
 
   - component: mission-event-decks
     core:
-      status: proposed
-      confidence: provisional
+      status: accepted
+      confidence: confirmed
       title: Deterministic mission event decks
       summary: "Each generated region receives a small seeded deck of optional events selected from its role and active scheme: signs, survivors, shifting weather, a patrol, a fresh crime scene, a frightened animal, a contested cache, or a machine complication. An event has a clear trigger, a visible or telegraphed effect, a logged outcome, and a bounded consequence."
       goals:
@@ -183,14 +183,14 @@ entities:
       writes: [authoritative-run-state]
       produces: [event-log]
     implementation:
-      status: declared
+      status: confirmed
       target_paths: [content, crates/rh-content/src/schema.rs, crates/rh-gen/src/materialise.rs, crates/rh-core/src/events.rs, crates/rh-core/src/sim.rs, crates/rh-replay/src/codec.rs]
       tests: [crates/rh-core/src/events.rs, crates/rh-gen/tests/generator.rs, crates/rh-replay/tests/golden.rs]
 
   - component: milestone-two-variety-validation
     core:
-      status: proposed
-      confidence: provisional
+      status: accepted
+      confidence: confirmed
       title: Variety and consequence validation
       summary: The generated corpus must cover both hunters, both templates for every regional role, every machine family, and every event family. Validation rejects blocked mandatory anchors and uncertified routes, and reports selected templates, packs, machines, events, and rejection reasons through the generation inspector.
       references: [hunter-selection-and-certification, paired-regional-template-selection, regional-variation-packs, mission-machine-library, mission-event-decks, generator-validation-budget, generation-inspector]
@@ -199,6 +199,6 @@ entities:
       reads: [seeded-mystery-generator]
       validates: [three-map-world]
     implementation:
-      status: declared
+      status: confirmed
       target_paths: [crates/rh-gen/tests/generator.rs, crates/rh-gen/src/planner.rs, crates/rh-cli/src/main.rs, tests/replays]
       tests: [crates/rh-gen/tests/generator.rs, crates/rh-replay/tests/golden.rs]

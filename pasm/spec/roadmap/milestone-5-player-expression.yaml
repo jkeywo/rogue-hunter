@@ -1,0 +1,61 @@
+entities:
+  - milestone: milestone-5-player-expression
+    core:
+      status: proposed
+      confidence: provisional
+      title: Milestone 5 - What the player brings to the fight
+      summary: "Widen the space of things a player can decide to do. Preparation becomes a craft with real choices rather than a single required counter - potions brewed and drunk before a fight, in the Witcher's sense, both generic and hunter-specific - and the systems added in Milestone 4 become things a player can deliberately manipulate rather than only witness. The distinction that matters throughout: a route is certified as winnable without any of this, so every addition is leverage a player may take, never a tax they must pay."
+      goals:
+        - "Give preparation genuine choice: several ways to be ready, with different costs and different failure modes."
+        - Give each hunter preparations only she can make, expressing her posture the way signatures already do in combat.
+        - Let a player turn Milestone 4's interacting systems and NPC relationships to their own advantage.
+      rationale:
+        - Preparation is currently a checklist - identify the origin, hold the counter - and a checklist is not a decision.
+        - A player who can only observe an interacting system is watching it; one who can steer it is playing it.
+      references: [weakness-preparation, hunter-combat-abilities, interacting-authored-systems, generated-npcs-with-traits-and-relationships, machine-driven-novelty]
+
+  - component: pre-fight-preparation-craft
+    core:
+      status: proposed
+      confidence: provisional
+      title: Potions, oils, and things drunk before the door opens
+      summary: "A craftable, consumable preparation layer taken before or during the final hunt, in the mould the wound draught already sits in but broadened: brews that trade one resource for another, oils that suit a blade to a particular quarry, wards that buy a turn. Both generic - available to any hunter who gathers and crafts - and hunter-specific, so a preparation expresses who she is the way a signature already does. Costs are real and the choices exclusive, because a preparation everyone always takes is not a choice but a longer recipe."
+      goals:
+        - Several preparations worth taking, few enough resources to take them all.
+        - Hunter-specific preparations that read as that hunter's answer to a problem.
+        - Consumables the viability model can price, so certification stays honest about what a prepared hunter brings.
+      rationale:
+        - The wound draught proves the shape works; what it lacks is company and therefore a decision.
+        - Certification prices what a route's loadout brings to the final fight, so anything that changes that loadout must be priced or it silently loosens the guarantee.
+      references: [milestone-5-player-expression, weakness-preparation, wound-draught, revenant-binding-charm, certification-keeps-its-promise]
+    architecture:
+      owner: authored-content-catalogue
+      reads: [investigation-pools]
+      validates: [clue-graph-validator]
+    implementation:
+      status: declared
+      target_paths: [content/items.toml, content/recipes.toml, content/hunters, crates/rh-core/src/sim.rs, crates/rh-core/src/viability.rs]
+      tests: [crates/rh-core/src/viability.rs, crates/rh-gen/tests/mechanics.rs, crates/rh-replay/tests/golden.rs]
+
+  - component: systems-a-player-can-steer
+    core:
+      status: proposed
+      confidence: provisional
+      title: Turning the valley's systems to your own ends
+      summary: Give the player deliberate handles on the interacting systems and the relationship web. Drive a quarry onto ground that suits you; use one villager's standing with another to open a door that words alone would not; set a machine's payoff so it lands when you need it rather than when you found it. The handles are affordances the player can see and reason about, not hidden combinations - a system a player must guess at is a puzzle, and this game already has its puzzle.
+      goals:
+        - Expose visible, learnable handles on the systems from Milestone 4.
+        - Make manipulation a genuine alternative to the direct route, with its own costs and risks.
+        - Keep every handle strictly optional, so certification is unaffected by whether a player uses one.
+      rationale:
+        - The systems will already produce consequences; the difference between watching and playing is whether the player has a lever.
+        - Visible affordances are the standing rule for opportunities and there is no reason for these to differ.
+      references: [milestone-5-player-expression, interacting-authored-systems, generated-npcs-with-traits-and-relationships, visible-opportunity-affordances, semantic-command-boundary]
+    architecture:
+      owner: authoritative-run-state
+      reads: [authored-content-catalogue]
+      produces: [three-map-world]
+    implementation:
+      status: declared
+      target_paths: [crates/rh-core/src/sim.rs, crates/rh-client-core/src/lib.rs, crates/rh-client-core/src/view.rs, content]
+      tests: [crates/rh-client-core/tests/session.rs, crates/rh-gen/tests/mechanics.rs]

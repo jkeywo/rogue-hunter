@@ -1,0 +1,86 @@
+entities:
+  - milestone: milestone-4-a-valley-that-interacts
+    core:
+      status: proposed
+      confidence: provisional
+      title: Milestone 4 - A valley that interacts with itself
+      summary: Deepen procedural generation from more content into content that acts on other content. More authored material, authored systems that make that material interact in ways the generator did not have to enumerate, and generated NPCs carrying traits and standing relationships so the settlement is a web of people rather than a list of them. The generator's guarantee is unchanged - every case stays inspectable and solver-certified - so every system added here must be one the planner can either reason about or provably ignore.
+      goals:
+        - Grow the content library past the point where a player recognises every map and every face.
+        - Add authored systems whose interesting outcomes come from interaction rather than from enumeration.
+        - Generate NPCs with traits and relationships that a player can read, remember, and act on.
+      rationale:
+        - Local novelty must be a machine - a rule that produces variety is worth more than a table that lists it.
+        - "The mission-machine and event-deck work proved the shape: an authored local configuration with a visible cause and a consequential payoff, which the planner never has to know exists."
+      references: [replayable-folk-horror-cases, machine-driven-novelty, mission-machine-library, mission-event-decks, seeded-mystery-generator]
+
+  - component: deeper-content-library
+    core:
+      status: proposed
+      confidence: provisional
+      title: Enough material that a run stops looking familiar
+      summary: The library is currently three origins, three villains, three schemes, four ordinary enemies, two map templates per regional role, four machines and seven events. A committed player exhausts the distinct material quickly - the second wilderness reads as the first with a gorge in it. Grow every axis, with a third template per regional role as the highest-value addition, a fourth origin behind it, and machines and events authored continuously rather than scheduled, being purely additive.
+      goals:
+        - A third authored template for each regional scenario role.
+        - A fourth origin, with its own counter reagent and its own two supply sources.
+        - More ordinary enemies, machines and events, authored as continuing work.
+      rationale:
+        - Variation packs stretch a template; they do not substitute for another one.
+        - Additive content carries no technical risk and no certification risk, so it need not queue behind system work.
+      references: [milestone-4-a-valley-that-interacts, paired-regional-scenario-library, regional-variation-packs, two-sources-per-origin-reagent]
+    architecture:
+      owner: authored-content-catalogue
+      reads: [seeded-mystery-generator]
+      validates: [clue-graph-validator]
+    implementation:
+      status: declared
+      target_paths: [content, content/maps, crates/rh-content/src/embedded.rs]
+      tests: [crates/rh-content/tests/catalogue.rs, crates/rh-gen/tests/generator.rs]
+
+  - component: interacting-authored-systems
+    core:
+      status: proposed
+      confidence: provisional
+      title: Systems that compose, rather than content that enumerates
+      summary: "Machines and events currently fire in isolation - one input, one observable payoff, spent once. The step beyond is authored systems whose state one another can read: a machine whose payoff changes what an event can do, weather or season that alters what a terrain patch means, a fire that spreads along what is flammable, a panic that propagates through people who know each other. The generator does not enumerate the results; it enumerates the pieces and the rules by which they touch. The structural constraint from the machine work carries forward unchanged - a certified route may never depend on any of it, so the planner does not know these systems exist and a sweep asserts no certified route step touches one."
+      goals:
+        - Give authored systems a way to read and alter shared run state, within a closed vocabulary.
+        - Keep every such system additive, never able to remove access to a certified route.
+        - "Preserve exact replay: interactions resolve inside the sim, from the command log and the run PRNG."
+      rationale:
+        - Enumerated variety grows linearly with authoring effort; interacting variety does not.
+        - The additive-only rule is what let machines and events be trusted, and is what will let these be.
+      references: [milestone-4-a-valley-that-interacts, machine-driven-novelty, mission-machine-library, event-decks-are-additive-only, command-replay]
+    architecture:
+      owner: seeded-mystery-generator
+      reads: [authored-content-catalogue]
+      validates: [clue-graph-validator]
+      produces: [authoritative-run-state]
+    implementation:
+      status: declared
+      target_paths: [content, crates/rh-content/src/schema.rs, crates/rh-gen/src/materialise.rs, crates/rh-core/src/sim.rs]
+      tests: [crates/rh-gen/tests/mechanics.rs, crates/rh-replay/tests/golden.rs]
+
+  - component: generated-npcs-with-traits-and-relationships
+    core:
+      status: proposed
+      confidence: provisional
+      title: A settlement of people who know each other
+      summary: "NPCs are currently drawn from an authored pool and stand alone. Generate them instead - name, trade, and a small set of traits from a closed vocabulary - and give them standing relationships to one another: kin, debt, grievance, devotion, fear. A trait changes what a person will tell you and what it costs; a relationship means what you do to one person is felt by another. The relationship map already exists as a screen and becomes genuinely worth reading. Evidence flows along these edges, which is what makes them matter rather than decorate: a grieving sister says what a wary neighbour will not."
+      goals:
+        - Generate NPCs with traits that change the price and the content of what they give.
+        - Generate relationships between them, visible on the relationship screen and consequential in play.
+        - Let the clue graph run through people, so social routes differ in shape from physical ones.
+      rationale:
+        - The villain already hides among these people; a web of relationships is what makes hiding there mean something.
+        - Social investigation currently costs a point and returns a fact - a trait and a relationship are what turn that into a decision about whom to ask.
+      references: [milestone-4-a-valley-that-interacts, hidden-villain-facts, social-action-costs, innocent-fallout-model, a-pool-costed-opportunity-costs-at-least-a-point]
+    architecture:
+      owner: seeded-mystery-generator
+      reads: [authored-content-catalogue]
+      validates: [clue-graph-validator]
+      produces: [three-map-world]
+    implementation:
+      status: declared
+      target_paths: [content/npcs.toml, crates/rh-content/src/schema.rs, crates/rh-gen/src/materialise.rs, crates/rh-gen/src/planner.rs, crates/rh-core/src/sim.rs]
+      tests: [crates/rh-gen/tests/generator.rs, crates/rh-content/tests/catalogue.rs]
