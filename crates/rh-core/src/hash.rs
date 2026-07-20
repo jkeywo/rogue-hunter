@@ -3,29 +3,19 @@
 //! Serializes with postcard (target-independent varint encoding) and hashes
 //! with FNV-1a 64. The same run replayed on native and WASM must produce the
 //! same digest; CI and the cross-client checks compare these.
+//!
+//! The arithmetic lives in `vellum-digest`, shared with the other game that
+//! reinvented it. These remain the names rogue-hunter calls it by: the digest
+//! is part of this game's save format, so it keeps a home here where the
+//! pinned tests can sit next to it.
 
 use serde::Serialize;
 
-const FNV_OFFSET: u64 = 0xcbf29ce484222325;
-const FNV_PRIME: u64 = 0x100000001b3;
-
-pub fn fnv1a(bytes: &[u8]) -> u64 {
-    let mut hash = FNV_OFFSET;
-    for byte in bytes {
-        hash ^= u64::from(*byte);
-        hash = hash.wrapping_mul(FNV_PRIME);
-    }
-    hash
-}
+pub use vellum_digest::fnv1a;
 
 /// Digest any serializable state (typically [`crate::state::RunState`]).
 pub fn digest<T: Serialize>(value: &T) -> u64 {
-    match postcard::to_allocvec(value) {
-        Ok(bytes) => fnv1a(&bytes),
-        // Serialization of plain-old-data state cannot fail in practice;
-        // a distinguishable sentinel beats a panic in release builds.
-        Err(_) => u64::MAX,
-    }
+    vellum_digest::digest_postcard(value)
 }
 
 #[cfg(test)]
@@ -53,5 +43,15 @@ mod tests {
     #[test]
     fn digest_differs_for_different_values() {
         assert_ne!(digest(&1u32), digest(&2u32));
+    }
+
+    /// The shared implementation must still be the one this game's saves were
+    /// written against. Kept here as well as in vellum so that an engine
+    /// change which moved the hash would fail in the consumer, not only in the
+    /// crate that made it.
+    #[test]
+    fn fnv1a_is_unchanged_by_the_shared_crate() {
+        assert_eq!(fnv1a(b""), 0xcbf2_9ce4_8422_2325);
+        assert_eq!(fnv1a(b"foobar"), 0x8594_4171_f739_67e8);
     }
 }

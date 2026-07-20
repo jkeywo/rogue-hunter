@@ -60,6 +60,14 @@ enum Command {
         /// Fail if the corpus takes longer than this many seconds.
         #[arg(long)]
         budget_seconds: Option<u64>,
+        /// Fail unless the corpus folds to exactly this digest.
+        ///
+        /// The per-seed checks answer "did every seed generate"; this answers
+        /// "did every seed generate *the same world as before*". A refactor
+        /// that shifts one RNG draw leaves every seed generating happily and
+        /// every world different, which no other check in this command sees.
+        #[arg(long)]
+        expect_digest: Option<String>,
     },
 }
 
@@ -151,10 +159,14 @@ fn main() -> anyhow::Result<()> {
         Command::Corpus {
             count,
             budget_seconds,
+            expect_digest,
         } => {
             let started = Instant::now();
             let mut failures = Vec::new();
             let mut combos = std::collections::BTreeSet::new();
+            // Folded in seed order with FNV-1a, the same mixing the state
+            // digest uses, so one changed world moves the whole number.
+            let mut fold: u64 = 0xcbf2_9ce4_8422_2325;
             for seed in 0..count {
                 match rh_gen::generate(seed, &catalogue) {
                     Ok(generated) => {
@@ -164,13 +176,18 @@ fn main() -> anyhow::Result<()> {
                             generated.report.origin,
                             generated.report.scheme
                         ));
+                        for byte in rh_core::hash::digest(&generated.world).to_le_bytes() {
+                            fold ^= u64::from(byte);
+                            fold = fold.wrapping_mul(0x100_0000_01b3);
+                        }
                     }
                     Err(error) => failures.push(format!("seed {seed}: {error}")),
                 }
             }
             let elapsed = started.elapsed();
             println!(
-                "corpus: {count} seeds in {:.1}s, {} failures, {} villain combinations",
+                "corpus: {count} seeds in {:.1}s, {} failures, {} villain combinations, \
+                 digest {fold:016x}",
                 elapsed.as_secs_f64(),
                 failures.len(),
                 combos.len()
@@ -194,6 +211,15 @@ fn main() -> anyhow::Result<()> {
                     bail!(
                         "corpus took {:.1}s, over the {budget}s budget",
                         elapsed.as_secs_f64()
+                    );
+                }
+            }
+            if let Some(expected) = expect_digest {
+                let expected = expected.trim_start_matches("0x");
+                if !expected.eq_ignore_ascii_case(&format!("{fold:016x}")) {
+                    bail!(
+                        "corpus digest is {fold:016x}, expected {expected}: the same seeds \
+                         now generate different worlds"
                     );
                 }
             }

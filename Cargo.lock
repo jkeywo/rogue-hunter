@@ -2502,6 +2502,7 @@ dependencies = [
  "serde",
  "thiserror 2.0.18",
  "toml",
+ "vellum-strings",
 ]
 
 [[package]]
@@ -2511,6 +2512,9 @@ dependencies = [
  "postcard",
  "rh-content",
  "serde",
+ "vellum-digest",
+ "vellum-replay",
+ "vellum-rng",
 ]
 
 [[package]]
@@ -2534,6 +2538,8 @@ dependencies = [
  "rh-gen",
  "serde",
  "thiserror 2.0.18",
+ "vellum-digest",
+ "vellum-replay",
 ]
 
 [[package]]
@@ -3263,6 +3269,34 @@ dependencies = [
  "quote",
  "syn 2.0.119",
 ]
+
+[[package]]
+name = "vellum-digest"
+version = "0.1.0"
+source = "git+https://github.com/jkeywo/vellum?rev=1e18ad1bc16e3c6c546ab9200e13a05a5819e05c#1e18ad1bc16e3c6c546ab9200e13a05a5819e05c"
+dependencies = [
+ "base64",
+ "postcard",
+ "serde",
+]
+
+[[package]]
+name = "vellum-replay"
+version = "0.1.0"
+source = "git+https://github.com/jkeywo/vellum?rev=1e18ad1bc16e3c6c546ab9200e13a05a5819e05c#1e18ad1bc16e3c6c546ab9200e13a05a5819e05c"
+
+[[package]]
+name = "vellum-rng"
+version = "0.1.0"
+source = "git+https://github.com/jkeywo/vellum?rev=1e18ad1bc16e3c6c546ab9200e13a05a5819e05c#1e18ad1bc16e3c6c546ab9200e13a05a5819e05c"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "vellum-strings"
+version = "0.1.0"
+source = "git+https://github.com/jkeywo/vellum?rev=1e18ad1bc16e3c6c546ab9200e13a05a5819e05c#1e18ad1bc16e3c6c546ab9200e13a05a5819e05c"
 
 [[package]]
 name = "version_check"

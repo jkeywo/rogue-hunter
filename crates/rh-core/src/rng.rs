@@ -1,14 +1,23 @@
 //! Deterministic simulation PRNG.
 //!
-//! A single hand-rolled PCG32 stream drives both world generation and
-//! runtime random events, per the command-replay contract. The constants are
-//! the reference PCG-XSH-RR 64/32 parameters; implementing them in-crate
-//! (rather than depending on an external RNG crate) pins the byte-exact
-//! sequence across toolchain and dependency upgrades.
+//! A single PCG32 stream drives both world generation and runtime random
+//! events, per the command-replay contract. The constants are the reference
+//! PCG-XSH-RR 64/32 parameters; keeping them out of the `rand` ecosystem pins
+//! the byte-exact sequence across toolchain and dependency upgrades.
+//!
+//! The arithmetic lives in `vellum-rng`, shared with the other game that wrote
+//! the same generator for the same reason. The *layout* stays here: only the
+//! state half is stored, which is the shape `RunState` has always had, and
+//! `RunState` is serialised into every share code. Storing the shared type
+//! would add its increment to the postcard bytes and invalidate every code a
+//! player has saved, so the crate is borrowed a draw at a time.
+//!
+//! Note that the bounded draw here is rejection-then-remainder, and the other
+//! game's is Lemire's multiply-and-shift. They compute the same rejection
+//! threshold, which makes them look interchangeable in a diff; they are not.
 
 use serde::{Deserialize, Serialize};
 
-const MULTIPLIER: u64 = 6364136223846793005;
 const INCREMENT: u64 = 1442695040888963407;
 
 /// PCG-XSH-RR 64/32 with a fixed stream, seeded via SplitMix64 so that
@@ -26,23 +35,27 @@ impl SimRng {
     }
 
     pub fn next_u32(&mut self) -> u32 {
-        let old = self.state;
-        self.state = old.wrapping_mul(MULTIPLIER).wrapping_add(INCREMENT);
-        let xorshifted = (((old >> 18) ^ old) >> 27) as u32;
-        let rot = (old >> 59) as u32;
-        xorshifted.rotate_right(rot)
+        self.borrow(vellum_rng::Pcg32::next_u32)
     }
 
-    /// Uniform value in `0..bound` (Lemire-style rejection to avoid modulo bias).
+    /// Uniform value in `0..bound` (rejection, then remainder).
     pub fn below(&mut self, bound: u32) -> u32 {
         debug_assert!(bound > 0, "SimRng::below requires a positive bound");
-        let threshold = bound.wrapping_neg() % bound;
-        loop {
-            let value = self.next_u32();
-            if value >= threshold {
-                return value % bound;
-            }
-        }
+        self.borrow(|rng| rng.below_modulo(bound))
+    }
+
+    /// Run one draw on the shared generator and take the advanced state back.
+    ///
+    /// Only the state half is stored, because that is the shape `RunState` has
+    /// always had and `RunState` is serialised into every share code. Adopting
+    /// `vellum_rng::Pcg32` as a field would add its increment to the postcard
+    /// bytes and invalidate every code a player has saved, so the arithmetic
+    /// is borrowed and the layout stays here.
+    fn borrow<T>(&mut self, draw: impl FnOnce(&mut vellum_rng::Pcg32) -> T) -> T {
+        let mut rng = vellum_rng::Pcg32::from_parts(self.state, INCREMENT);
+        let result = draw(&mut rng);
+        self.state = rng.into_parts().0;
+        result
     }
 
     /// Uniform value in the inclusive range `lo..=hi`.
@@ -63,11 +76,8 @@ impl SimRng {
     }
 }
 
-fn splitmix64(mut value: u64) -> u64 {
-    value = value.wrapping_add(0x9E3779B97F4A7C15);
-    value = (value ^ (value >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
-    value = (value ^ (value >> 27)).wrapping_mul(0x94D049BB133111EB);
-    value ^ (value >> 31)
+fn splitmix64(value: u64) -> u64 {
+    vellum_rng::split_mix_64(value)
 }
 
 #[cfg(test)]

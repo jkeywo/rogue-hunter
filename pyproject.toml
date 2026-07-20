@@ -1,28 +1,25 @@
 [project]
-name = "rogue-hunter-pasm"
+name = "rogue-hunter-tooling"
 version = "0.1.0"
-description = "PASM specification and validation tooling for Rogue Hunter."
+description = "Development tooling for Rogue Hunter: the PASM architecture model."
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = ["PyYAML>=6.0"]
-
-[project.scripts]
-pasm = "pasm.cli.main:main"
+# PASM itself lives in its own repository, shared with project-murmur, which
+# had grown a byte-identical copy of it. What stays here is pasm/spec -- the
+# model of *this* codebase -- and pasm/tools/extract_strings.py, which is about
+# this game's content pipeline rather than about architecture models.
+#
+# Pinned to a rev: the scanner's findings are a gate, so which version produced
+# them matters.
+dependencies = [
+  "pasm @ git+https://github.com/jkeywo/pasm@de8a7bfce3aefa799eea51f8e5a2708e996e8b6e",
+]
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
+# This project ships no Python of its own any more; installing it is how the
+# pinned PASM and its dependencies arrive.
 [tool.setuptools]
-packages = [
-  "pasm",
-  "pasm.architecture",
-  "pasm.cli",
-  "pasm.core",
-  "pasm.domains",
-  "pasm.domains.game_design",
-  "pasm.implementation",
-  "pasm.integration",
-  "pasm.migration",
-  "pasm.scanners",
-]
+packages = []

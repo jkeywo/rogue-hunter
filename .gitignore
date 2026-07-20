@@ -27,3 +27,9 @@ __pycache__/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+
+# Local override pointing vellum at a sibling checkout, for working on the
+# engine and this game together. Never committed: a checked-in override would
+# make CI build whatever happened to be on disk instead of the pinned rev,
+# which is the one thing that makes pinning a rev worthless.
+.cargo/config.toml

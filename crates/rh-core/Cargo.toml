@@ -7,6 +7,9 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+vellum-digest = { workspace = true }
+vellum-replay = { workspace = true }
+vellum-rng = { workspace = true }
 rh-content = { workspace = true }
 serde = { workspace = true }
 postcard = { workspace = true }

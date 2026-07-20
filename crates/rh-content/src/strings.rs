@@ -133,11 +133,7 @@ impl StringTable {
 
     /// `ui` with `{name}`-style placeholders filled.
     pub fn ui_fill(&self, id: &str, args: &[(&str, &str)]) -> String {
-        let mut text = self.ui(id).to_owned();
-        for (key, value) in args {
-            text = text.replace(&format!("{{{key}}}"), value);
-        }
-        text
+        vellum_strings::interpolate(self.ui(id), args)
     }
 
     pub fn row(&self, id: &str) -> Option<&StringRow> {
@@ -149,11 +145,7 @@ impl StringTable {
     /// Matches the substitution the content files already document, so a
     /// translator sees the same `{npc}` and `{clue}` markers they do today.
     pub fn fill(&self, id: &StringId, args: &[(&str, &str)]) -> String {
-        let mut text = self.get(id).to_owned();
-        for (key, value) in args {
-            text = text.replace(&format!("{{{key}}}"), value);
-        }
-        text
+        vellum_strings::interpolate(self.get(id), args)
     }
 
     pub fn ids(&self) -> impl Iterator<Item = &str> {

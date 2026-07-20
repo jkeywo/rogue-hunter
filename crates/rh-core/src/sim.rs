@@ -2383,3 +2383,25 @@ impl Sim {
         self.state.villain.actor
     }
 }
+
+/// The replay-as-save contract, stated once in `vellum-replay` and kept here.
+///
+/// `Sim::apply` was already the only way the simulation advances, and a
+/// rejection already changed nothing; this names those properties so the
+/// shared contract checks can hold the game to them.
+impl vellum_replay::Simulation for Sim {
+    type Command = crate::command::Command;
+    type Rejection = crate::command::Rejection;
+
+    fn apply(&mut self, command: &Self::Command) -> Result<(), Self::Rejection> {
+        Sim::apply(self, command)
+    }
+
+    fn is_over(&self) -> bool {
+        self.state.outcome.is_some()
+    }
+
+    fn digest(&self) -> u64 {
+        crate::hash::digest(&self.state)
+    }
+}
