@@ -52,14 +52,33 @@ async function main() {
     const [x, y] = canvasPoint(event);
     client.click(x, y);
     render();
+    pumpWalk();
   });
+
+  // A click-to-walk takes one step per tick rather than resolving inside a
+  // single frame, which would read as a teleport and hide whatever the
+  // hunter walked into.
+  let walkTimer = null;
+  function pumpWalk() {
+    if (walkTimer !== null) return;
+    if (!client.walking()) return;
+    walkTimer = setInterval(() => {
+      const more = client.step_walk();
+      render();
+      if (!more) {
+        clearInterval(walkTimer);
+        walkTimer = null;
+      }
+    }, 90);
+  }
 
   // Hovering a menu row moves the highlight, so the detail pane follows the
   // pointer and confirming does what the highlight shows.
   document.addEventListener("mouseover", (event) => {
     const row = event.target.closest?.("[data-choice]");
-    if (row) {
-      client.hover_row(Number(row.dataset.choice));
+    if (row && client.hover_row(Number(row.dataset.choice))) {
+      // Only when the highlight actually moved: redrawing swaps the node out
+      // from under the pointer, which would cancel the click being made on it.
       render();
     }
   });

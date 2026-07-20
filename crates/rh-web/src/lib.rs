@@ -9,7 +9,7 @@ use wasm_bindgen::prelude::*;
 use web_sys::{CanvasRenderingContext2d, Document, Element, HtmlCanvasElement};
 
 use rh_client_core::view::{CellColor, OverlayView, PanelLabels, RunView, ScreenView};
-use rh_client_core::{ClientSession, Intent, Key, SaveAction};
+use rh_client_core::{ClientSession, Intent, Key, SaveAction, Screen};
 use rh_core::events::EventKind;
 use rh_core::geometry::{Point, MAP_HEIGHT, MAP_WIDTH};
 
@@ -84,6 +84,19 @@ impl WebClient {
         }
     }
 
+    /// Whether a click-to-walk is still under way, so the page knows to
+    /// schedule the next step.
+    pub fn walking(&self) -> bool {
+        self.session.walking()
+    }
+
+    /// Take one more step of a walk in progress; returns whether more remain.
+    pub fn step_walk(&mut self) -> bool {
+        let more = self.session.step_walk();
+        self.persist();
+        more
+    }
+
     /// Click on a menu/list row (splash options, overlay items, list entries).
     pub fn choose(&mut self, index: u32) {
         self.session.handle(Intent::Select(index as usize));
@@ -92,8 +105,32 @@ impl WebClient {
 
     /// Move the menu highlight to a row the mouse is over, without choosing
     /// it. Keeps the detail pane following the pointer.
-    pub fn hover_row(&mut self, index: u32) {
+    ///
+    /// Returns whether anything actually moved. The caller must not redraw
+    /// when nothing did: redrawing replaces the row under the cursor, the
+    /// browser sees a new element there and fires `mouseover` again, and the
+    /// press and release of a real click land on different nodes — so no
+    /// click event is ever produced. That is what made the menus unclickable.
+    pub fn hover_row(&mut self, index: u32) -> bool {
+        let before = self.selection();
         self.session.handle(Intent::HoverRow(index as usize));
+        self.selection() != before
+    }
+
+    /// Which row the current screen or modal has highlighted.
+    fn selection(&self) -> Option<usize> {
+        if let Some(rh_client_core::Modal::Menu { selected, .. }) = &self.session.modal {
+            return Some(*selected);
+        }
+        match &self.session.screen {
+            Screen::Splash { selected }
+            | Screen::HunterSelect { selected, .. }
+            | Screen::Grimoire { selected }
+            | Screen::Relationships { selected }
+            | Screen::RegionMap { selected }
+            | Screen::EventLog { selected } => Some(*selected),
+            _ => None,
+        }
     }
 
     /// Fire the action at `index` in the on-screen action panel (a click).
@@ -339,7 +376,13 @@ fn side_html(run: &RunView, labels: &PanelLabels) -> String {
     }
     html.push_str(&format!("<h3>{}</h3><ul>", escape(&labels.pack)));
     for item in &run.inventory {
-        html.push_str(&format!("<li>{}</li>", escape(item)));
+        // The description rides as a tooltip: hovering a pack line is the
+        // cheapest way to ask what a thing is for.
+        html.push_str(&format!(
+            "<li title=\"{}\">{}</li>",
+            escape(&item.description),
+            escape(&item.label)
+        ));
     }
     html.push_str("</ul>");
     html

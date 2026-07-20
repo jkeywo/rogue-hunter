@@ -908,6 +908,11 @@ fn check_ui(cat: &Catalogue, issues: &mut Vec<String>) {
 pub fn referenced_ids(cat: &Catalogue) -> Vec<(String, &StringId)> {
     let mut ids: Vec<(String, &StringId)> = Vec::new();
 
+    for entry in &cat.guide {
+        ids.push((format!("guide.{}.title", entry.id), &entry.title));
+        ids.push((format!("guide.{}.body", entry.id), &entry.body));
+    }
+
     for (key, machine) in &cat.machines {
         ids.push((format!("machines.{key}.name"), &machine.name));
         ids.push((format!("machines.{key}.prompt"), &machine.prompt));

@@ -40,6 +40,8 @@ pub enum Intent {
     Dossier,
     /// Open the grimoire.
     Grimoire,
+    /// Open the hunter's guide: how a hunt is actually solved.
+    Guide,
     /// Open the relationship map.
     Relationships,
     /// Open the region (travel) map.
@@ -122,25 +124,82 @@ const CHAR_BINDINGS: &[(char, Intent)] = &[
     ('.', Intent::Wait),
     (' ', Intent::Wait),
     ('f', Intent::Fire),
-    ('F', Intent::FireSilver),
     ('a', Intent::Aim),
     ('p', Intent::PowerAttack),
     ('s', Intent::Sprint),
     ('x', Intent::SetSnare),
-    ('K', Intent::KillingBlow),
     ('q', Intent::Draught),
     ('c', Intent::Charm),
     ('d', Intent::Dossier),
     ('g', Intent::Grimoire),
     ('r', Intent::Relationships),
     ('v', Intent::RegionMap),
-    ('L', Intent::EventLog),
+    ('i', Intent::Guide),
 ];
+
+/// How the player drives the hunter.
+///
+/// The two schemes differ in one thing that then decides another: whether
+/// the letter keys steer. Under [`ControlScheme::Numpad`] they do not, which
+/// frees `b`, `k` and `l` for the three commands that would otherwise need
+/// a capital — so the whole scheme can be played without reaching for shift.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ControlScheme {
+    /// Numpad and arrows steer; every command is a lowercase letter.
+    #[default]
+    Numpad,
+    /// The roguelike hands: hjkl and yubn steer, and the three commands
+    /// whose letters those take are capitals instead.
+    Roguelike,
+}
+
+impl ControlScheme {
+    pub fn next(self) -> Self {
+        match self {
+            ControlScheme::Numpad => ControlScheme::Roguelike,
+            ControlScheme::Roguelike => ControlScheme::Numpad,
+        }
+    }
+
+    /// String id for the scheme's name, shown on the splash.
+    pub fn label_id(self) -> &'static str {
+        match self {
+            ControlScheme::Numpad => "ui.controls.numpad",
+            ControlScheme::Roguelike => "ui.controls.roguelike",
+        }
+    }
+
+    /// String id for how this scheme steers, shown in the splash's keys
+    /// column. Letters only appear here when they actually move the hunter.
+    pub fn steer_id(self) -> &'static str {
+        match self {
+            ControlScheme::Numpad => "ui.controls.numpad.steer",
+            ControlScheme::Roguelike => "ui.controls.roguelike.steer",
+        }
+    }
+
+    /// The bindings this scheme adds on top of the common table.
+    fn extra_bindings(self) -> &'static [(char, Intent)] {
+        match self {
+            // Letters are free here, so the awkward capitals become lowercase.
+            ControlScheme::Numpad => &[
+                ('b', Intent::FireSilver),
+                ('k', Intent::KillingBlow),
+                ('l', Intent::EventLog),
+            ],
+            ControlScheme::Roguelike => &[
+                ('F', Intent::FireSilver),
+                ('K', Intent::KillingBlow),
+                ('L', Intent::EventLog),
+            ],
+        }
+    }
+}
 
 /// Translate a key press into the intent it means under the given mode.
 /// Pure and total over the binding tables; the session wraps it with the
 /// mode it is actually in.
-pub fn intent_for_key(mode: InputMode, key: Key) -> Option<Intent> {
+pub fn intent_for_key(mode: InputMode, scheme: ControlScheme, key: Key) -> Option<Intent> {
     if mode == InputMode::TextEntry {
         return match key {
             Key::Char(c) => Some(Intent::Char(c)),
@@ -168,33 +227,42 @@ pub fn intent_for_key(mode: InputMode, key: Key) -> Option<Intent> {
         Key::End if !in_menu => Some(Intent::Move(Direction::SouthWest)),
         Key::PageDown if !in_menu => Some(Intent::Move(Direction::SouthEast)),
         Key::Clear if !in_menu => Some(Intent::Wait),
-        Key::Char(c) => char_intent(c, in_menu),
+        Key::Char(c) => char_intent(c, scheme, in_menu),
         _ => None,
     }
 }
 
-fn char_intent(c: char, in_menu: bool) -> Option<Intent> {
+fn char_intent(c: char, scheme: ControlScheme, in_menu: bool) -> Option<Intent> {
     // Numpad digits (NumLock on) are roguelike movement in the run screen.
     if !in_menu {
         if let Some(intent) = numpad_move(c) {
             return Some(intent);
         }
     }
-    match c {
-        'j' if in_menu => return Some(Intent::Down),
-        'k' if in_menu => return Some(Intent::Up),
-        'j' => return Some(Intent::Move(Direction::South)),
-        'k' => return Some(Intent::Move(Direction::North)),
-        'h' => return Some(Intent::Move(Direction::West)),
-        'l' => return Some(Intent::Move(Direction::East)),
-        'y' => return Some(Intent::Move(Direction::NorthWest)),
-        'u' => return Some(Intent::Move(Direction::NorthEast)),
-        'b' => return Some(Intent::Move(Direction::SouthWest)),
-        'n' => return Some(Intent::Move(Direction::SouthEast)),
-        _ => {}
+    // jk always navigate a list, whichever scheme is in force: every other
+    // list key is shared too, and a menu is not a place you steer.
+    if in_menu {
+        match c {
+            'j' => return Some(Intent::Down),
+            'k' => return Some(Intent::Up),
+            _ => {}
+        }
+    } else if scheme == ControlScheme::Roguelike {
+        match c {
+            'j' => return Some(Intent::Move(Direction::South)),
+            'k' => return Some(Intent::Move(Direction::North)),
+            'h' => return Some(Intent::Move(Direction::West)),
+            'l' => return Some(Intent::Move(Direction::East)),
+            'y' => return Some(Intent::Move(Direction::NorthWest)),
+            'u' => return Some(Intent::Move(Direction::NorthEast)),
+            'b' => return Some(Intent::Move(Direction::SouthWest)),
+            'n' => return Some(Intent::Move(Direction::SouthEast)),
+            _ => {}
+        }
     }
     CHAR_BINDINGS
         .iter()
+        .chain(scheme.extra_bindings())
         .find(|(key, _)| *key == c)
         .map(|(_, intent)| intent.clone())
 }
@@ -217,12 +285,13 @@ fn numpad_move(c: char) -> Option<Intent> {
 
 /// The key hint printed beside an action, read back off the same table
 /// that translates the press.
-pub(crate) fn key_label(intent: &Intent) -> Option<String> {
+pub fn key_label(scheme: ControlScheme, intent: &Intent) -> Option<String> {
     if matches!(intent, Intent::NextThreat) {
         return Some("Tab".to_owned());
     }
     CHAR_BINDINGS
         .iter()
+        .chain(scheme.extra_bindings())
         .find(|(_, bound)| bound == intent)
         .map(|(key, _)| key.to_string())
 }

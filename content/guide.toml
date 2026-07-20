@@ -1,0 +1,46 @@
+# The hunter's guide: how a hunt is actually solved.
+#
+# The grimoire is lore — what the things in the valley are. This is method:
+# what a player should actually do with six days, in the order it matters.
+# Rules numbers stay out of it, the same way they stay out of the grimoire;
+# what belongs here is the shape of the work.
+
+[[entries]]
+id = "the-shape-of-it"
+title = "guide.the-shape-of-it.title"
+body = "guide.the-shape-of-it.body"
+
+[[entries]]
+id = "naming-the-thing"
+title = "guide.naming-the-thing.title"
+body = "guide.naming-the-thing.body"
+
+[[entries]]
+id = "how-it-began"
+title = "guide.how-it-began.title"
+body = "guide.how-it-began.body"
+
+[[entries]]
+id = "what-it-is-working-toward"
+title = "guide.what-it-is-working-toward.title"
+body = "guide.what-it-is-working-toward.body"
+
+[[entries]]
+id = "the-counter"
+title = "guide.the-counter.title"
+body = "guide.the-counter.body"
+
+[[entries]]
+id = "the-clock"
+title = "guide.the-clock.title"
+body = "guide.the-clock.body"
+
+[[entries]]
+id = "the-hunt-itself"
+title = "guide.the-hunt-itself.title"
+body = "guide.the-hunt-itself.body"
+
+[[entries]]
+id = "if-it-goes-wrong"
+title = "guide.if-it-goes-wrong.title"
+body = "guide.if-it-goes-wrong.body"

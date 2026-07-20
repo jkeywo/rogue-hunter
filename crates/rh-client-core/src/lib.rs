@@ -15,7 +15,7 @@ use rh_core::state::ActorKind;
 use rh_core::world::{FeatureKind, GraveContents, OpportunityAnchor};
 use rh_replay::RunSession;
 
-pub use input::{InputMode, Intent, Key};
+pub use input::{ControlScheme, InputMode, Intent, Key};
 pub use view::{Cell, CellColor, ViewModel};
 
 /// What a client should do with its persisted save right now. The policy
@@ -54,6 +54,10 @@ pub enum Screen {
     },
     Run,
     Grimoire {
+        selected: usize,
+    },
+    /// How a hunt is solved, for a player who has never solved one.
+    Guide {
         selected: usize,
     },
     Relationships {
@@ -141,10 +145,19 @@ pub struct ClientSession {
     /// Where an interrupted walk was heading, so it can be picked up again
     /// rather than re-aimed. Cleared on arrival and when the path is lost.
     pub travel_target: Option<Point>,
+    /// Whether that target is still being walked toward. Held apart from the
+    /// target itself because the two answer different questions: this one
+    /// says whether the client should tick another step, while the target
+    /// outlives an interruption so the walk can be offered again.
+    walk_active: bool,
+    /// Steps taken on the walk in progress, against `MAX_WALK_STEPS`.
+    steps_walked: usize,
     /// A first-time teaching line, shown once and then never again.
     pub hint: Option<String>,
     /// Hint ids already spent this session.
     hints_seen: std::collections::BTreeSet<&'static str>,
+    /// Which control scheme the player drives with.
+    pub controls: input::ControlScheme,
     /// Random-ish seed source for "New Run" (clients pass a clock value).
     seed_nonce: u64,
 }
@@ -188,6 +201,9 @@ impl Default for WalkWatch {
 /// pathological path cannot spin.
 const MAX_WALK_STEPS: usize = 64;
 
+/// Rows on the splash: new run, seed, share code, control scheme.
+const SPLASH_ROWS: usize = 4;
+
 /// Move a list highlight with the one semantics every screen and modal
 /// shares: Up and Down clamp to the list, and a hover moves the highlight
 /// to the row it points at without choosing it. Returns the new highlight,
@@ -213,7 +229,10 @@ impl ClientSession {
             look_cursor: None,
             status: String::new(),
             travel_target: None,
+            walk_active: false,
+            steps_walked: 0,
             hint: None,
+            controls: input::ControlScheme::default(),
             hints_seen: std::collections::BTreeSet::new(),
             seed_nonce,
         }
@@ -243,7 +262,7 @@ impl ClientSession {
     /// clients call this and neither owns a binding of its own, so they
     /// cannot disagree about what a key does.
     pub fn intent_for_key(&self, key: Key) -> Option<Intent> {
-        input::intent_for_key(self.input_mode(), key)
+        input::intent_for_key(self.input_mode(), self.controls, key)
     }
 
     /// Whether the client sits idle on the splash menu — where the terminal
@@ -290,6 +309,7 @@ impl ClientSession {
             Screen::CodeEntry { .. } => self.handle_code_entry(intent),
             Screen::Run => self.handle_run(intent),
             Screen::Grimoire { .. } => self.handle_list_screen(intent),
+            Screen::Guide { .. } => self.handle_list_screen(intent),
             Screen::Relationships { .. } => self.handle_list_screen(intent),
             Screen::RegionMap { .. } => self.handle_list_screen(intent),
             Screen::EventLog { .. } => self.handle_list_screen(intent),
@@ -304,12 +324,12 @@ impl ClientSession {
         let Screen::Splash { selected } = &mut self.screen else {
             return;
         };
-        if let Some(row) = list_move(&intent, *selected, 3) {
+        if let Some(row) = list_move(&intent, *selected, SPLASH_ROWS) {
             *selected = row;
             return;
         }
         match intent {
-            Intent::Select(index) if index <= 2 => {
+            Intent::Select(index) if index < SPLASH_ROWS => {
                 *selected = index;
                 self.handle_splash(Intent::Confirm);
             }
@@ -326,12 +346,16 @@ impl ClientSession {
                         error: None,
                     }
                 }
-                _ => {
+                2 => {
                     self.screen = Screen::CodeEntry {
                         input: String::new(),
                         error: None,
                     }
                 }
+                // The scheme row cycles in place rather than opening a
+                // screen: there are two schemes, so a submenu would be a
+                // whole screen spent saying one word.
+                _ => self.controls = self.controls.next(),
             },
             Intent::Click(_) => {}
             _ => {}
@@ -434,6 +458,7 @@ impl ClientSession {
         let count = self.list_len();
         let toggle = match self.screen {
             Screen::Grimoire { .. } => Some(Intent::Grimoire),
+            Screen::Guide { .. } => Some(Intent::Guide),
             Screen::Relationships { .. } => Some(Intent::Relationships),
             Screen::RegionMap { .. } => Some(Intent::RegionMap),
             Screen::EventLog { .. } => Some(Intent::EventLog),
@@ -442,6 +467,7 @@ impl ClientSession {
         };
         match &mut self.screen {
             Screen::Grimoire { selected }
+            | Screen::Guide { selected }
             | Screen::Relationships { selected }
             | Screen::RegionMap { selected }
             | Screen::EventLog { selected }
@@ -470,6 +496,7 @@ impl ClientSession {
     fn list_len(&self) -> usize {
         match self.screen {
             Screen::Grimoire { .. } => self.catalogue.grimoire.len(),
+            Screen::Guide { .. } => self.catalogue.guide.len(),
             Screen::Relationships { .. } => view::relationship_entries(self).len(),
             Screen::RegionMap { .. } => view::region_entries(self).len(),
             Screen::EventLog { .. } => view::record_entries(self).len(),
@@ -648,6 +675,7 @@ impl ClientSession {
             Intent::NextThreat => self.next_threat(),
             Intent::Dossier => self.screen = Screen::Dossier { selected: 0 },
             Intent::Grimoire => self.screen = Screen::Grimoire { selected: 0 },
+            Intent::Guide => self.screen = Screen::Guide { selected: 0 },
             Intent::Relationships => self.screen = Screen::Relationships { selected: 0 },
             Intent::RegionMap => self.screen = Screen::RegionMap { selected: 0 },
             Intent::EventLog => {
@@ -925,47 +953,77 @@ impl ClientSession {
         let Some(run) = self.run.as_ref() else { return };
         if !target.in_bounds() || run.sim.state.hunter.pos == target {
             self.travel_target = None;
+            self.walk_active = false;
             return;
         }
         self.travel_target = Some(target);
-        let strings = self.catalogue.strings.clone();
-        for _ in 0..MAX_WALK_STEPS {
-            let Some(direction) = self.path_step(target) else {
-                self.travel_target = None;
-                self.status = strings.ui("ui.status.walk-blocked").to_owned();
-                return;
-            };
-            let before = self.walk_watch();
-            self.apply_now(Command::Move(direction));
-            let after = self.walk_watch();
-            if after.over {
-                self.travel_target = None;
-                return;
-            }
-            if after.pos == before.pos {
-                // The move was refused; `apply_now` already said why.
-                self.travel_target = None;
-                return;
-            }
-            if after.pos == target {
-                self.travel_target = None;
-                self.status = strings.ui("ui.status.walk-arrived").to_owned();
-                return;
-            }
-            if after.hp < before.hp {
-                self.status = strings.ui("ui.status.walk-hurt").to_owned();
-                return;
-            }
-            if after.threats.iter().any(|id| !before.threats.contains(id)) {
-                self.status = strings.ui("ui.status.walk-sighted").to_owned();
-                return;
-            }
-            if after.discovered > before.discovered {
-                self.status = strings.ui("ui.status.walk-lead").to_owned();
-                return;
-            }
+        self.walk_active = true;
+        self.steps_walked = 0;
+        // Take the first step now so the click feels answered, and leave the
+        // rest to `step_walk`. The client paces those, because a hunter
+        // crossing a square should be watchable — a walk that resolves inside
+        // one frame reads as a teleport and hides whatever interrupted it.
+        self.step_walk();
+    }
+
+    /// Whether a click-to-walk is still under way.
+    pub fn walking(&self) -> bool {
+        self.walk_active
+    }
+
+    /// Take one step of a walk in progress. Returns whether more remain, so
+    /// the client knows to schedule another tick.
+    pub fn step_walk(&mut self) -> bool {
+        let Some(target) = self.travel_target.filter(|_| self.walk_active) else {
+            return false;
+        };
+        self.steps_walked += 1;
+        if self.steps_walked > MAX_WALK_STEPS {
+            self.walk_active = false;
+            self.status = self.catalogue.strings.ui("ui.status.walk-far").to_owned();
+            return false;
         }
-        self.status = strings.ui("ui.status.walk-far").to_owned();
+        let strings = self.catalogue.strings.clone();
+        let Some(direction) = self.path_step(target) else {
+            // No path left: there is nothing worth picking up again either.
+            self.travel_target = None;
+            self.walk_active = false;
+            self.status = strings.ui("ui.status.walk-blocked").to_owned();
+            return false;
+        };
+        let before = self.walk_watch();
+        self.apply_now(Command::Move(direction));
+        let after = self.walk_watch();
+
+        // Every reason a walk stops short. The hunter keeps what she learned
+        // and stands where she got to; only the walking is cancelled.
+        let halt = |session: &mut Self, message: &str| {
+            session.walk_active = false;
+            session.status = strings.ui(message).to_owned();
+        };
+        if after.over || after.pos == before.pos {
+            // Run ended, or the move was refused and `apply_now` said why.
+            self.walk_active = false;
+            return false;
+        }
+        if after.pos == target {
+            self.travel_target = None;
+            halt(self, "ui.status.walk-arrived");
+            return false;
+        }
+        if after.hp < before.hp {
+            halt(self, "ui.status.walk-hurt");
+            return false;
+        }
+        if after.threats.iter().any(|id| !before.threats.contains(id)) {
+            halt(self, "ui.status.walk-sighted");
+            return false;
+        }
+        if after.discovered > before.discovered {
+            halt(self, "ui.status.walk-lead");
+            return false;
+        }
+        true
     }
 
     /// The handful of facts a walk watches between steps.
@@ -1167,7 +1225,7 @@ impl ClientSession {
             actions.push(ActionEntry {
                 key: key
                     .map(str::to_owned)
-                    .or_else(|| input::key_label(&intent))
+                    .or_else(|| input::key_label(self.controls, &intent))
                     .unwrap_or_default(),
                 label: label.to_owned(),
                 enabled,

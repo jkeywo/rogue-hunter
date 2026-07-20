@@ -20,21 +20,18 @@
 id = "sent-for"
 body = [
   "openings.openings.sent-for.body.1",
-  "openings.openings.sent-for.body.2",
 ]
 
 [[openings]]
 id = "the-road-in"
 body = [
   "openings.openings.the-road-in.body.1",
-  "openings.openings.the-road-in.body.2",
 ]
 
 [[openings]]
 id = "the-parish-pays"
 body = [
   "openings.openings.the-parish-pays.body.1",
-  "openings.openings.the-parish-pays.body.2",
 ]
 
 # -- Person-anchored priors. Somebody got to you first. ---------------------
@@ -45,7 +42,6 @@ anchor = "npc"
 grant = "identity"
 body = [
   "openings.openings.talked-at-on-the-road.body.1",
-  "openings.openings.talked-at-on-the-road.body.2",
 ]
 
 [[openings]]
@@ -72,7 +68,6 @@ anchor = "tile"
 grant = "identity"
 body = [
   "openings.openings.read-it-on-the-way-past.body.1",
-  "openings.openings.read-it-on-the-way-past.body.2",
 ]
 
 [[openings]]
@@ -95,21 +90,18 @@ body = [
 id = "the-last-one-left"
 body = [
   "openings.openings.the-last-one-left.body.1",
-  "openings.openings.the-last-one-left.body.2",
 ]
 
 [[openings]]
 id = "nobody-sent-for-you"
 body = [
   "openings.openings.nobody-sent-for-you.body.1",
-  "openings.openings.nobody-sent-for-you.body.2",
 ]
 
 [[openings]]
 id = "passing-through"
 body = [
   "openings.openings.passing-through.body.1",
-  "openings.openings.passing-through.body.2",
 ]
 
 # ---------------------------------------------------------------------------
@@ -148,7 +140,6 @@ axis = "season"
 effect = { kind = "pressure", extra = 2 }
 body = [
   "openings.conditions.the-deep-of-winter.body.1",
-  "openings.conditions.the-deep-of-winter.body.2",
 ]
 
 [[conditions]]
@@ -172,7 +163,6 @@ axis = "reception"
 effect = { kind = "social-surcharge" }
 body = [
   "openings.conditions.unwelcome.body.1",
-  "openings.conditions.unwelcome.body.2",
 ]
 
 [[conditions]]
@@ -196,7 +186,6 @@ axis = "hour"
 effect = { kind = "short-sight", tiles = 3 }
 body = [
   "openings.conditions.already-dark.body.1",
-  "openings.conditions.already-dark.body.2",
 ]
 
 [[conditions]]
@@ -220,7 +209,6 @@ axis = "provenance"
 effect = { kind = "ambush", percent = 20 }
 body = [
   "openings.conditions.the-road-behind-you.body.1",
-  "openings.conditions.the-road-behind-you.body.2",
 ]
 
 # -- The boons. One axis supplies one of these each run. --------------------
@@ -231,7 +219,6 @@ axis = "season"
 effect = { kind = "quiet-roads", percent = 15 }
 body = [
   "openings.conditions.an-open-winter.body.1",
-  "openings.conditions.an-open-winter.body.2",
 ]
 
 [[conditions]]
@@ -240,7 +227,6 @@ axis = "reception"
 effect = { kind = "well-supplied", item = "wound-draught" }
 body = [
   "openings.conditions.expected-and-provided-for.body.1",
-  "openings.conditions.expected-and-provided-for.body.2",
 ]
 
 [[conditions]]
@@ -249,7 +235,6 @@ axis = "hour"
 effect = { kind = "long-sight", tiles = 2 }
 body = [
   "openings.conditions.the-whole-day-ahead.body.1",
-  "openings.conditions.the-whole-day-ahead.body.2",
 ]
 
 [[conditions]]
@@ -258,5 +243,4 @@ axis = "provenance"
 effect = { kind = "well-supplied", item = "flintlock-shot" }
 body = [
   "openings.conditions.your-kit-in-order.body.1",
-  "openings.conditions.your-kit-in-order.body.2",
 ]

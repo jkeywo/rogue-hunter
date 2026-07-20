@@ -512,3 +512,45 @@ entities:
       title: A search move is index-space; a route step is world-space
       summary: An architecture pass proposed collapsing the planner's internal Action enum into the serialized RouteAction so the planner emits exactly what the autoplayer consumes. Declined on inspection - the two are different representations doing different work. Action::Resolve carries the op index the search's bitmask bookkeeping runs on; RouteAction::Resolve carries the OpportunityId the world and the autoplayer speak. Collapsing them means either id-to-index lookups inside the search's hot loop or a route type that leaks search internals to everything that reads a route. They meet at exactly one translation site, in apply_action, which is a boundary earning its keep rather than duplication. The defects that motivated the proposal were real but lay elsewhere - the autoplayer branching on route prose, and action costs written twice - and are fixed on their own.
       references: [route-certification-strategy, text-is-data-and-never-branched-on, clue-graph-validator]
+
+  # Playtest feedback: what a first-time player could not find out.
+
+  - decision: two-control-schemes-with-no-capitals-by-default
+    core:
+      status: accepted
+      confidence: confirmed
+      title: The default scheme steers with the numpad and asks for no capitals
+      summary: Playtesting found the roguelike hands hostile to anyone who has not played one - hjkl steering forces the three commands whose letters it takes onto capitals, so the game demanded shift for a silver bullet, a Killing Blow and the record. There are now two schemes, cycled from a splash row that changes in place rather than opening a screen. Numpad is the default - arrows and the keypad steer, which frees b, k and l, and the whole game is playable without reaching for shift. Roguelike keeps hjkl and yubn and takes the capitals back. The scheme lives on the session, so both clients read it from one place; the bindings table on the splash is filled from the same binding table the key translator reads, via key_label, so a scheme change cannot leave the splash advertising keys that no longer work.
+      references: [semantic-command-boundary, client-input-bindings]
+
+  - decision: the-guide-is-content-not-a-tutorial
+    core:
+      status: accepted
+      confidence: confirmed
+      title: How to solve a hunt is eight authored entries, not a scripted tutorial
+      summary: A player who had read the grimoire still could not say how a hunt is won. The answer is a second reference screen, opened with i, holding eight entries - the shape of a hunt, naming the thing, origin, scheme, the counter, the clock, the fight, and what failure costs. It is guide.toml with the grimoire's own schema and it renders through the same list view, so method and lore are two decks of the same kind rather than two mechanisms. Deliberately not a scripted tutorial - a tutorial has to be sequenced against a run and would become a second, drifting copy of the rules, while a reference deck is content the rules already validate and any string in it is one row in the table.
+      references: [authored-content-catalogue, text-is-data-and-never-branched-on, hunter-grimoire]
+
+  - decision: an-item-says-what-it-is-for-wherever-it-is-listed
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Pack lines carry their description, on hover and in the dossier
+      summary: Item descriptions were authored but reached no player - the sidebar had room for names only. The pack view model now carries each item's description beside its label, so the web sidebar shows it as a tooltip, and the dossier gains a pack section that spells every carried item out for the terminal, where there is nothing to hover. Both read the same authored description, so a rewritten item blurb lands in both places at once.
+      references: [authored-content-catalogue, case-dossier]
+
+  - decision: a-walk-is-paced-by-the-client-not-the-session
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Click-to-walk takes one step per client tick
+      summary: Click-to-walk resolved its whole path inside the intent, which read as a teleport and hid whatever interrupted it. The session now takes the first step, so the click feels answered, and exposes step_walk for the client to tick - ninety milliseconds in both clients. Nothing about the simulation changed - each step is still an ordinary recorded Move, so replays are unaffected. The walk's two states had to be split to do it - walk_active says whether to tick again, while travel_target outlives an interruption so the walk can be offered again rather than re-aimed.
+      references: [command-replay, semantic-command-boundary]
+
+  - decision: an-opening-is-one-paragraph
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Each opening says its piece in one paragraph
+      summary: Openings were authored as two paragraphs each, and a run draws five of them - hook, condition and the rest - so the game opened with ten paragraphs before a player had pressed anything. Every opening is now a single paragraph carrying the same information, which is a content change only - the string ids collapsed from body.1 and body.2 to body, and strings.csv sits outside the content fingerprint, so no share code was invalidated by the rewrite.
+      references: [in-media-res-opening, conditions-may-not-touch-the-final-fight, authored-content-catalogue]

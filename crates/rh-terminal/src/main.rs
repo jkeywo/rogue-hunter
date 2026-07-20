@@ -23,7 +23,12 @@ pub struct Client {
     pub save_path: PathBuf,
     /// Interactive regions from the last frame, for mouse hit-testing.
     pub areas: render::RunAreas,
+    /// Seconds accumulated toward the next step of a click-to-walk.
+    pub walk_timer: f32,
 }
+
+/// Seconds between steps of a click-to-walk.
+const WALK_STEP: f32 = 0.09;
 
 fn main() {
     let catalogue = match rh_content::load_embedded() {
@@ -54,8 +59,9 @@ fn main() {
             session,
             save_path,
             areas: render::RunAreas::default(),
+            walk_timer: 0.0,
         })
-        .add_systems(Update, (input_system, draw_system).chain())
+        .add_systems(Update, (input_system, walk_system, draw_system).chain())
         .run();
 }
 
@@ -205,6 +211,22 @@ fn key_of(code: KeyCode) -> Option<Key> {
         KeyCode::KeypadBegin => Key::Clear,
         _ => return None,
     })
+}
+
+/// Pace a click-to-walk: one step every `WALK_STEP`, so crossing a square is
+/// watchable and whatever interrupts it is visible when it happens.
+fn walk_system(mut client: ResMut<Client>, time: Res<Time>) {
+    if !client.session.walking() {
+        client.walk_timer = 0.0;
+        return;
+    }
+    client.walk_timer += time.delta_secs();
+    if client.walk_timer < WALK_STEP {
+        return;
+    }
+    client.walk_timer = 0.0;
+    client.session.step_walk();
+    persist(&client);
 }
 
 fn draw_system(mut context: ResMut<RatatuiContext>, mut client: ResMut<Client>) {

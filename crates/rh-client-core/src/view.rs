@@ -131,6 +131,13 @@ pub enum ScreenView {
     CaseReport(CaseReportView),
 }
 
+/// One line of the pack: what it is called, and what it is for.
+#[derive(Debug, Clone)]
+pub struct PackItem {
+    pub label: String,
+    pub description: String,
+}
+
 #[derive(Debug, Clone)]
 pub struct RunView {
     /// Row-major 32x20 grid.
@@ -140,7 +147,10 @@ pub struct RunView {
     pub health_line: String,
     pub pools_line: String,
     pub stamina_line: String,
-    pub inventory: Vec<String>,
+    /// What is in the pack, each with what it actually does — the clients
+    /// show the description on hover, so a player never has to guess what
+    /// a name means.
+    pub inventory: Vec<PackItem>,
     /// Everything currently in sight, nearest first, hostiles before people.
     pub in_sight: Vec<SightEntry>,
     /// A first-time teaching line for this frame, if one fired.
@@ -229,6 +239,11 @@ pub fn terrain_name(strings: &StringTable, terrain: Terrain) -> &str {
     }
 }
 
+/// The key that currently fires an intent, for the splash bindings table.
+fn key_hint(session: &ClientSession, intent: &crate::Intent) -> String {
+    crate::input::key_label(session.controls, intent).unwrap_or_default()
+}
+
 pub fn build(session: &ClientSession) -> ViewModel {
     let screen = match &session.screen {
         Screen::Splash { selected } => {
@@ -245,8 +260,19 @@ pub fn build(session: &ClientSession) -> ViewModel {
                     .key_bindings
                     .iter()
                     .map(|binding| {
+                        // The keys column is filled from the same binding
+                        // table the translator reads, so switching scheme
+                        // cannot leave the splash advertising the old keys.
                         (
-                            strings.get(&binding.keys).to_owned(),
+                            strings.ui_fill(
+                                binding.keys.as_str(),
+                                &[
+                                    ("steer", strings.ui(session.controls.steer_id())),
+                                    ("silver", &key_hint(session, &crate::Intent::FireSilver)),
+                                    ("killing", &key_hint(session, &crate::Intent::KillingBlow)),
+                                    ("log", &key_hint(session, &crate::Intent::EventLog)),
+                                ],
+                            ),
                             strings.get(&binding.action).to_owned(),
                         )
                     })
@@ -267,6 +293,12 @@ pub fn build(session: &ClientSession) -> ViewModel {
                         .strings
                         .ui("ui.splash.option.paste-code")
                         .to_owned(),
+                    // Reads as a setting rather than a destination: the row
+                    // says which scheme is in force, and picking it swaps.
+                    strings.ui_fill(
+                        "ui.splash.option.controls",
+                        &[("scheme", strings.ui(session.controls.label_id()))],
+                    ),
                 ],
                 selected: *selected,
             }
@@ -338,6 +370,21 @@ pub fn build(session: &ClientSession) -> ViewModel {
             error: error.clone(),
         },
         Screen::Run => ScreenView::Run(Box::new(build_run_view(session))),
+        Screen::Guide { selected } => ScreenView::List {
+            title: session.catalogue.strings.ui("ui.guide.title").to_owned(),
+            entries: session
+                .catalogue
+                .guide
+                .iter()
+                .map(|entry| {
+                    (
+                        session.catalogue.strings.get(&entry.title).to_owned(),
+                        session.catalogue.strings.get(&entry.body).to_owned(),
+                    )
+                })
+                .collect(),
+            selected: Some(*selected),
+        },
         Screen::Grimoire { selected } => ScreenView::List {
             title: session.catalogue.strings.ui("ui.grimoire.title").to_owned(),
             entries: session
@@ -562,20 +609,23 @@ fn build_run_view(session: &ClientSession) -> RunView {
     let clock = &sim.catalogue.balance.clock;
     let hunter_def = &sim.catalogue.hunter;
     let strings = &sim.catalogue.strings;
-    let inventory: Vec<String> = hunter
+    let inventory: Vec<PackItem> = hunter
         .inventory
         .iter()
         .map(|(item, count)| {
-            let name = sim
-                .catalogue
-                .items
-                .get(item)
+            let def = sim.catalogue.items.get(item);
+            let name = def
                 .map(|def| sim.catalogue.strings.get(&def.name).to_owned())
                 .unwrap_or_else(|| item.clone());
-            if *count > 1 {
-                format!("{name} x{count}")
-            } else {
-                name
+            PackItem {
+                label: if *count > 1 {
+                    format!("{name} x{count}")
+                } else {
+                    name
+                },
+                description: def
+                    .map(|def| sim.catalogue.strings.get(&def.description).to_owned())
+                    .unwrap_or_default(),
             }
         })
         .collect();
@@ -982,6 +1032,32 @@ pub(crate) fn dossier_entries(session: &ClientSession) -> Vec<(String, String)> 
     entries.push((
         strings.ui("ui.dossier.prep.title").to_owned(),
         prep.join("\n"),
+    ));
+
+    // The pack spelled out. The sidebar has room for names only, so this is
+    // where a player finds out what a name is for.
+    let mut pack: Vec<String> = Vec::new();
+    for (item, count) in &state.hunter.inventory {
+        let Some(def) = sim.catalogue.items.get(item) else {
+            continue;
+        };
+        let name = strings.get(&def.name);
+        let name = if *count > 1 {
+            format!("{name} x{count}")
+        } else {
+            name.to_owned()
+        };
+        pack.push(strings.ui_fill(
+            "ui.dossier.pack.entry",
+            &[("item", &name), ("what", strings.get(&def.description))],
+        ));
+    }
+    if pack.is_empty() {
+        pack.push(strings.ui("ui.dossier.pack.empty").to_owned());
+    }
+    entries.push((
+        strings.ui("ui.dossier.pack.title").to_owned(),
+        pack.join("\n"),
     ));
 
     entries

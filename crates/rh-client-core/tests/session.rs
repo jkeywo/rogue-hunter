@@ -305,14 +305,25 @@ fn pointing_at_distant_ground_walks_the_whole_way_there() {
     );
     client.handle(Intent::TravelTo(exit));
 
+    // The intent takes the first step itself; the rest are paced by the
+    // client so the player watches the hunter walk rather than teleport.
+    let first = client.run.as_ref().expect("run").sim.state.hunter.pos;
+    assert_ne!(first, start, "the walk intent takes the first step");
+    assert_eq!(start.distance(first), 1, "and only the first step");
+    for _ in 0..64 {
+        if !client.step_walk() {
+            break;
+        }
+    }
+
     let after = client.run.as_ref().expect("run").sim.state.hunter.pos;
-    assert_ne!(after, start, "one walk intent should cover ground");
     assert!(
         start.distance(after) > 1 || after == exit,
-        "a walk should be more than the single step a click used to take"
+        "pumped to completion, a walk covers ground"
     );
     // Arriving clears the target; being interrupted keeps it, so the walk can
-    // be picked up rather than re-aimed.
+    // be picked up rather than re-aimed. Either way the walking has stopped.
+    assert!(!client.walking(), "a finished walk asks for no more ticks");
     if after == exit {
         assert_eq!(client.travel_target, None, "arrival clears the target");
     } else {
@@ -332,6 +343,11 @@ fn an_interrupted_walk_is_offered_again_rather_than_re_aimed() {
         run.sim.world.map(run.sim.state.current_map).exits[0].at
     };
     client.handle(Intent::TravelTo(exit));
+    for _ in 0..64 {
+        if !client.step_walk() {
+            break;
+        }
+    }
     if client.travel_target.is_none() {
         // It arrived first go; nothing to resume, which is the other branch.
         return;
@@ -460,7 +476,11 @@ fn the_dossier_synthesises_what_is_known() {
         rh_client_core::view::ScreenView::List { title, entries, .. } => {
             // Bracketed: placeholder copy from the string table.
             assert_eq!(title, "[The Case So Far]");
-            assert_eq!(entries.len(), 3, "the quarry, the leads, the preparations");
+            assert_eq!(
+                entries.len(),
+                4,
+                "the quarry, the leads, the preparations, the pack"
+            );
             for (heading, body) in &entries {
                 assert!(heading.starts_with('['), "unbracketed heading: {heading}");
                 assert!(!body.is_empty(), "{heading} should say something");
@@ -831,4 +851,60 @@ fn the_save_follows_the_run_and_only_the_run() {
     assert_eq!(client.save_action(), SaveAction::Write(code.clone()));
     client.handle(Intent::Grimoire);
     assert_eq!(client.save_action(), SaveAction::Write(code));
+}
+
+#[test]
+fn the_splash_cycles_the_control_scheme_in_place() {
+    let mut client = session();
+    let before = client.controls;
+    // The last splash row is a setting, not a destination.
+    client.handle(Intent::Select(3));
+    assert!(
+        matches!(client.screen, Screen::Splash { .. }),
+        "cycling the scheme should not leave the splash"
+    );
+    assert_ne!(client.controls, before, "the row cycles the scheme");
+    client.handle(Intent::Select(3));
+    assert_eq!(client.controls, before, "and cycles back round");
+}
+
+#[test]
+fn the_guide_says_how_a_hunt_is_solved() {
+    let mut client = run_on_seed("11");
+    client.handle(Intent::Guide);
+    assert!(matches!(client.screen, Screen::Guide { .. }));
+    match client.view().screen {
+        rh_client_core::view::ScreenView::List { title, entries, .. } => {
+            assert_eq!(title, "[How a Hunt Is Solved]");
+            assert!(entries.len() >= 6, "the guide should cover the whole hunt");
+            for (heading, body) in &entries {
+                assert!(heading.starts_with('['), "unbracketed heading: {heading}");
+                assert!(!body.is_empty(), "{heading} should say something");
+            }
+        }
+        other => panic!("expected the guide list, got {other:?}"),
+    }
+    // It closes the way every other reference screen does.
+    client.handle(Intent::Cancel);
+    assert!(matches!(client.screen, Screen::Run));
+}
+
+#[test]
+fn the_dossier_says_what_each_carried_item_is_for() {
+    let client = run_on_seed("11");
+    let pack = match client.view().screen {
+        rh_client_core::view::ScreenView::Run(run) => run
+            .inventory
+            .into_iter()
+            .map(|item| item.description)
+            .collect::<Vec<_>>(),
+        other => panic!("expected the run view, got {other:?}"),
+    };
+    assert!(!pack.is_empty(), "the hunter starts with something");
+    for description in &pack {
+        assert!(
+            description.starts_with('['),
+            "every pack line carries its description: {description:?}"
+        );
+    }
 }

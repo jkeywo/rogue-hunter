@@ -250,6 +250,22 @@ grimoire.entries.witch.body,Grimoire entry body text,"[Not a hag on a heath — 
 grimoire.entries.witch.title,Grimoire entry title,[Of the Witch]
 grimoire.entries.wolf.body,Grimoire entry body text,"[Honest beasts, if hungry ones. They come straight on and die like anything else. When wolves grow bold near a settlement, ask what emboldened them.]"
 grimoire.entries.wolf.title,Grimoire entry title,[Of Wolves]
+guide.how-it-began.body,"Guide entry body, shown when the entry is selected","[Every case has a beginning, and the beginning decides what your weapon must be quenched in. An old curse answers to what the parish blessed long ago. A wrong done between the living answers to earth from the wronged one's own plot. A broken compact answers to the seal that sealed it.|Read the beginning before you light the forge. You can carry all three reagents and be certain — but you will pay for that certainty in daylight, and daylight is the one thing you cannot craft.]"
+guide.how-it-began.title,"Guide entry title, listed on the guide screen",[How It Began]
+guide.if-it-goes-wrong.body,"Guide entry body, shown when the entry is selected","[There is always a second way through. Every case is built so that losing an informant, or a route, or a fight, leaves another road open — you will not be shut out of a case by one bad afternoon.|Attacking a villager is the exception. Do that and the settlement closes to you, prices rise, and whatever that person knew goes with them. Be certain before you draw on somebody with a face.]"
+guide.if-it-goes-wrong.title,"Guide entry title, listed on the guide screen",[If It Goes Wrong]
+guide.naming-the-thing.body,"Guide entry body, shown when the entry is selected","[You cannot hunt what you have not named. Naming takes two proofs, and at least one of them must rule something out.|A sign that merely agrees with your suspicion is not enough, however many you gather: three villagers all saying it felt wrong is three of the same nothing. What you need is the sign that says it cannot be the other thing — tracks that turn into bootprints, steel that turned aside, ground nobody has disturbed. Look for the clue that eliminates, and take the corroborating one on the way past.]"
+guide.naming-the-thing.title,"Guide entry title, listed on the guide screen",[Naming the Thing]
+guide.the-clock.body,"Guide entry body, shown when the entry is selected","[Travelling between the settlement, the wood and the outlying site costs a day. Nothing else does — walking about within one place is free, and so is talking, looking, and thinking.|So the expensive decision is never which clue to take. It is which map to be standing on. Plan your day around the trip, and do everything a place owes you before you leave it.]"
+guide.the-clock.title,"Guide entry title, listed on the guide screen",[The Clock]
+guide.the-counter.body,"Guide entry body, shown when the entry is selected","[Each kind of thing has one kind of death. A beast that mends itself needs silver. A hexed neighbour needs cold iron, dug from a bog and never near a fire. The risen dead need consecrated ground or a charm to strip their shadow.|Gather the makings, take them to a forge, and quench the work in what the beginning demands. Go to the final night without the counter in your pack and you are not hunting; you are visiting.]"
+guide.the-counter.title,"Guide entry title, listed on the guide screen",[The Counter]
+guide.the-hunt-itself.body,"Guide entry body, shown when the entry is selected","[When you have the name and the counter, go to it. A thing asleep in its grave takes the first blow for free, and that blow is worth more than any other you will land. A thing wearing a neighbour's face must be confronted where it stands.|Watch what it telegraphs. Nothing in this valley kills you without first telling you it is about to.]"
+guide.the-hunt-itself.title,"Guide entry title, listed on the guide screen",[The Hunt Itself]
+guide.the-shape-of-it.body,"Guide entry body, shown when the entry is selected","[Six days, three places, one thing killing people. You win by proving what it is, preparing the one thing that kills it, and then going to where it sleeps. You lose by running out of days. Everything else is detail.|Nothing you learn is ever lost. Dying costs you a day and nothing else — not your findings, not your pack. Days are the only thing you cannot get back, so spend them on work that narrows the answer.]"
+guide.the-shape-of-it.title,"Guide entry title, listed on the guide screen",[The Shape of a Hunt]
+guide.what-it-is-working-toward.body,"Guide entry body, shown when the entry is selected","[The thing in the valley is not merely feeding; it is doing something, and on the fourth day it will do more of it. Find the sign that says which, and you will know where to go to blunt it before it lands.|Pre-empting costs you a trip and a point. Not pre-empting costs you a stronger quarry on the last night. Neither is wrong, but choose on purpose.]"
+guide.what-it-is-working-toward.title,"Guide entry title, listed on the guide screen",[What It Is Working Toward]
 hunters.huntress.manoeuvres.aim.description,"Manoeuvre description, shown when inspecting the action",[Steady the flintlock. Your next ranged shot this encounter cannot miss.]
 hunters.huntress.manoeuvres.aim.name,"Name of a hunter manoeuvre, shown in the action list",[Aim]
 hunters.huntress.manoeuvres.power-attack.description,"Manoeuvre description, shown when inspecting the action",[Put your weight behind the next blow. Your next melee strike deals half again its damage.]
@@ -556,53 +572,37 @@ npcs.secrets.secret-love.text,Journal text when an NPC's secret is uncovered,"[{
 npcs.secrets.skimming-tithes.name,"Name of an NPC secret, shown in the journal",[Skimmed Tithes]
 npcs.secrets.skimming-tithes.text,Journal text when an NPC's secret is uncovered,"[{npc} has been thinning the tithe-box for years, a penny at a time.]"
 openings.conditions.a-soft-winter.body.1,"Valley-condition paragraph, shown as the run begins","[It is a soft winter, all mud and no frost, and the valley has the sulky look of a place that would rather be under snow.]"
-openings.conditions.already-dark.body.1,"Valley-condition paragraph, shown as the run begins","[You misjudged the road and come in well after dark, which no hunter does twice on purpose.]"
-openings.conditions.already-dark.body.2,"Valley-condition paragraph, shown as the run begins","[There is no moon worth the name. You will be working close tonight, and close is where the disadvantage is.]"
-openings.conditions.an-open-winter.body.1,"Valley-condition paragraph, shown as the run begins","[It is an open winter, the roads hard and clear and passable all the way up the valley. Whatever else this place has gone wrong at, it has not gone wrong at the weather.]"
-openings.conditions.an-open-winter.body.2,"Valley-condition paragraph, shown as the run begins",[You can get about. That is not nothing; most of this trade is getting about.]
+openings.conditions.already-dark.body.1,"Valley-condition paragraph, shown as the run begins","[You misjudged the road and come in well after dark, with no moon worth the name. You will be working close tonight, and close is where the disadvantage is.]"
+openings.conditions.an-open-winter.body.1,"Valley-condition paragraph, shown as the run begins","[It is an open winter, the roads hard and clear the length of the valley. You can get about, which is not nothing — most of this trade is getting about.]"
 openings.conditions.at-dusk.body.1,"Valley-condition paragraph, shown as the run begins","[You come in at dusk, with the light going amber and then going altogether, and the valley folding itself up for the night rather faster than it needs to.]"
-openings.conditions.expected-and-provided-for.body.1,"Valley-condition paragraph, shown as the run begins","[Somebody here has done this before. There is a room held for you, and on the table in it a stoppered bottle of the right sort, put by without being asked for.]"
-openings.conditions.expected-and-provided-for.body.2,"Valley-condition paragraph, shown as the run begins","[You do not find out who. They are not taking credit for it, which tells you they expect it to be needed.]"
+openings.conditions.expected-and-provided-for.body.1,"Valley-condition paragraph, shown as the run begins","[Somebody here has done this before: a room held for you, and on the table a stoppered bottle of the right sort, put by without being asked for and without anyone taking the credit.]"
 openings.conditions.first-light.body.1,"Valley-condition paragraph, shown as the run begins","[You come in at first light, which is the honest hour to arrive somewhere — early enough to be seen doing it, late enough not to wake anybody.]"
 openings.conditions.fresh-from-another.body.1,"Valley-condition paragraph, shown as the run begins","[You are barely a fortnight out of the last one, and it has not finished with you yet. You still check doorways. You will do that for a while.]"
 openings.conditions.high-summer.body.1,"Valley-condition paragraph, shown as the run begins","[High summer, and too hot for the time of year. The stock are in the shade and the flies are at everything, and the smell reaches you well before {place} does.]"
 openings.conditions.incurious.body.1,"Valley-condition paragraph, shown as the run begins","[Nobody much minds that you are here. That is worse than suspicion, in its way — a valley this used to bad news has been getting it a while.]"
 openings.conditions.known-by-reputation.body.1,"Valley-condition paragraph, shown as the run begins","[Somebody here has heard of you, and has told the rest. The version that reached them is flattering and wrong, and you will be corrected out of it by about Thursday.]"
 openings.conditions.openly-glad.body.1,"Valley-condition paragraph, shown as the run begins","[They are glad to see you, openly and a little desperately, and you have learned to distrust that. Glad people expect to be saved on a schedule.]"
-openings.conditions.the-deep-of-winter.body.1,"Valley-condition paragraph, shown as the run begins","[It is the deep of winter, the part with no give in it. The ground rings when you put a heel in it and the light is gone by four.]"
-openings.conditions.the-deep-of-winter.body.2,"Valley-condition paragraph, shown as the run begins","[Everything out here is hungry, and hungry things come further down the valley than they otherwise would. You will not have the wood to yourself.]"
+openings.conditions.the-deep-of-winter.body.1,"Valley-condition paragraph, shown as the run begins","[It is the deep of winter, the part with no give in it, and the light gone by four. Everything out here is hungry, and hungry things come further down the valley than they otherwise would.]"
 openings.conditions.the-middle-of-the-day.body.1,"Valley-condition paragraph, shown as the run begins","[You come in at the flat middle of the day, when a place has nothing to hide behind and shows you exactly how it is doing. It is not doing well.]"
-openings.conditions.the-road-behind-you.body.1,"Valley-condition paragraph, shown as the run begins","[You did not come here cleanly. There is a matter two valleys back that has not been settled, and settling it involves people who are prepared to travel.]"
-openings.conditions.the-road-behind-you.body.2,"Valley-condition paragraph, shown as the run begins","[They will not come into the settlement. The roads between, though, are theirs as much as anyone's.]"
+openings.conditions.the-road-behind-you.body.1,"Valley-condition paragraph, shown as the run begins","[You did not come here cleanly: there is a matter two valleys back that involves people prepared to travel. They will not come into the settlement, but the roads between are theirs as much as anyone's.]"
 openings.conditions.the-thaw.body.1,"Valley-condition paragraph, shown as the run begins","[The thaw is on. Everything is running — ditches, gutters, the fields themselves — and the whole valley sounds like something being poured away.]"
-openings.conditions.the-whole-day-ahead.body.1,"Valley-condition paragraph, shown as the run begins","[You come in with the whole of the day still in front of you and the light as good as it gets here, which is not very, but it is honest.]"
-openings.conditions.the-whole-day-ahead.body.2,"Valley-condition paragraph, shown as the run begins",[You will see what there is to see today. Tomorrow can look after itself.]
-openings.conditions.unwelcome.body.1,"Valley-condition paragraph, shown as the run begins","[Word went ahead of you and it was not kind. Whoever sent it did a thorough job: you are a stranger who has come to make trouble out of a run of hard luck, and they have decided that before you opened your mouth.]"
-openings.conditions.unwelcome.body.2,"Valley-condition paragraph, shown as the run begins","[Everything you want from these people, you will pay more for. Nobody will sell you so much as powder.]"
+openings.conditions.the-whole-day-ahead.body.1,"Valley-condition paragraph, shown as the run begins","[You come in with the whole of the day still in front of you, and the light as good as it gets here — which is not very, but it is honest. You will see what there is to see.]"
+openings.conditions.unwelcome.body.1,"Valley-condition paragraph, shown as the run begins","[Word went ahead of you and it was not kind — a stranger come to make trouble out of a run of hard luck, decided before you opened your mouth. Everything you want from these people you will pay more for, and nobody will sell you so much as powder.]"
 openings.conditions.wary.body.1,"Valley-condition paragraph, shown as the run begins","[They are wary of you, which is sensible of them. Doors do not shut as you pass, but they are held, and the holding is the message.]"
 openings.conditions.wholly-unknown.body.1,"Valley-condition paragraph, shown as the run begins","[Nobody here has heard of you, which is restful. You get to be exactly as good as you turn out to be, with nothing to live up to and nothing to live down.]"
-openings.conditions.your-kit-in-order.body.1,"Valley-condition paragraph, shown as the run begins","[You came in with everything where it should be — powder dry, ball counted, nothing left behind at the last place because you were leaving it in a hurry.]"
-openings.conditions.your-kit-in-order.body.2,"Valley-condition paragraph, shown as the run begins",[It is a small thing to be pleased about. Small things are most of what a hunter gets.]
+openings.conditions.your-kit-in-order.body.1,"Valley-condition paragraph, shown as the run begins","[You came in with everything where it should be: powder dry, ball counted, nothing left behind at the last place. A small thing to be pleased about, and small things are most of what a hunter gets.]"
 openings.openings.gathered-while-walking.body.1,"Opening narration paragraph, shown as the run begins","[You did not come into the valley empty-handed. There had been one stop on the way in, and it had been worth making.]"
 openings.openings.given-a-direction.body.1,"Opening narration paragraph, shown as the run begins","[{npc} met you on the way in and gave you a direction, which is more than most will give a stranger and considerably less than you are going to need.]"
-openings.openings.nobody-sent-for-you.body.1,"Opening narration paragraph, shown as the run begins",[Nobody sent for you. You heard it third-hand at a market forty miles off — a valley losing people and calling it accidents — and something about the arithmetic would not leave you alone.]
-openings.openings.nobody-sent-for-you.body.2,"Opening narration paragraph, shown as the run begins","[So you have no fee, no authority, and nobody expecting you. On the other hand, whatever is here has not been warned.]"
+openings.openings.nobody-sent-for-you.body.1,"Opening narration paragraph, shown as the run begins","[Nobody sent for you; you heard it third-hand at a market forty miles off, a valley losing people and calling it accidents. So you have no fee and no authority — but whatever is here has not been warned.]"
 openings.openings.noticed-on-arrival.body.1,"Opening narration paragraph, shown as the run begins","[{clue} caught your eye on the way in — not enough to stop for long, enough to know where you will be going back to.]"
-openings.openings.passing-through.body.1,"Opening narration paragraph, shown as the run begins",[You were going somewhere else. You are not going there now.]
-openings.openings.passing-through.body.2,"Opening narration paragraph, shown as the run begins","[It was the third thing that did it: one is a story, two is a coincidence, three is a pattern, and you have never once been wrong about the third thing.]"
+openings.openings.passing-through.body.1,"Opening narration paragraph, shown as the run begins","[You were going somewhere else. You are not going there now: one is a story, two is a coincidence, three is a pattern, and you have never once been wrong about the third thing.]"
 openings.openings.pressed-upon-you.body.1,"Opening narration paragraph, shown as the run begins","[{npc} had business with you before you were properly arrived, and you came away from it carrying something.]"
-openings.openings.read-it-on-the-way-past.body.1,"Opening narration paragraph, shown as the run begins","[You stopped at {clue} before you were properly arrived, on the sound principle that a hunter who walks past the first strange thing will be shown the second at a worse moment.]"
-openings.openings.read-it-on-the-way-past.body.2,"Opening narration paragraph, shown as the run begins","[You had your look. What you read there is in your head now, and the valley cannot unsay it.]"
-openings.openings.sent-for.body.1,"Opening narration paragraph, shown as the run begins","[The letter reached you at Wenlock, folded twice and written in three hands, which is how a valley writes when nobody wants their name at the bottom of it.]"
-openings.openings.sent-for.body.2,"Opening narration paragraph, shown as the run begins","[It says: come. It does not say what for. That much they will tell you to your face, or not at all.]"
-openings.openings.talked-at-on-the-road.body.1,"Opening narration paragraph, shown as the run begins","[{npc} found you before you found the valley, waiting up at the ford with the look of somebody who had rehearsed it on the walk down.]"
-openings.openings.talked-at-on-the-road.body.2,"Opening narration paragraph, shown as the run begins","[It came out in a rush, and then they were away up the bank before you could ask a second question. It is not proof. But it is yours already, and nothing that happens in this valley now can take it back out of your head.]"
-openings.openings.the-last-one-left.body.1,"Opening narration paragraph, shown as the run begins","[There was a hunter here before you. The parish is vague about what became of him, in the particular way that means they know exactly.]"
-openings.openings.the-last-one-left.body.2,"Opening narration paragraph, shown as the run begins",[His kit is in the inn's back room. Nobody has touched it. Nobody will meet your eye about it either.]
-openings.openings.the-parish-pays.body.1,"Opening narration paragraph, shown as the run begins","[The parish put up the money, which means the parish has decided this is real, which means it has been real for longer than anyone will admit to your face.]"
-openings.openings.the-parish-pays.body.2,"Opening narration paragraph, shown as the run begins","[They will be polite. They will be helpful. They will not be quick, and you do not have slow.]"
-openings.openings.the-road-in.body.1,"Opening narration paragraph, shown as the run begins","[You came in along the drove road at first light, past a byre with the door off its hinges and nothing living inside it.]"
-openings.openings.the-road-in.body.2,"Opening narration paragraph, shown as the run begins",[Whatever walks here has been walking a while. You have six days. The valley has already spent some of them pretending otherwise.]
+openings.openings.read-it-on-the-way-past.body.1,"Opening narration paragraph, shown as the run begins","[You stopped at {clue} before you were properly arrived, on the sound principle that a hunter who walks past the first strange thing is shown the second at a worse moment. What you read there is in your head now, and the valley cannot unsay it.]"
+openings.openings.sent-for.body.1,"Opening narration paragraph, shown as the run begins","[The letter reached you at Wenlock, folded twice and written in three hands. It says: come. It does not say what for — that much they will tell you to your face, or not at all.]"
+openings.openings.talked-at-on-the-road.body.1,"Opening narration paragraph, shown as the run begins","[{npc} found you at the ford before you found the valley, said it all in a rush, and was away up the bank before you could ask a second question. It is not proof — but it is yours already, and nothing that happens here can take it back out of your head.]"
+openings.openings.the-last-one-left.body.1,"Opening narration paragraph, shown as the run begins","[There was a hunter here before you, and the parish is vague about what became of him in the particular way that means they know exactly. His kit is still in the inn's back room, and nobody will meet your eye about it.]"
+openings.openings.the-parish-pays.body.1,"Opening narration paragraph, shown as the run begins","[The parish put up the money, which means the parish has decided this is real, and has known it rather longer than anyone will admit to your face. They will be polite, and helpful, and not quick.]"
+openings.openings.the-road-in.body.1,"Opening narration paragraph, shown as the run begins","[You came in along the drove road at first light, past a byre with the door off its hinges and nothing living inside it. Whatever walks here has been walking a while.]"
 origins.ancient-curse.counter-flavour,Flavour shown when preparing the reagent that counters this origin,"[You quench the work in hallowed water. Against a thing this old, only what the parish blessed will hold an edge.]"
 origins.ancient-curse.description,"Origin description, shown in the case report and grimoire","[The evil is old. Its signs lie in parish records, weathered stones, and dreams that are not dreams. What was cursed long ago is undone only by what was blessed long ago.]"
 origins.ancient-curse.name,"Name of a case origin, shown once proven",[An Ancient Curse]
@@ -703,6 +703,10 @@ ui.confirm.travel,Confirmation asked before travelling: says what the day costs,
 ui.confirm.travel-event,Added to the travel confirmation when the quarry's scheme moves that day,[Something of the quarry's comes due that day.]
 ui.confirm.travel-final,Added to the travel confirmation when the day spent begins the final hunt,[There will be no days left after it. The hunt begins.]
 ui.confirm.yes,Row that goes ahead with a confirmed action,[Go]
+ui.controls.numpad,"Name of the numpad control scheme, shown on the splash",[Numpad]
+ui.controls.numpad.steer,Splash key-bindings table: how the numpad scheme steers,[Arrows / numpad]
+ui.controls.roguelike,"Name of the roguelike control scheme, shown on the splash",[Roguelike (hjkl)]
+ui.controls.roguelike.steer,Splash key-bindings table: how the roguelike scheme steers,[Arrows / numpad / hjkl+yubn]
 ui.direction.snare,Prompt while choosing where to set a snare,[Set snare: which direction?]
 ui.direction.sprint,Prompt while choosing a direction to sprint,[Sprint: which direction?]
 ui.dossier.clock,Line in the dossier giving the day and the quarry's threat tier,[Day {day} of {total}. The quarry stands at tier {tier}.]
@@ -711,6 +715,9 @@ ui.dossier.leads.empty,Shown in the dossier when no leads are outstanding,[Nothi
 ui.dossier.leads.entry,One outstanding lead in the dossier,[{name} — {place}]
 ui.dossier.leads.title,Dossier section heading: leads not yet worked,[Leads Outstanding]
 ui.dossier.leads.unaffordable,Appended to a dossier lead the hunter cannot currently pay for,[ — you cannot pay it yet]
+ui.dossier.pack.empty,Dossier pack section when the hunter carries nothing,[You are carrying nothing at all.]
+ui.dossier.pack.entry,"One pack line in the dossier; {item} is the name, {what} what it does",[{item} — {what}]
+ui.dossier.pack.title,"Dossier section heading: the pack, item by item",[The Pack]
 ui.dossier.prep.consecrated,Dossier line when the church ground has been warded,[The church ground is warded.]
 ui.dossier.prep.holding,Dossier line listing the counters in the pack,[In the pack: {items}]
 ui.dossier.prep.nothing,Dossier line when the pack holds nothing that would bite,[The pack holds nothing that would bite.]
@@ -742,6 +749,7 @@ ui.grave.empty,Inspect line for an empty grave,[an empty grave]
 ui.grave.mundane,Inspect line for an ordinary grave,[an honest burial]
 ui.grave.villain,Inspect line for the grave the villain rests in,[the villain's resting place]
 ui.grimoire.title,Title of the grimoire screen,[The Grimoire]
+ui.guide.title,Title of the hunter's guide screen,[How a Hunt Is Solved]
 ui.hint.case-report-footer,Footer on the case report telling the player how to leave,[Enter to return to the fireside.]
 ui.hint.direction,Hint shown while waiting for a direction key,[press a direction key]
 ui.hint.first.day-passed,"First-time hint, shown once after the first day is spent",[A day is gone. You have six. Travel is what spends them; walking about the valley is free.]
@@ -767,7 +775,7 @@ ui.keys.cancel.keys,"Splash screen key-bindings table, keys column",[Esc]
 ui.keys.consume,"Splash screen key-bindings table, action column",[Drink a wound draught / press a binding charm]
 ui.keys.consume.keys,"Splash screen key-bindings table, keys column",[q / c]
 ui.keys.fire,"Splash screen key-bindings table, action column",[Fire the flintlock / fire a silver bullet]
-ui.keys.fire.keys,"Splash screen key-bindings table, keys column",[f / F]
+ui.keys.fire.keys,"Splash screen key-bindings table, keys column",[f / {silver}]
 ui.keys.interact,"Splash screen key-bindings table, action column","[Interact: investigate, talk, travel, craft, loot]"
 ui.keys.interact.keys,"Splash screen key-bindings table, keys column",[e / Enter]
 ui.keys.look,"Splash screen key-bindings table, action column",[Look mode: detach a cursor to examine any tile]
@@ -775,13 +783,13 @@ ui.keys.look.keys,"Splash screen key-bindings table, keys column",[;]
 ui.keys.mouse,"Splash screen key-bindings table, action column",[Hover any tile to inspect it; click the map or an action to act]
 ui.keys.mouse.keys,"Splash screen key-bindings table, keys column",[Mouse]
 ui.keys.move,"Splash screen key-bindings table, action column",[Move (8 directions) / melee an adjacent enemy]
-ui.keys.move.keys,"Splash screen key-bindings table, keys column",[Arrows / numpad / hjkl+yubn]
-ui.keys.screens,"Splash screen key-bindings table, action column",[The Case / Grimoire / Faces / the Valley / the Record]
-ui.keys.screens.keys,"Splash screen key-bindings table, keys column",[d / g / r / v / L]
+ui.keys.move.keys,"Splash screen key-bindings table, keys column",[{steer}]
+ui.keys.screens,"Splash screen key-bindings table, action column",[The Case / Grimoire / How to Hunt / Faces / the Valley / the Record]
+ui.keys.screens.keys,"Splash screen key-bindings table, keys column",[d / g / i / r / v / {log}]
 ui.keys.sight,"Splash screen key-bindings table, action column",[Put the cursor on the next thing in sight]
 ui.keys.sight.keys,"Splash screen key-bindings table, keys column",[Tab]
 ui.keys.tactics,"Splash screen key-bindings table, action column",[Set Snare / Killing Blow (Physical)]
-ui.keys.tactics.keys,"Splash screen key-bindings table, keys column",[x / K]
+ui.keys.tactics.keys,"Splash screen key-bindings table, keys column",[x / {killing}]
 ui.keys.wait,"Splash screen key-bindings table, action column",[Wait a turn]
 ui.keys.wait.keys,"Splash screen key-bindings table, keys column",[Space / .]
 ui.keys.walk,"Splash screen key-bindings table, action column","[Walk to the look cursor, stopping if anything happens]"
@@ -848,6 +856,7 @@ ui.sight.vulnerable,Appended in the in-sight panel when the villain can be wound
 ui.splash.intro.1,"Splash screen opening paragraph, first of three","[Something is killing the valley folk, and the valley has sent for you.]"
 ui.splash.intro.2,"Splash screen opening paragraph, second of three: the shape of a run","[You have six days. Walk the settlement, the deep wood, and the forsaken manor; trade words and watch faces; read the signs the thing cannot help but leave. Prove its name twice over, prepare its death, and take the hunt to it — or let the sixth night come, and it will take the hunt to you.]"
 ui.splash.intro.3,"Splash screen opening paragraph, third of three: what death costs","[Everything you learn, you keep. Even dying only costs you a day. Days are the one thing you cannot craft.]"
+ui.splash.option.controls,Splash screen menu option: cycle the control scheme; {scheme} is the current one,[Controls: {scheme}]
 ui.splash.option.enter-seed,Splash screen menu option: start a run from a typed seed,[Enter Seed]
 ui.splash.option.new-run,Splash screen menu option: start a fresh run,[New Run]
 ui.splash.option.paste-code,Splash screen menu option: restore a run from a share code,[Paste Replay Code]

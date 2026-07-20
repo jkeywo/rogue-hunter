@@ -31,6 +31,8 @@ pub struct Catalogue {
     pub maps: BTreeMap<String, MapTemplate>,
     pub gathers: BTreeMap<String, GatherDef>,
     pub grimoire: Vec<GrimoireEntry>,
+    /// How a hunt is solved: method, as against the grimoire's lore.
+    pub guide: Vec<GrimoireEntry>,
     /// How runs open: generic hooks, and prose for a banked node.
     pub openings: Vec<OpeningDef>,
     /// What the valley is like on arrival; a run draws exactly one.
@@ -117,6 +119,7 @@ impl Catalogue {
             .ok_or_else(|| ContentError::MissingFile("hunters/*.toml".to_owned()))?;
 
         let grimoire_file: GrimoireFile = parse("grimoire.toml", text("grimoire.toml")?)?;
+        let guide_file: GrimoireFile = parse("guide.toml", text("guide.toml")?)?;
         let openings_file: OpeningsFile = parse("openings.toml", text("openings.toml")?)?;
         let catalogue = Self {
             balance: parse("balance.toml", text("balance.toml")?)?,
@@ -134,6 +137,7 @@ impl Catalogue {
             maps,
             gathers: parse("gathers.toml", text("gathers.toml")?)?,
             grimoire: grimoire_file.entries,
+            guide: guide_file.entries,
             openings: openings_file.openings,
             conditions: openings_file.conditions,
             machines: parse("machines.toml", text("machines.toml")?)?,

@@ -209,7 +209,7 @@ fn draw_run(frame: &mut Frame, run: &RunView, status: &str, labels: &PanelLabels
         Style::default().add_modifier(Modifier::UNDERLINED),
     ));
     for item in &run.inventory {
-        side.push(Line::raw(format!("  {item}")));
+        side.push(Line::raw(format!("  {}", item.label)));
     }
     frame.render_widget(
         Paragraph::new(Text::from(side))
