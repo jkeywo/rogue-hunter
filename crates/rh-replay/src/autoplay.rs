@@ -108,7 +108,18 @@ pub fn autoplay(session: &mut RunSession) -> Option<Outcome> {
 /// Drive the session and report how it went, in enough detail to say which
 /// stage of the run lost it.
 pub fn autoplay_reported(session: &mut RunSession) -> AutoplayReport {
-    let route = session.sim.world.certified_routes.first();
+    // Follow the route that reaches a certified hunt soonest, not the one the
+    // generator happened to list first. An earlier hunt is a shorter journey
+    // through a deadly valley and a fight at a lower threat tier - both of
+    // which a frail hunter feels most. Ties break toward the surer estimate.
+    // The two routes are certified to be independently walkable, so choosing
+    // between them is the driver's to make and changes nothing about the world.
+    let route = session
+        .sim
+        .world
+        .certified_routes
+        .iter()
+        .min_by_key(|route| (route.ready_by_turn, u16::MAX - route.viability_permille));
     let certified_permille = route.map(|route| route.viability_permille).unwrap_or(0);
     let steps: Vec<RouteStep> = route.map(|route| route.steps.clone()).unwrap_or_default();
     let route_steps_total = steps.len();
@@ -350,10 +361,17 @@ impl Bot {
             }
         }
 
-        // Ordinary enemies that have our scent get put down before they whittle us.
+        // Ordinary enemies that have our scent. How to answer them depends on
+        // whether this hunter can win a brawl: a sturdy one with a finisher
+        // clears them so they stop whittling her, but a frail one who trades
+        // blow for blow against a pack loses the race and, with it, the days
+        // the route was counting on. The diagnosis found the Occultist doing
+        // exactly that — dying to thralls on the road, respawning, and
+        // reaching the fight too late and too poor. A frail hunter kites and
+        // keeps moving instead; the pack falls behind and the route gets done.
         let map = session.sim.state.current_map;
         let hunter = session.sim.state.hunter.pos;
-        let threat = session
+        let awake: Vec<(rh_core::state::ActorId, Point)> = session
             .sim
             .state
             .actors
@@ -365,15 +383,31 @@ impl Bot {
                     && actor.kind != ActorKind::Villain
                     && actor.pos.distance(hunter) <= 6
             })
-            .min_by_key(|actor| (actor.pos.distance(hunter), actor.id.0))
-            .map(|actor| (actor.id, actor.pos));
-        if let Some((enemy_id, enemy_pos)) = threat {
-            if hunter.is_adjacent(enemy_pos) {
+            .map(|actor| (actor.id, actor.pos))
+            .collect();
+        let nearest = awake
+            .iter()
+            .min_by_key(|(id, pos)| (pos.distance(hunter), id.0))
+            .copied();
+        if let Some((enemy_id, enemy_pos)) = nearest {
+            let adjacent_count = awake
+                .iter()
+                .filter(|(_, pos)| hunter.is_adjacent(*pos))
+                .count();
+            // Frail is measured against the thing that kills her: a pack does
+            // its full melee to her every turn, so what matters is whether she
+            // can out-heal or out-kill it, which is a signature or the health
+            // to trade. Without either, she does not stand in it.
+            let brawler = session.sim.catalogue.hunter.physical_cap >= 2
+                || session.sim.state.hunter.max_hp >= 12;
+            let outnumbered = adjacent_count >= 2;
+
+            if hunter.is_adjacent(enemy_pos) && (brawler || !outnumbered) {
                 let _ = session.apply(Command::Melee(Target::Actor(enemy_id)));
                 return;
             }
-            // Answer ranged harassment in kind, keeping one shot in reserve
-            // to cast the silver bullet around when the beast demands it.
+            // Shoot the nearest while it closes, keeping a shot in reserve to
+            // cast silver around a regenerating beast when the moment comes.
             let villain_def = session.sim.villain_def();
             let needs_reserve = villain_def.regeneration.is_some()
                 && session.sim.state.hunter.item_count("silver-bullet") == 0;
@@ -388,8 +422,21 @@ impl Bot {
             {
                 return;
             }
-            self.walk_toward(session, enemy_pos, true);
-            return;
+            // Out of shots. A brawler closes; a frail hunter breaks contact and
+            // presses on with the route rather than standing to be surrounded.
+            if brawler {
+                self.walk_toward(session, enemy_pos, true);
+                return;
+            }
+            if outnumbered && self.step_away(session, enemy_pos) {
+                return;
+            }
+            // One foe and no shots: fall through to the route, which walks her
+            // onward. If it cannot, meet the one enemy rather than dithering.
+            if self.step_index >= self.steps.len() {
+                self.walk_toward(session, enemy_pos, true);
+                return;
+            }
         }
 
         // Otherwise: work the certified route, then initiate the hunt.
@@ -513,12 +560,14 @@ impl Bot {
             let hunter = session.sim.state.hunter.pos;
             let distance = hunter.distance(pos);
             let has_silver = session.sim.state.hunter.item_count("silver-bullet") > 0;
-            // Open from range: back off before the aimed silver shot rather
-            // than starting the fight inside the beast's reach.
-            if has_silver && distance < 2 && self.step_away(session, pos) {
-                return;
-            }
-            if has_silver && (2..=6).contains(&distance) {
+            // Open the hunt with an aimed silver shot the moment there is a
+            // line to the host. An earlier version backed off to open from
+            // range first, and when the host held its ground it oscillated
+            // into that step forever - stepping away, being followed, stepping
+            // away - and burned the whole action budget at day zero. She aims
+            // in place and fires from wherever she stands now; the shot reveals
+            // the host and lands the silver on the beast either way.
+            if has_silver && distance <= 6 {
                 if !session.sim.state.hunter.sure_shot
                     && session.sim.state.hunter.stamina >= manoeuvre_cost(session, "aim")
                     && session
@@ -589,7 +638,6 @@ impl Bot {
         let def = session.sim.villain_def().clone();
         let vulnerable = session.sim.villain_is_vulnerable(actor_id);
         let stamina = state.hunter.stamina;
-        let physical = state.hunter.physical;
         let has_charm = state.hunter.item_count("binding-charm") > 0;
         let has_silver = state.hunter.item_count("silver-bullet") > 0;
         let sure_shot = state.hunter.sure_shot;
@@ -755,7 +803,7 @@ impl Bot {
                 .actor(actor_id)
                 .map(|actor| actor.trapped > 0)
                 .unwrap_or(false);
-            if physical >= 1
+            if has_signature(session, "killing-blow")
                 && (dormant || trapped || wounded)
                 && self.try_apply(
                     session,
@@ -777,7 +825,10 @@ impl Bot {
         // has no finisher and little health, so the ground has to do the work
         // the Huntress does with a snare and a killing blow. Hunters without
         // the signature fall through to the snare below.
-        if physical >= 1 && villain_pos.distance(hunter) <= 4 && !dormant {
+        if has_signature(session, "ward-the-ground")
+            && villain_pos.distance(hunter) <= 4
+            && !dormant
+        {
             let already = session
                 .sim
                 .state
@@ -806,7 +857,7 @@ impl Bot {
         }
 
         // Lay a snare on the approach, then close in.
-        if physical >= 1 && villain_pos.distance(hunter) <= 4 && !dormant {
+        if has_signature(session, "set-snare") && villain_pos.distance(hunter) <= 4 && !dormant {
             if let Some(dir) = Direction::toward(hunter, villain_pos) {
                 let snare_at = hunter.step(dir);
                 let already = session
@@ -838,18 +889,27 @@ impl Bot {
     fn travel_toward(&mut self, session: &mut RunSession, destination: MapId) {
         let current = session.sim.state.current_map;
         if current == destination {
-            self.step_index = self.step_index.saturating_add(0);
             return;
         }
-        let exit = session
+        // Head for the next map on the way, which is the destination itself
+        // when there is a direct road and an intermediate hop when there is
+        // not. The world is a small triangle today, but a map whose two exits
+        // both lead to the same neighbour leaves the third reachable only
+        // through it, and the bot used to wait out the clock at a door that
+        // does not go where it wanted rather than take the road that does.
+        let Some(next_hop) = self.next_travel_hop(session, current, destination) else {
+            let _ = session.apply(Command::Wait);
+            return;
+        };
+        let exit_at = session
             .sim
             .world
             .map(current)
             .exits
             .iter()
-            .find(|exit| exit.to_map == destination)
+            .find(|exit| exit.to_map == next_hop)
             .map(|exit| exit.at);
-        let Some(exit_at) = exit else {
+        let Some(exit_at) = exit_at else {
             let _ = session.apply(Command::Wait);
             return;
         };
@@ -866,6 +926,41 @@ impl Bot {
         } else {
             self.walk_toward(session, exit_at, false);
         }
+    }
+
+    /// The first map to travel to on a shortest path from `current` to
+    /// `destination`, by breadth-first search over paired exits. `None` when
+    /// the destination is unreachable, which a well-formed world never is.
+    fn next_travel_hop(
+        &self,
+        session: &RunSession,
+        current: MapId,
+        destination: MapId,
+    ) -> Option<MapId> {
+        // Predecessor per map by index; a handful of maps, so a flat Vec keyed
+        // on MapId.0 is the whole graph. `None` means unvisited.
+        let map_count = session.sim.world.maps.len();
+        let mut came_from: Vec<Option<u8>> = vec![None; map_count];
+        came_from[current.0 as usize] = Some(current.0);
+        let mut queue = VecDeque::from([current]);
+        while let Some(map) = queue.pop_front() {
+            if map == destination {
+                // Walk the predecessors back to the hop that leaves `current`.
+                let mut step = destination.0;
+                while came_from[step as usize] != Some(current.0) {
+                    step = came_from[step as usize]?;
+                }
+                return Some(MapId(step));
+            }
+            for exit in &session.sim.world.map(map).exits {
+                let to = exit.to_map.0 as usize;
+                if came_from[to].is_none() {
+                    came_from[to] = Some(map.0);
+                    queue.push_back(exit.to_map);
+                }
+            }
+        }
+        None
     }
 
     /// Move to stand adjacent to a feature matching the predicate. Returns
@@ -995,6 +1090,23 @@ fn next_step(session: &RunSession, target: Point, adjacent_ok: bool) -> Option<D
 
 /// Stamina cost of a manoeuvre by id, from authored content (so the bot
 /// tracks tuning changes instead of hardcoding costs).
+/// Whether this hunter owns the signature and can pay for it now. The combat
+/// ladder used to gate on `physical >= 1` alone - a check on the pool, not the
+/// kit - so it asked every hunter for the same three abilities regardless of
+/// which she has. Harmless in play (the sim refuses and she falls through) but
+/// it meant the Huntress reached for a ward she has never owned dozens of times
+/// a run. The ladder asks this instead, so a hunter only tries what is hers.
+fn has_signature(session: &RunSession, id: &str) -> bool {
+    session
+        .sim
+        .catalogue
+        .hunter
+        .signatures
+        .iter()
+        .find(|sig| sig.id == id)
+        .is_some_and(|sig| session.sim.state.hunter.physical >= sig.physical_cost)
+}
+
 fn manoeuvre_cost(session: &RunSession, id: &str) -> u8 {
     session
         .sim

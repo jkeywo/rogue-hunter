@@ -55,7 +55,7 @@ entities:
       reads: [authored-content-catalogue]
       validates: [seeded-mystery-generator]
     implementation:
-      status: declared
+      status: confirmed
       target_paths: [crates/rh-core/src/viability.rs, crates/rh-core/src/sim.rs, crates/rh-replay/src/autoplay.rs, content/balance.toml]
       tests: [crates/rh-replay/tests/golden.rs, crates/rh-gen/tests/generator.rs]
 

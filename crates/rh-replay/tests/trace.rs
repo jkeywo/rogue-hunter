@@ -9,10 +9,14 @@ fn trace_seed() {
         .ok()
         .and_then(|value| value.parse().ok())
         .unwrap_or(0);
+    let hunter = std::env::var("RH_DEBUG_HUNTER").unwrap_or_else(|_| "huntress".to_owned());
     let catalogue = rh_content::load_embedded().expect("content");
-    let mut session = RunSession::new(seed, catalogue).expect("run generates");
+    // Reject forward to the same world the corpus scan drove, so a trace of a
+    // losing seed is a trace of the loss the scan reported.
+    let (mut session, used) =
+        RunSession::new_from_viable_seed(seed, catalogue, &hunter).expect("run generates");
     println!(
-        "=== seed {seed}: {} ===",
+        "=== seed {seed} (used {used}) as {hunter}: {} ===",
         session.sim.world.villain.archetype
     );
     for route in &session.sim.world.certified_routes {

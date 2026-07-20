@@ -35,6 +35,51 @@ fn any_sim() -> Sim {
 }
 
 #[test]
+fn a_fallen_hunter_comes_back_clear_of_the_pack() {
+    // Respawning at the settlement door dropped a hunter straight back among
+    // the minions clustered there, so a death begat a death and burned the
+    // days the certified route was counting on. She now returns to the tile
+    // farthest from any waking hostile.
+    let mut sim = any_sim();
+    let settlement = sim.world.map_by_role(rh_content::MapRole::Settlement);
+    let entry = sim.world.map(settlement).entry;
+
+    // A pack waiting on the doorstep, awake and watching.
+    let mut pack = Vec::new();
+    for dir in rh_core::geometry::Direction::ALL {
+        let at = entry.step(dir);
+        if at.in_bounds() {
+            let id =
+                sim.state
+                    .spawn_actor(ActorKind::Enemy("thrall".to_owned()), settlement, at, 5);
+            if let Some(actor) = sim.state.actor_mut(id) {
+                actor.awake = true;
+            }
+            pack.push(at);
+        }
+    }
+    assert!(!pack.is_empty(), "the entry has neighbours to crowd");
+
+    sim.state.final_hunt = false;
+    sim.handle_hunter_death_for_test();
+
+    let landed = sim.state.hunter.pos;
+    let nearest = pack
+        .iter()
+        .map(|hostile| hostile.distance(landed))
+        .min()
+        .unwrap_or(i16::MAX);
+    assert!(
+        nearest > 1,
+        "respawned at {landed:?}, still adjacent to the pack that just killed her"
+    );
+    assert!(
+        landed != entry,
+        "respawned on the very doorstep the minions were clustered at"
+    );
+}
+
+#[test]
 fn soft_signs_alone_cannot_name_the_villain() {
     let mut sim = any_sim();
 

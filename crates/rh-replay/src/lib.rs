@@ -21,8 +21,11 @@ use serde::{Deserialize, Serialize};
 /// Version 2 adds the selected hunter: routes are certified per hunter, so a
 /// seed alone no longer identifies a run. Version 3 prices travel's Mystic
 /// restore into certification (the planner had under-credited it), so which
-/// seeds certify can differ from version 2 worlds.
-pub const REPLAY_VERSION: u8 = 3;
+/// seeds certify can differ from version 2 worlds. Version 4 moves where a
+/// fallen hunter respawns — to the settlement tile farthest from a hostile
+/// rather than the door the map's own minions cluster at — so any version 3
+/// code with a pre-final death would replay from a different position.
+pub const REPLAY_VERSION: u8 = 4;
 
 /// How far `new_from_viable_seed` will walk forward before giving up. Well
 /// above the observed rejection rate, so exhausting it means something is

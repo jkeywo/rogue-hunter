@@ -1619,6 +1619,55 @@ impl Sim {
         }
     }
 
+    /// Where a fallen hunter comes back. The entry tile is where the map's
+    /// own minions cluster, so respawning there dropped her straight back
+    /// among the enemies that had just killed her — a death that begat a death
+    /// and burned the days the certified route was counting on. She now comes
+    /// back at the walkable tile of the settlement farthest from any hostile
+    /// that can see her, falling back to the entry when the map is quiet.
+    fn respawn_tile(&self, map: MapId) -> Point {
+        let entry = self.world.map(map).entry;
+        let hostiles: Vec<Point> = self
+            .state
+            .actors
+            .iter()
+            .filter(|actor| actor.map == map && actor.hp > 0 && actor.awake)
+            .map(|actor| actor.pos)
+            .collect();
+        if hostiles.is_empty() {
+            return entry;
+        }
+        let clearance = |point: Point| {
+            hostiles
+                .iter()
+                .map(|hostile| hostile.distance(point))
+                .min()
+                .unwrap_or(i16::MAX)
+        };
+        let mut best = entry;
+        let mut best_clearance = clearance(entry);
+        for y in 0..crate::geometry::MAP_HEIGHT {
+            for x in 0..crate::geometry::MAP_WIDTH {
+                let point = Point::new(x, y);
+                if !is_walkable(self.state.terrain(&self.world, map, point))
+                    || self.state.tile_occupied(&self.world, map, point)
+                {
+                    continue;
+                }
+                // Tie-break toward the entry so a quiet corner near the door
+                // still beats a far one, keeping respawns from stranding her.
+                let here = clearance(point);
+                if here > best_clearance
+                    || (here == best_clearance && point.distance(entry) < best.distance(entry))
+                {
+                    best = point;
+                    best_clearance = here;
+                }
+            }
+        }
+        best
+    }
+
     pub(crate) fn free_tiles_near(&self, map: MapId, near: Point, radius: i16) -> Vec<Point> {
         let mut tiles: Vec<Point> = Vec::new();
         for dy in -radius..=radius {
@@ -2301,7 +2350,7 @@ impl Sim {
         self.state.deaths = self.state.deaths.saturating_add(1);
         let settlement = self.world.map_by_role(rh_content::MapRole::Settlement);
         self.state.current_map = settlement;
-        self.state.hunter.pos = self.world.map(settlement).entry;
+        self.state.hunter.pos = self.respawn_tile(settlement);
         self.state.hunter.hp = self.state.hunter.max_hp;
         self.clear_encounter_buffs();
         // A lost villain fight sends the villain back to its haunts, healed.
@@ -2344,6 +2393,11 @@ impl Sim {
     #[doc(hidden)]
     pub fn deal_damage_to_actor_for_test(&mut self, id: ActorId, damage: u16, weakness: bool) {
         self.deal_damage_to_actor(id, damage, weakness);
+    }
+
+    #[doc(hidden)]
+    pub fn handle_hunter_death_for_test(&mut self) {
+        self.handle_hunter_death();
     }
 
     #[doc(hidden)]

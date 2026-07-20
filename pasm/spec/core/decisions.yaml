@@ -580,3 +580,27 @@ entities:
       title: A stat check is not a capability check
       summary: "A smaller finding the same instrument turned up, and the mirror image of what was predicted. The combat ladder gates signatures on physical >= 1, which is a check on the pool rather than on the kit, so a hunter is asked for whatever the ladder lists regardless of whether she owns it. The counted refusals show the Huntress reaching for ward-the-ground sixty-six times across the corpus - it is the Occultist's signature and the Huntress has never had it - against thirteen for the Occultist reaching for killing-blow. The fall-through is harmless in play, costing a decision pass rather than an action, which is exactly why it survived: nothing was counting. It is not the cause of the certification gap and is not being fixed as though it were, but the ladder should ask what the hunter has rather than what she can afford, the way the viability model already does."
       references: [the-occultist-gap-is-preparation-not-tactics, hunter-selection-and-certification, hunter-combat-abilities]
+
+  - decision: the-driver-follows-the-soonest-ready-route
+    core:
+      status: accepted
+      confidence: confirmed
+      title: The bot walks the route that reaches a hunt first, not the listed first
+      summary: "The autoplayer followed certified_routes.first(), which the generator lists as the early route, even when the independent fallback was ready sooner, at a lower threat tier, and priced higher. For a frail hunter that was the wrong choice thrice over: a later hunt is a longer journey through a deadly valley, a villain that has ramped a tier, and more days spent that a death can no longer afford. The driver now picks the route with the least ready_by_turn, breaking ties toward the surer estimate. The two routes are certified independently walkable, so which one the driver takes is its choice to make and changes nothing about the world. This one change lifted the Occultist from 354 to 541 permille won; it was the single largest lever in closing the gap the diagnosis opened."
+      references: [the-occultist-gap-is-preparation-not-tactics, route-certification-strategy, a-loss-is-attributed-by-the-driver-not-the-world]
+
+  - decision: a-frail-hunter-kites-and-a-fallen-one-respawns-clear
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Survival tactics that a nine-health hunter actually needs
+      summary: "Two sim-and-driver changes for the hunter the model treats as able to stand in a brawl she cannot. The driver: a hunter without the health or a signature to trade blows no longer walks into a pack to melee it - she shoots while it closes and breaks contact when surrounded, keeping moving so the route gets done rather than trading herself down on the road. The sim: a fallen hunter respawns at the settlement tile farthest from any waking hostile rather than at the entry, where the map's own minions cluster - respawning there was a death that begat a death. The respawn is a change to the simulation, so any earlier share code with a pre-final death would replay from a new position; REPLAY_VERSION moves to 4 rather than let a version 3 code diverge silently. The combat ladder was also taught to ask what signatures the hunter owns rather than gate on a Physical point alone - harmless before, but it had the Huntress reaching for a ward she has never carried dozens of times a run."
+      references: [the-occultist-gap-is-preparation-not-tactics, the-bot-asks-for-abilities-its-hunter-does-not-have, share-code-format, sim-is-truth-for-the-economy]
+
+  - decision: the-agreement-band-falls-to-what-was-measured
+    core:
+      status: accepted
+      confidence: confirmed
+      title: The band falls from 550 to 450, and states where the debt still stands
+      summary: "The corpus band only ever moves down, each cut backed by a scan. With the driver taught to follow the soonest route, to kite as a frail hunter, and to respawn clear of a pack, the Huntress closed to a roughly 230 permille gap and the Occultist to roughly 390, so the band falls from 550 to 450 - a real hundred-permille tightening rather than an aspiration. It does not reach the 250 the plan aimed at, and the reason is recorded rather than hidden: the Occultist's residual gap is a frail hunter's genuinely deadlier journey, which the estimate does not model and the band exists to absorb. Her losing runs reach the fight after two to four deaths at a ramped tier, some of them fights the estimate rightly calls winnable that she enters ground down. Closing that last stretch is a survival-tactics or a journey-modelling problem for a later pass, not a mispriced final fight."
+      references: [the-driver-follows-the-soonest-ready-route, a-frail-hunter-kites-and-a-fallen-one-respawns-clear, viability-agreement-is-a-corpus-scan]
