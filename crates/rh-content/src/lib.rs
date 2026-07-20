@@ -41,7 +41,21 @@ pub fn load_embedded() -> Result<Catalogue, ContentError> {
 pub fn content_fingerprint() -> u16 {
     let mut hash: u64 = 0xcbf29ce484222325;
     for (name, source) in embedded::SOURCES {
-        for byte in name.bytes().chain(source.bytes()) {
+        // Carriage returns are skipped, so the fingerprint is a statement
+        // about the content rather than about the machine that compiled it.
+        //
+        // The content files are stored with LF and checked out with CRLF on
+        // Windows, and `include_str!` embeds whatever is on disk. Hashing raw
+        // bytes therefore produced one fingerprint from a Windows build and a
+        // different one from Linux or wasm — and since this number rides
+        // inside every ReplayRecord and is checked on load, a share code
+        // recorded on one platform was refused as ContentMismatch on the
+        // other. Nothing in the game logged it; the two builds simply
+        // disagreed about which content they were running.
+        //
+        // TOML and the string table both treat the two endings alike, so this
+        // changes no behaviour beyond making the number portable.
+        for byte in name.bytes().chain(source.bytes()).filter(|b| *b != b'\r') {
             hash ^= u64::from(byte);
             hash = hash.wrapping_mul(0x100000001b3);
         }

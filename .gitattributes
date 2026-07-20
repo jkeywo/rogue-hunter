@@ -1,0 +1,10 @@
+# Authored content and fixtures are embedded at compile time and hashed, so
+# what is on disk has to be the same on every machine. Without this, Windows
+# checks these out with CRLF, `include_str!` embeds the carriage returns, and
+# the build disagrees with a Linux or wasm build about what the content is.
+#
+# `content_fingerprint` skips carriage returns as well, so a stale checkout
+# cannot reintroduce the problem; this keeps the working tree honest too.
+content/**            text eol=lf
+crates/**/tests/fixtures/** text eol=lf
+tests/replays/**      text eol=lf

@@ -502,3 +502,51 @@ fn a_slot_walled_off_from_the_map_is_rejected() {
         "expected a reachability complaint, got: {message}"
     );
 }
+
+/// The content fingerprint must describe the content, not the machine that
+/// compiled it.
+///
+/// This number rides inside every `ReplayRecord` and is checked on load, so a
+/// build that computes it differently refuses share codes from a build that
+/// does not. That is exactly what used to happen: the content files are stored
+/// with LF and checked out with CRLF on Windows, `include_str!` embeds
+/// whatever is on disk, and the native Windows build and the wasm build --
+/// which is compiled on Linux -- quietly disagreed about which content they
+/// were running. Nothing logged it; codes simply came back ContentMismatch.
+///
+/// Re-hashing the sources with the endings flipped is the closest a test on
+/// one platform can get to asking what the other would compute.
+#[test]
+fn the_fingerprint_does_not_depend_on_line_endings() {
+    fn fingerprint_of(sources: &[(String, String)]) -> u16 {
+        let mut hash: u64 = 0xcbf29ce484222325;
+        for (name, source) in sources {
+            for byte in name.bytes().chain(source.bytes()).filter(|b| *b != b'\r') {
+                hash ^= u64::from(byte);
+                hash = hash.wrapping_mul(0x100000001b3);
+            }
+        }
+        (hash ^ (hash >> 16) ^ (hash >> 32) ^ (hash >> 48)) as u16
+    }
+
+    let as_lf: Vec<(String, String)> = rh_content::embedded_sources()
+        .iter()
+        .map(|(name, source)| ((*name).to_owned(), source.replace("\r\n", "\n")))
+        .collect();
+    let as_crlf: Vec<(String, String)> = as_lf
+        .iter()
+        .map(|(name, source)| (name.clone(), source.replace('\n', "\r\n")))
+        .collect();
+
+    assert_eq!(
+        fingerprint_of(&as_lf),
+        fingerprint_of(&as_crlf),
+        "the same content hashes differently depending on its line endings, so \
+         a share code recorded on one platform will be refused on another"
+    );
+    assert_eq!(
+        rh_content::content_fingerprint(),
+        fingerprint_of(&as_lf),
+        "this checkout's fingerprint disagrees with the normalised one"
+    );
+}
