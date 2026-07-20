@@ -6,12 +6,13 @@
 //! full command surface in CI, and prove generated runs are playable from
 //! start to finish. Fully deterministic for a given seed.
 
-use std::collections::VecDeque;
+use std::collections::{BTreeMap, VecDeque};
 
 use rh_core::command::{Command, Target};
 use rh_core::fov::is_walkable;
 use rh_core::geometry::{Direction, Point, MAP_HEIGHT, MAP_WIDTH};
 use rh_core::state::{ActorKind, Outcome};
+use rh_core::viability::{hunt_viability, HuntLoadout};
 use rh_core::world::{
     FeatureKind, MapId, OpportunityAnchor, OpportunityId, RouteAction, RouteStep,
 };
@@ -23,27 +24,117 @@ const MAX_ACTIONS: u32 = 4000;
 /// Consecutive no-progress actions before giving up.
 const MAX_STALLS: u32 = 60;
 
+/// How a driven run finished. Held apart from [`Outcome`] on purpose: the sim
+/// knows only whether the hunter won or fell, because that is all a *world*
+/// can know. Whether the bot gave up before finding out is a fact about the
+/// driver, and putting it in `Outcome` would change the serialized run state
+/// and invalidate every share code for a fact no player can observe.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RunEnd {
+    Victory,
+    Defeat,
+    /// The bot ran out of actions or made no progress for too long. Reported
+    /// as a loss by callers that only want a win rate, but it is a different
+    /// failure with a different remedy, and the two were indistinguishable
+    /// until this existed.
+    Stalled,
+}
+
+/// Where a run was lost. The point of the whole report: a win rate says the
+/// estimate is wrong somewhere, and this says where to look.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LossStage {
+    Won,
+    /// The clock forced the final hunt before the villain was ever named.
+    NeverNamed,
+    /// She reached the fight carrying far less than the route certified.
+    ArrivedUnderprepared,
+    /// She reached the fight with what was promised, and lost it anyway.
+    FoughtBadly,
+    /// She died on the way often enough that the clock ran out.
+    DiedBeforeArriving,
+    Stalled,
+}
+
+/// How far below the certified promise a rescored loadout may fall before the
+/// loss is blamed on preparation rather than on the fight. A hundred permille
+/// is a turn and a third of margin in the model's own currency.
+const UNDERPREPARED_SHORTFALL: u16 = 100;
+
+/// Everything a driven run can say about itself. Built by
+/// [`autoplay_reported`]; [`autoplay`] throws all of it away but the outcome.
+#[derive(Debug, Clone)]
+pub struct AutoplayReport {
+    pub outcome: Option<Outcome>,
+    pub end: RunEnd,
+    pub stage: LossStage,
+    pub actions: u32,
+    pub clock_at_end: u8,
+    pub deaths_before_final: u8,
+    pub villain_uncovered: bool,
+    pub route_steps_done: usize,
+    pub route_steps_total: usize,
+    /// Steps abandoned by `STEP_BUDGET` rather than completed.
+    pub route_steps_abandoned: usize,
+    pub final_hunt_entered: bool,
+    /// What the route promised, from `certified_routes.first()`.
+    pub certified_permille: u16,
+    /// What she was actually carrying when the final hunt began.
+    pub loadout_at_final_hunt: Option<HuntLoadout>,
+    /// The same estimate the planner ran, against the loadout she actually
+    /// assembled. This is the field that splits the diagnosis: if it matches
+    /// the promise and she still lost, the estimate is wrong; if it falls far
+    /// short, the bot never assembled what was certified.
+    pub rescored_permille: Option<u16>,
+    pub draughts_unspent: u16,
+    /// Commands the bot tried and the sim refused, by tag. A hunter whose
+    /// finisher does not exist shows up here as a large count against it.
+    pub command_rejections: BTreeMap<&'static str, u32>,
+}
+
+impl AutoplayReport {
+    /// How far the rescored loadout fell short of the promise, if both known.
+    pub fn shortfall(&self) -> Option<i32> {
+        self.rescored_permille
+            .map(|rescored| i32::from(self.certified_permille) - i32::from(rescored))
+    }
+}
+
 /// Drive the session to an outcome. Returns `None` if the bot stalled.
 pub fn autoplay(session: &mut RunSession) -> Option<Outcome> {
-    let steps: Vec<RouteStep> = session
-        .sim
-        .world
-        .certified_routes
-        .first()
-        .map(|route| route.steps.clone())
-        .unwrap_or_default();
+    autoplay_reported(session).outcome
+}
+
+/// Drive the session and report how it went, in enough detail to say which
+/// stage of the run lost it.
+pub fn autoplay_reported(session: &mut RunSession) -> AutoplayReport {
+    let route = session.sim.world.certified_routes.first();
+    let certified_permille = route.map(|route| route.viability_permille).unwrap_or(0);
+    let steps: Vec<RouteStep> = route.map(|route| route.steps.clone()).unwrap_or_default();
+    let route_steps_total = steps.len();
     let mut bot = Bot {
         steps,
         step_index: 0,
         stalls: 0,
         step_actions: 0,
+        abandoned: 0,
+        rejections: BTreeMap::new(),
     };
+    let mut actions = 0u32;
+    let mut stalled = false;
+    let mut final_hunt_entered = session.sim.state.final_hunt;
+    let mut loadout_at_final_hunt = None;
+    let mut rescored_permille = None;
+    let mut deaths_before_final = 0u8;
+    let mut last_deaths = session.sim.state.deaths;
+
     for _ in 0..MAX_ACTIONS {
-        if let Some(outcome) = session.outcome() {
-            return Some(outcome);
+        if session.outcome().is_some() {
+            break;
         }
         if bot.stalls >= MAX_STALLS {
-            return None;
+            stalled = true;
+            break;
         }
         let step_before = bot.step_index;
         let progress_before = (
@@ -53,12 +144,29 @@ pub fn autoplay(session: &mut RunSession) -> Option<Outcome> {
             session.sim.state.resolved.len(),
         );
         bot.act(session);
+        actions += 1;
+        // The moment the fight starts is the only moment worth pricing: it is
+        // what the planner was estimating, and everything gathered afterwards
+        // came too late to have been part of the promise.
+        if !final_hunt_entered && session.sim.state.final_hunt {
+            final_hunt_entered = true;
+            let (loadout, rescored) = rescore(session);
+            loadout_at_final_hunt = Some(loadout);
+            rescored_permille = Some(rescored);
+        }
+        if session.sim.state.deaths > last_deaths {
+            last_deaths = session.sim.state.deaths;
+            if !final_hunt_entered {
+                deaths_before_final = deaths_before_final.saturating_add(1);
+            }
+        }
         // A stuck route step gets skipped rather than stalling the run.
         if bot.step_index == step_before && bot.step_index < bot.steps.len() {
             bot.step_actions += 1;
             if bot.step_actions > STEP_BUDGET {
                 bot.step_index += 1;
                 bot.step_actions = 0;
+                bot.abandoned += 1;
             }
         } else {
             bot.step_actions = 0;
@@ -77,7 +185,101 @@ pub fn autoplay(session: &mut RunSession) -> Option<Outcome> {
             bot.stalls += 1;
         }
     }
-    session.outcome()
+
+    let outcome = session.outcome();
+    let end = match (outcome, stalled) {
+        (Some(Outcome::Victory), _) => RunEnd::Victory,
+        (Some(Outcome::Defeat), _) => RunEnd::Defeat,
+        (None, _) => RunEnd::Stalled,
+    };
+    let state = &session.sim.state;
+    let stage = classify(
+        end,
+        state.villain_uncovered,
+        final_hunt_entered,
+        certified_permille,
+        rescored_permille,
+    );
+    AutoplayReport {
+        outcome,
+        end,
+        stage,
+        actions,
+        clock_at_end: state.clock,
+        deaths_before_final,
+        villain_uncovered: state.villain_uncovered,
+        route_steps_done: bot.step_index.min(route_steps_total),
+        route_steps_total,
+        route_steps_abandoned: bot.abandoned,
+        final_hunt_entered,
+        certified_permille,
+        loadout_at_final_hunt,
+        rescored_permille,
+        draughts_unspent: state.hunter.item_count("wound-draught"),
+        command_rejections: bot.rejections,
+    }
+}
+
+/// Price what the hunter is actually carrying, using the same model and the
+/// same loadout mapping the planner certified with. Deliberately calls
+/// `HuntLoadout::from_kit` rather than assembling the fields here: a second
+/// mapping is a second thing to drift.
+fn rescore(session: &RunSession) -> (HuntLoadout, u16) {
+    let state = &session.sim.state;
+    let catalogue = &session.sim.catalogue;
+    let loadout = HuntLoadout::from_kit(
+        catalogue,
+        |id| state.hunter.item_count(id),
+        state.hunter.physical,
+        state.church_consecrated
+            && state.current_map
+                == session
+                    .sim
+                    .world
+                    .map_by_role(rh_content::MapRole::Settlement),
+    );
+    let viability = hunt_viability(
+        catalogue,
+        &session.sim.world.villain.archetype,
+        state.villain.tier,
+        &loadout,
+    );
+    (loadout, viability)
+}
+
+fn classify(
+    end: RunEnd,
+    villain_uncovered: bool,
+    final_hunt_entered: bool,
+    certified: u16,
+    rescored: Option<u16>,
+) -> LossStage {
+    match end {
+        RunEnd::Victory => LossStage::Won,
+        RunEnd::Stalled => LossStage::Stalled,
+        RunEnd::Defeat => {
+            // Order matters, and an earlier version of this got it wrong by
+            // asking about deaths first: a run that died twice on the way and
+            // *then* reached the fight underprepared was filed as never having
+            // arrived, which hid the largest signal in the corpus behind the
+            // smallest one. Deaths are a cost along the way, not a stage; the
+            // stage is decided by how far she got and what she had when she
+            // got there, and `deaths_before_final` is reported alongside.
+            if !villain_uncovered {
+                // The clock dragged her into a fight with something she could
+                // not name. Nothing about the fight is the story here.
+                LossStage::NeverNamed
+            } else if !final_hunt_entered {
+                LossStage::DiedBeforeArriving
+            } else if rescored
+                .is_some_and(|r| certified.saturating_sub(r) >= UNDERPREPARED_SHORTFALL)
+            {
+                LossStage::ArrivedUnderprepared
+            } else {
+                LossStage::FoughtBadly
+            }
+        }
+    }
 }
 
 struct Bot {
@@ -86,6 +288,25 @@ struct Bot {
     stalls: u32,
     /// Actions spent on the current route step; stuck steps get skipped.
     step_actions: u32,
+    /// Steps given up on rather than completed.
+    abandoned: usize,
+    rejections: BTreeMap<&'static str, u32>,
+}
+
+impl Bot {
+    /// Apply a command, recording a refusal against `tag`. The bot has always
+    /// swallowed refusals — it has to, since it guesses at what is legal — but
+    /// swallowing them silently is how a hunter came to spend a whole corpus
+    /// asking for a finisher she does not own without anything noticing.
+    fn try_apply(&mut self, session: &mut RunSession, tag: &'static str, command: Command) -> bool {
+        match session.apply(command) {
+            Ok(()) => true,
+            Err(_) => {
+                *self.rejections.entry(tag).or_insert(0) += 1;
+                false
+            }
+        }
+    }
 }
 
 /// Actions allowed per route step before the bot skips it.
@@ -203,13 +424,13 @@ impl Bot {
                     // Either way the step is done with: a failure here means
                     // the plan drifted and the ingredients are short, and
                     // retrying would loop forever.
-                    let _ = session.apply(Command::Craft { recipe });
+                    self.try_apply(session, "craft", Command::Craft { recipe });
                     self.step_index += 1;
                 }
             }
             RouteAction::Consecrate => {
                 if self.goto_feature(session, |kind| matches!(kind, FeatureKind::Altar)) {
-                    let _ = session.apply(Command::Consecrate);
+                    self.try_apply(session, "consecrate", Command::Consecrate);
                     self.step_index += 1;
                 }
             }
@@ -536,13 +757,15 @@ impl Bot {
                 .unwrap_or(false);
             if physical >= 1
                 && (dormant || trapped || wounded)
-                && session
-                    .apply(Command::Signature {
+                && self.try_apply(
+                    session,
+                    "signature:killing-blow",
+                    Command::Signature {
                         id: "killing-blow".to_owned(),
                         dir: None,
                         target: Some(Target::Actor(actor_id)),
-                    })
-                    .is_ok()
+                    },
+                )
             {
                 return;
             }
@@ -562,13 +785,15 @@ impl Bot {
                 .iter()
                 .any(|ward| ward.covers(session.sim.state.current_map, hunter));
             if !already
-                && session
-                    .apply(Command::Signature {
+                && self.try_apply(
+                    session,
+                    "signature:ward-the-ground",
+                    Command::Signature {
                         id: "ward-the-ground".to_owned(),
                         dir: None,
                         target: None,
-                    })
-                    .is_ok()
+                    },
+                )
             {
                 return;
             }
@@ -592,13 +817,15 @@ impl Bot {
                     .any(|snare| snare.map == session.sim.state.current_map);
                 if !already
                     && snare_at != villain_pos
-                    && session
-                        .apply(Command::Signature {
+                    && self.try_apply(
+                        session,
+                        "signature:set-snare",
+                        Command::Signature {
                             id: "set-snare".to_owned(),
                             dir: Some(dir),
                             target: None,
-                        })
-                        .is_ok()
+                        },
+                    )
                 {
                     return;
                 }

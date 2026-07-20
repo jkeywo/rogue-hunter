@@ -554,3 +554,29 @@ entities:
       title: Each opening says its piece in one paragraph
       summary: Openings were authored as two paragraphs each, and a run draws five of them - hook, condition and the rest - so the game opened with ten paragraphs before a player had pressed anything. Every opening is now a single paragraph carrying the same information, which is a content change only - the string ids collapsed from body.1 and body.2 to body, and strings.csv sits outside the content fingerprint, so no share code was invalidated by the rewrite.
       references: [in-media-res-opening, conditions-may-not-touch-the-final-fight, authored-content-catalogue]
+
+  # Milestone 3: paying the certification debt.
+
+  - decision: a-loss-is-attributed-by-the-driver-not-the-world
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Where a run was lost is a fact about the driver, not the world
+      summary: "The agreement scan could say only that the estimate over-promised, never where the promise broke, because three end states collapsed into two - a bot that stalled was indistinguishable from a hunter who fought and fell. The attribution now lives in an AutoplayReport the driver builds, not in Outcome. Outcome stays two variants because it is serialized into run state and a player can only ever observe those two; widening it would have moved every digest for a fact no player can see. The report's decisive field is rescored_permille - the same viability estimate the planner ran, against the loadout the bot actually assembled at the moment the fight began. If it matches the promise and she still lost, the estimate is wrong; if it falls far short, she never assembled what was certified. One number, and the two remedies share nothing."
+      references: [viability-agreement-is-a-corpus-scan, autoplayer-golden-replays, command-replay, share-code-format]
+
+  - decision: the-occultist-gap-is-preparation-not-tactics
+    core:
+      status: accepted
+      confidence: confirmed
+      title: She reaches the fight carrying nothing, and it was predicted wrongly
+      summary: "The diagnosis was run before the remedy was chosen, and it falsified the stated prediction. The expectation was FoughtBadly - that the bot's combat ladder was Huntress-shaped and the Occultist was being asked for a finisher she does not own. The corpus says otherwise: thirty of her forty-eight losses are ArrivedUnderprepared and none at all are FoughtBadly, with a mean shortfall of 587 permille between what the route promised and what she was carrying when the fight started. The Huntress shows the same shape more mildly - eleven underprepared against four fought badly. Every underprepared run ends at the clock's forced hunt rather than one she chose, and the pattern in what she holds is exact: durable kit survives (a cold-iron pin is still in the pack) while every consumable is at zero. She crafts the counter the route certified and spends it before the fight the route certified it for. The remedy is therefore route execution, not repricing the ward and not the combat ladder. Recorded because the prediction was wrong in a useful direction: had the remedy been chosen from the prediction, the work would have gone into the one place the evidence exonerates."
+      references: [a-loss-is-attributed-by-the-driver-not-the-world, viability-agreement-is-a-corpus-scan, viability-model-calibration]
+
+  - decision: the-bot-asks-for-abilities-its-hunter-does-not-have
+    core:
+      status: accepted
+      confidence: confirmed
+      title: A stat check is not a capability check
+      summary: "A smaller finding the same instrument turned up, and the mirror image of what was predicted. The combat ladder gates signatures on physical >= 1, which is a check on the pool rather than on the kit, so a hunter is asked for whatever the ladder lists regardless of whether she owns it. The counted refusals show the Huntress reaching for ward-the-ground sixty-six times across the corpus - it is the Occultist's signature and the Huntress has never had it - against thirteen for the Occultist reaching for killing-blow. The fall-through is harmless in play, costing a decision pass rather than an action, which is exactly why it survived: nothing was counting. It is not the cause of the certification gap and is not being fixed as though it were, but the ladder should ask what the hunter has rather than what she can afford, the way the viability model already does."
+      references: [the-occultist-gap-is-preparation-not-tactics, hunter-selection-and-certification, hunter-combat-abilities]

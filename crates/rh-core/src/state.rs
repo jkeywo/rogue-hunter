@@ -24,6 +24,11 @@ pub struct RunState {
     /// Global travel turns spent (0-based; final hunt begins at travel_turns).
     pub clock: u8,
     pub final_hunt: bool,
+    /// Times the hunter has fallen short of the final hunt. Each one cost a
+    /// day and nothing else, so it never reaches the outcome — but a run lost
+    /// to the clock after three deaths was lost somewhere quite different
+    /// from one lost in the fight, and only this tells them apart.
+    pub deaths: u8,
     /// Local encounter turn counter (increments after every hunter action).
     pub local_turn: u32,
     pub current_map: MapId,
@@ -299,6 +304,7 @@ impl RunState {
             rng,
             clock: 0,
             final_hunt: false,
+            deaths: 0,
             local_turn: 0,
             current_map: settlement,
             hunter: HunterState {

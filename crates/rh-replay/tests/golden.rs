@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use rh_content::Catalogue;
 use rh_core::state::Outcome;
 use rh_core::world::RouteAction;
-use rh_replay::{autoplay, RunSession};
+use rh_replay::{autoplay, corpus, RunSession};
 
 fn catalogue() -> Catalogue {
     rh_content::load_embedded().expect("embedded content")
@@ -72,36 +72,27 @@ fn autoplayer_wins_runs_for_every_hunter() {
 /// (won 354, certified 884): the occultist's extra distance is recorded
 /// calibration debt — her bot tactics or her estimate need work — and the
 /// band pins today's reality so any further drift trips it.
+///
+/// The band only ever moves down, and every reduction is backed by a scan.
+/// Raising it would be hiding the debt rather than paying it.
+const AGREEMENT_BAND_PERMILLE: u32 = 550;
+
 #[test]
 #[ignore = "slow corpus scan: holds the win rate to the certified estimate; run with --ignored"]
 fn win_rate_tracks_certified_viability() {
     for hunter in catalogue().hunters.keys() {
-        let mut wins = 0u32;
-        let mut runs = 0u32;
-        let mut promised: u64 = 0;
-        for seed in 0..48u64 {
-            let (mut session, _used) = RunSession::new_from_viable_seed(seed, catalogue(), hunter)
-                .unwrap_or_else(|error| panic!("{hunter} near seed {seed}: {error}"));
-            promised += u64::from(
-                session
-                    .sim
-                    .world
-                    .certified_routes
-                    .first()
-                    .map(|route| route.viability_permille)
-                    .unwrap_or(0),
-            );
-            runs += 1;
-            if autoplay::autoplay(&mut session) == Some(Outcome::Victory) {
-                wins += 1;
-            }
-        }
-        let won_permille = wins * 1000 / runs;
-        let promised_permille = (promised / u64::from(runs)) as u32;
+        let records = corpus::scan(&catalogue(), hunter, 0..48);
+        let summary = corpus::summarise(&records);
+        let table = corpus::table(&records);
+        // Printed either way: on failure it is the diagnosis, and under
+        // --nocapture it is the instrument this milestone reads.
+        println!("{table}");
         assert!(
-            won_permille + 550 >= promised_permille,
-            "{hunter}: won {won_permille} permille of driven runs against a certified \
-             {promised_permille} permille - the estimate is over-promising"
+            summary.won_permille + AGREEMENT_BAND_PERMILLE >= summary.promised_permille,
+            "{hunter}: won {} permille of driven runs against a certified {} permille -              the estimate is over-promising
+{table}",
+            summary.won_permille,
+            summary.promised_permille
         );
     }
 }
@@ -273,6 +264,58 @@ fn translating_the_route_text_does_not_change_what_the_autoplayer_does() {
         assert!(
             kinds.contains(&required),
             "seed 7's route has no {required} step, so this proves nothing about it: {kinds:?}"
+        );
+    }
+}
+
+/// Pin the instrument before trusting what it says. A diagnosis is only worth
+/// as much as the report it reads, and the report has to agree with the world
+/// it describes: the promise it quotes must be the route's own, and a run that
+/// reached the fight must have been rescored against what she was carrying.
+#[test]
+fn the_autoplay_report_agrees_with_the_world_it_describes() {
+    for hunter in catalogue().hunters.keys() {
+        let (mut session, _used) = RunSession::new_from_viable_seed(17, catalogue(), hunter)
+            .expect("seed 17 certifies for every hunter");
+        let promised = session
+            .sim
+            .world
+            .certified_routes
+            .first()
+            .map(|route| route.viability_permille)
+            .expect("a certified world has a route");
+        let report = autoplay::autoplay_reported(&mut session);
+
+        assert_eq!(
+            report.certified_permille, promised,
+            "{hunter}: the report must quote the route's own promise"
+        );
+        assert_eq!(
+            report.outcome,
+            session.outcome(),
+            "{hunter}: the report's outcome must be the world's"
+        );
+        assert_eq!(
+            report.stage == corpus::stage_of_won(),
+            report.end == rh_replay::autoplay::RunEnd::Victory,
+            "{hunter}: only a victory is staged as won"
+        );
+        // Reaching the fight is what makes a rescore possible, and the two
+        // must never disagree - a rescore without a fight would be pricing a
+        // loadout that was never taken into one.
+        assert_eq!(
+            report.final_hunt_entered,
+            report.rescored_permille.is_some(),
+            "{hunter}: a rescore exists exactly when the fight was reached"
+        );
+        assert_eq!(
+            report.loadout_at_final_hunt.is_some(),
+            report.rescored_permille.is_some(),
+            "{hunter}: the loadout and its price are recorded together"
+        );
+        assert!(
+            report.route_steps_done <= report.route_steps_total,
+            "{hunter}: cannot complete more steps than the route has"
         );
     }
 }

@@ -2298,6 +2298,7 @@ impl Sim {
                 .ui("log.outcome.death-costs-a-day")
                 .to_owned(),
         );
+        self.state.deaths = self.state.deaths.saturating_add(1);
         let settlement = self.world.map_by_role(rh_content::MapRole::Settlement);
         self.state.current_map = settlement;
         self.state.hunter.pos = self.world.map(settlement).entry;

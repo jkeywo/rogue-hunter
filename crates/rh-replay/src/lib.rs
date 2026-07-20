@@ -7,6 +7,7 @@
 
 pub mod autoplay;
 mod codec;
+pub mod corpus;
 
 use rh_content::Catalogue;
 use rh_core::command::{Command, Rejection};

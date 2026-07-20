@@ -9,7 +9,7 @@ use std::time::Instant;
 
 use anyhow::{bail, Context};
 use clap::{Parser, Subcommand};
-use rh_replay::{autoplay, RunSession};
+use rh_replay::{autoplay, corpus, RunSession};
 
 #[derive(Parser)]
 #[command(name = "rh", about = "Rogue Hunter headless toolchain", version)]
@@ -51,6 +51,22 @@ enum Command {
         /// Print the resulting share code.
         #[arg(long)]
         emit_code: bool,
+    },
+    /// Drive a corpus of seeds for one hunter and report where each was lost.
+    ///
+    /// The agreement test can only tell you the estimate is over-promising.
+    /// This tells you which stage of the run is losing, which is the only
+    /// thing that decides what to fix.
+    CorpusScan {
+        /// Which hunter drives the corpus.
+        #[arg(long, default_value = "huntress")]
+        hunter: String,
+        /// First seed.
+        #[arg(long, default_value_t = 0)]
+        from: u64,
+        /// One past the last seed.
+        #[arg(long, default_value_t = 48)]
+        to: u64,
     },
     /// Bounded generator stress validation over a seed corpus.
     Corpus {
@@ -155,6 +171,10 @@ fn main() -> anyhow::Result<()> {
             if emit_code {
                 println!("share code:\n{}", session.share_code());
             }
+        }
+        Command::CorpusScan { hunter, from, to } => {
+            let records = corpus::scan(&catalogue, &hunter, from..to);
+            print!("{}", corpus::table(&records));
         }
         Command::Corpus {
             count,
