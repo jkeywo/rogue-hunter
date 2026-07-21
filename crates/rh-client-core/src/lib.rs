@@ -1147,15 +1147,33 @@ impl ClientSession {
                 && !state.resolved.contains(&opp.id)
                 && !state.lost.contains(&opp.id)
         });
-        let candidates: [(&'static str, bool); 6] = [
+        // The moment the proofs first agree is the pivot of the whole case and
+        // nothing on screen shouts it, so a first-timer can gather what they
+        // need and not realise they may now name the thing.
+        let can_name = state.corroboration(&run.sim.catalogue).met() && !state.villain_uncovered;
+        // A lead she has found but cannot yet pay for teaches that pools gate
+        // the work and that travel restores them — the first wall a new player
+        // hits without knowing it is one.
+        let unaffordable_lead = run.sim.world.opportunities.iter().any(|opp| {
+            state.discovered.contains(&opp.id)
+                && !state.resolved.contains(&opp.id)
+                && !state.lost.contains(&opp.id)
+                && matches!(
+                    rh_core::economy::opportunity_cost(opp.pool, opp.cost, state.settlement_hostile),
+                    Some((pool, cost)) if hunter.pool(pool) < cost
+                )
+        });
+        let candidates: [(&'static str, bool); 8] = [
             ("ui.hint.first.final-hunt", state.final_hunt),
             (
                 "ui.hint.first.wounded",
                 hunter.hp * 2 <= hunter.max_hp && hunter.hp > 0,
             ),
+            ("ui.hint.first.can-name", can_name),
             ("ui.hint.first.villain-tier", state.villain.tier > 0),
             ("ui.hint.first.day-passed", state.clock > 0),
             ("ui.hint.first.stamina-empty", hunter.stamina == 0),
+            ("ui.hint.first.unaffordable", unaffordable_lead),
             ("ui.hint.first.lead", has_lead),
         ];
         let Some(id) = candidates

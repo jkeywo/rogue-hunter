@@ -766,10 +766,12 @@ ui.grimoire.title,Title of the grimoire screen,[The Grimoire]
 ui.guide.title,Title of the hunter's guide screen,[How a Hunt Is Solved]
 ui.hint.case-report-footer,Footer on the case report telling the player how to leave,[Enter to return to the fireside.]
 ui.hint.direction,Hint shown while waiting for a direction key,[press a direction key]
+ui.hint.first.can-name,First-time hint when the hunter first has enough proof to name the villain,"[Your proofs agree. You have enough to name your quarry now — open the Case, or act on it, before the trail cools.]"
 ui.hint.first.day-passed,"First-time hint, shown once after the first day is spent",[A day is gone. You have six. Travel is what spends them; walking about the valley is free.]
 ui.hint.first.final-hunt,"First-time hint, shown once when the final hunt begins",[No more days. Whatever you carry now is what you fight with.]
 ui.hint.first.lead,"First-time hint, shown once when a lead is outstanding",[A lead stands open. Walk to the mark on the map and press e to work it.]
 ui.hint.first.stamina-empty,"First-time hint, shown once when stamina runs out",[Your wind is gone. Stamina comes back a point a turn; the manoeuvres wait.]
+ui.hint.first.unaffordable,First-time hint when a discovered lead costs more of a pool than the hunter currently has,"[That lead costs more than you can spend right now. Pools are spent on the work that narrows a case, and a day's travel restores them.]"
 ui.hint.first.villain-tier,"First-time hint, shown once when the quarry's threat tier rises",[The quarry has grown. Each day it works is a day it is harder to put down.]
 ui.hint.first.wounded,"First-time hint, shown once when the hunter drops to half health",[You are half spent. A draught mends four; the road does not mend you at all.]
 ui.hint.list-nav,Footer on list screens telling the player how to navigate,[arrows browse — Esc returns]

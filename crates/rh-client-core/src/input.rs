@@ -135,6 +135,10 @@ const CHAR_BINDINGS: &[(char, Intent)] = &[
     ('r', Intent::Relationships),
     ('v', Intent::RegionMap),
     ('i', Intent::Guide),
+    // The universal help key opens the guide too, so a lost player who reaches
+    // for '?' the way they would in any other game finds how a hunt is solved
+    // rather than nothing.
+    ('?', Intent::Guide),
 ];
 
 /// How the player drives the hunter.

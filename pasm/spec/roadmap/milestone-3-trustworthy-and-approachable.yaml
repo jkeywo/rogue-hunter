@@ -1,8 +1,8 @@
 entities:
   - milestone: milestone-3-trustworthy-and-approachable
     core:
-      status: proposed
-      confidence: provisional
+      status: accepted
+      confidence: confirmed
       title: Milestone 3 - Trustworthy certification, and a way in
       summary: Pay the debt that undermines the game's central promise, then open the door to players who are not already roguelike readers. A certified world must be a world the selected hunter can actually win, which it currently is not for the Occultist. A third hunter proves the per-hunter certification model generalises past the two it was built against. Accessibility and onboarding make the game playable by someone who has not read its source.
       goals:
@@ -119,6 +119,6 @@ entities:
       owner: authored-content-catalogue
       reads: [hunter-grimoire]
     implementation:
-      status: declared
+      status: confirmed
       target_paths: [content/guide.toml, content/strings.csv, crates/rh-client-core/src/view.rs]
       tests: [crates/rh-client-core/tests/session.rs]

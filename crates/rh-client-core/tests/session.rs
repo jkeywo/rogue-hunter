@@ -894,6 +894,15 @@ fn the_guide_says_how_a_hunt_is_solved() {
     // It closes the way every other reference screen does.
     client.handle(Intent::Cancel);
     assert!(matches!(client.screen, Screen::Run));
+
+    // The universal help key reaches it too, so a lost player who presses '?'
+    // finds the how-to rather than nothing.
+    let key = rh_client_core::input::intent_for_key(
+        client.input_mode(),
+        client.controls,
+        rh_client_core::Key::Char('?'),
+    );
+    assert_eq!(key, Some(Intent::Guide), "'?' must open the guide");
 }
 
 #[test]
