@@ -18,8 +18,8 @@ entities:
 
   - component: viability-gap-diagnosis
     core:
-      status: proposed
-      confidence: provisional
+      status: accepted
+      confidence: confirmed
       title: Find out which half of the estimate is wrong
       summary: "The corpus scan records the Huntress winning 645 permille against a certified 946, and the Occultist winning 354 against a certified 884 - five hundred and thirty adrift. Two quite different faults produce that number and the remedies share nothing, so the gap is diagnosed before it is closed. Either the estimate misprices what the Occultist brings to the final fight, or the autoplayer does not know how to play her - she fights through Mystic, wards and charms rather than snares and Killing Blows, and the bot's tactics were written against a hunter who does not. Instrument the losing runs on the Occultist corpus and report where each was lost: arrived underprepared, arrived prepared and fought badly, or died before arriving."
       goals:
@@ -39,8 +39,8 @@ entities:
 
   - component: certification-keeps-its-promise
     core:
-      status: proposed
-      confidence: provisional
+      status: accepted
+      confidence: confirmed
       title: A certified world is one the chosen hunter can win
       summary: "Close the diagnosed gap, wherever it was found, and tighten the agreement band as the visible proof it closed. The band is the instrument as well as the gate - a number that only ever moves down, each reduction backed by a corpus scan. The settlement respawn defect is fixed here too, being a plausible contributor: enemies respawning near the settlement respawn point can cost a hunter a run in a way no route model prices."
       goals:
@@ -61,8 +61,8 @@ entities:
 
   - component: third-hunter
     core:
-      status: proposed
-      confidence: provisional
+      status: accepted
+      confidence: confirmed
       title: A third hunter, to prove the model generalises
       summary: Add a hunter whose investigation and combat posture differs from both the Huntress and the Occultist, certified per-hunter exactly as they are. The value is as much structural as it is content - per-hunter certification, the viability model, the autoplayer's tactics and the hunter-selection screen were all built against a pair, and a third is what distinguishes a general model from one fitted to two cases.
       goals:
@@ -83,8 +83,8 @@ entities:
 
   - component: accessible-presentation
     core:
-      status: proposed
-      confidence: provisional
+      status: accepted
+      confidence: confirmed
       title: Nothing is signalled by colour alone
       summary: The map, the panels and the case report currently lean on colour to carry meaning, and neither client offers anything to assistive technology. Every distinction a player must make becomes available without colour - glyph, label or position - and the web client's panels become navigable and announceable rather than a rendered blob of markup. Contrast is checked rather than assumed.
       goals:
@@ -104,8 +104,8 @@ entities:
 
   - component: first-run-onboarding
     core:
-      status: proposed
-      confidence: provisional
+      status: accepted
+      confidence: confirmed
       title: A first-time player reaches a first naming unaided
       summary: The guide says how a hunt is solved and the splash lists the keys, but nobody has established that the two are enough. This is a validation task before it is a building task - watch a first run happen, find where it stalls, and answer only what actually stalled it. Whatever is added stays content wherever it can be, per the standing preference for a reference deck over a scripted tutorial.
       goals:
