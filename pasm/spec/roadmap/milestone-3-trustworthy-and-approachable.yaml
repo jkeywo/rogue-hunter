@@ -77,7 +77,7 @@ entities:
       reads: [seeded-mystery-generator]
       validates: [clue-graph-validator]
     implementation:
-      status: declared
+      status: confirmed
       target_paths: [content/hunters, crates/rh-content/src/embedded.rs, crates/rh-core/src/viability.rs, crates/rh-replay/src/autoplay.rs]
       tests: [crates/rh-gen/tests/generator.rs, crates/rh-replay/tests/golden.rs]
 

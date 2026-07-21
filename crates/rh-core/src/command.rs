@@ -77,34 +77,56 @@ pub enum Target {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Rejection {
     RunOver,
-    Blocked { what: String },
+    Blocked {
+        what: String,
+    },
     NoSuchTarget,
     OutOfRange,
     NoLineOfSight,
     NotAdjacent,
-    NoAmmo { item: String },
-    PoolEmpty { pool: PoolKind, needed: u8 },
-    StaminaShort { needed: u8 },
+    NoAmmo {
+        item: String,
+    },
+    PoolEmpty {
+        pool: PoolKind,
+        needed: u8,
+    },
+    StaminaShort {
+        needed: u8,
+    },
     NotDiscovered,
     AlreadyResolved,
     NpcUnavailable,
     NpcWillNotTalk,
-    NotEnoughCoin { needed: u16 },
+    NotEnoughCoin {
+        needed: u16,
+    },
     NotAtExit,
     TravelBlockedByFinalHunt,
     NotAtWorkstation,
-    MissingIngredients { recipe: String },
+    MissingIngredients {
+        recipe: String,
+    },
     NotAtAltar,
     AlreadyConsecrated,
     NotAtGrave,
     GraveAlreadyOpened,
     NothingToForce,
-    NeedMoreIdentityClues { have: u8, need: u8 },
+    NeedMoreIdentityClues {
+        have: u8,
+        need: u8,
+    },
     EvidenceNotDecisive,
     NothingLeftToRead,
-    MissingOriginReagent { reagent: String },
+    /// No lost social lead left to press a witness back into giving.
+    NoWitnessToPress,
+    MissingOriginReagent {
+        reagent: String,
+    },
     AlreadyUncovered,
-    UnknownAbility { id: String },
+    UnknownAbility {
+        id: String,
+    },
     BadAbilityArguments,
     NothingThere,
 }
@@ -154,6 +176,11 @@ impl std::fmt::Display for Rejection {
                 f,
                 "You have no ambiguous sign left to read. Reinterpretation needs something \
                  half-said to work on; find another sign first."
+            ),
+            Rejection::NoWitnessToPress => write!(
+                f,
+                "No door has closed on you that pressing could open again. This is for a \
+                 lead a soured witness took with them, not one still there to take."
             ),
             Rejection::MissingOriginReagent { reagent } => write!(
                 f,

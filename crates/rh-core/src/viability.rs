@@ -81,6 +81,10 @@ pub fn hunt_viability(
         )
         .max()
         .unwrap_or(1);
+    // A hunter with no damage-multiplier manoeuvre swings at plain strength,
+    // which in halves is `MULTIPLIER_HALVES` over itself — a stated 1x rather
+    // than the bare 2 this once defaulted to, right only by coincidence that
+    // the denominator happens to be 2.
     let power_numerator: u32 = catalogue
         .hunter
         .manoeuvres
@@ -89,7 +93,7 @@ pub fn hunt_viability(
             ManoeuvreEffect::MeleeDamageMultiplier { numerator } => Some(u32::from(numerator)),
             _ => None,
         })
-        .unwrap_or(2);
+        .unwrap_or(u32::from(combat::MULTIPLIER_HALVES));
     // Plain swings every turn: priming Power Attack costs an action, which
     // makes the primed cycle a damage LOSS at MVP blade values. The
     // multiplier only pays off against a sleeping target (the coup opener).
@@ -115,11 +119,35 @@ pub fn hunt_viability(
     let has_killing_blow = affords(killing_blow_cost);
     let has_ward = affords(ward_cost);
 
+    // The Advocate's second: a villager who stands with her adds blows and
+    // takes some in return. Priced in the model's own two currencies rather
+    // than a new axis — damage a turn here, turns survived below — so a hunter
+    // who fights through people is one the estimate can still vouch for. Read
+    // the authored numbers off the signature; the cost gate is the same.
+    let second = catalogue
+        .hunter
+        .signatures
+        .iter()
+        .find_map(|def| match &def.effect {
+            SignatureEffect::SecondInTheFight {
+                turns,
+                damage_per_turn,
+            } if loadout.physical >= def.physical_cost => Some((*turns, *damage_per_turn)),
+            _ => None,
+        });
+
     // Warded ground tears at the thing every time it comes across. Credited at
     // half rate: it bites on the approach and on repositioning, not every turn
     // of a toe-to-toe exchange.
     if has_ward {
         melee_dpt += u32::from(combat.ground_ward_damage) * 1000 / 2;
+    }
+    // The second's blows, credited at half rate like the ward: it stands for
+    // only part of the fight, so its damage is a share of a full turn's, not
+    // a whole one added for the duration.
+    if let Some((_, damage_per_turn)) = second {
+        melee_dpt +=
+            u32::from(damage_per_turn) * 1000 * u32::from(combat.melee_hit_percent) / 100 / 2;
     }
     let melee_dpt = melee_dpt;
 
@@ -278,6 +306,14 @@ pub fn hunt_viability(
         // documented under planner-cost-scales-with-mystic-pool.
         survive += 5;
     }
+    // The second takes half of what comes at her while it stands, so across
+    // its `turns` it buys back about half of them in survival. This is the
+    // Advocate's whole survival case — she has neither the health to trade nor
+    // a snare to deny — so unlike the snare and ward above it stacks rather
+    // than being one branch of a choice.
+    if let Some((turns, _)) = second {
+        survive += i32::from(turns) / 2;
+    }
     survive -= i32::from(loadout.draughts); // drinking costs actions
     if loadout.on_consecrated_ground {
         survive += 1; // the ward burns the revenant even as it approaches
@@ -329,6 +365,42 @@ mod tests {
         assert!(
             viability >= threshold,
             "prepared early hunt scored {viability}"
+        );
+    }
+
+    #[test]
+    fn the_advocates_second_is_what_carries_her() {
+        // The Advocate has neither the health to trade nor a snare to deny, so
+        // the estimate must be pricing her second — and only her second — when
+        // it vouches for her. Score her loadout with the Physical point that
+        // buys the second and without it; the gap is the second alone, since
+        // nothing else she carries turns on that point.
+        let cat = catalogue().with_hunter("advocate").expect("advocate");
+        let with_point = HuntLoadout {
+            hunter_hp: cat.hunter.health,
+            draughts: 1,
+            silver_bullets: 1,
+            binding_charms: 0,
+            counter_blades: 0,
+            physical: 1,
+            on_consecrated_ground: false,
+            dormant_opening: false,
+        };
+        let without_point = HuntLoadout {
+            physical: 0,
+            ..with_point
+        };
+        let with_second = hunt_viability(&cat, "werewolf", 0, &with_point);
+        let without = hunt_viability(&cat, "werewolf", 0, &without_point);
+
+        assert!(
+            with_second > without,
+            "the second added nothing: {with_second} vs {without}"
+        );
+        let threshold = cat.balance.generator.viability_threshold_permille;
+        assert!(
+            with_second >= threshold,
+            "the second should make the frail hunt viable, scored {with_second}"
         );
     }
 

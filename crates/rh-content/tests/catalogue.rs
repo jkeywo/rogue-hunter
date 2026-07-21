@@ -7,13 +7,16 @@ use rh_content::{Concealment, ItemKind};
 fn embedded_catalogue_loads_and_validates() {
     let catalogue = rh_content::load_embedded().expect("embedded content must validate");
 
-    // Spot-check the fixed MVP profile the spec pins down.
-    assert_eq!(catalogue.hunter.health, 12);
-    assert_eq!(catalogue.hunter.lore_cap, 2);
-    assert_eq!(catalogue.hunter.social_cap, 2);
-    assert_eq!(catalogue.hunter.mystic_cap, 0);
-    assert_eq!(catalogue.hunter.physical_cap, 2);
-    assert_eq!(catalogue.hunter.stamina_cap, 6);
+    // Spot-check the fixed MVP profile the spec pins down. Named rather than
+    // taken from the default, which is the first hunter by id and is no longer
+    // the Huntress now that the Advocate sorts ahead of her.
+    let huntress = &catalogue.hunters["huntress"];
+    assert_eq!(huntress.health, 12);
+    assert_eq!(huntress.lore_cap, 2);
+    assert_eq!(huntress.social_cap, 2);
+    assert_eq!(huntress.mystic_cap, 0);
+    assert_eq!(huntress.physical_cap, 2);
+    assert_eq!(huntress.stamina_cap, 6);
 
     // Three villain archetypes with their concealment styles. The Witch
     // shares the Werewolf's NPC host but fights behind a ward.

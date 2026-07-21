@@ -100,6 +100,14 @@ pub struct HunterState {
     /// Pending melee multiplier numerator over 2 (3 = x1.5 from Power Attack).
     pub melee_multiplier: Option<u8>,
     pub favour_used: bool,
+    /// Turns a called-in villager still stands with the hunter (the Advocate's
+    /// second). While it lasts, her blows land harder and some of what comes
+    /// back is taken by the one beside her. A buff on the hunter rather than an
+    /// actor on the board: an ally actor would touch targeting, occupancy, and
+    /// the digest, where a second she has earned is one number that counts down.
+    pub second_turns: u8,
+    /// Extra melee damage the standing second adds each turn it is here.
+    pub second_damage: u16,
 }
 
 impl HunterState {
@@ -321,6 +329,8 @@ impl RunState {
                 sure_shot: false,
                 melee_multiplier: None,
                 favour_used: false,
+                second_turns: 0,
+                second_damage: 0,
             },
             actors: Vec::new(),
             next_actor_id: 0,

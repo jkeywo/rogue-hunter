@@ -727,6 +727,7 @@ fn ranged_attack_hunter(sim: &mut Sim, id: ActorId, damage: u16, hit_percent: u8
     };
     let name = sim.actor_name(&kind);
     if sim.state.rng.percent(hit_percent) {
+        let damage = sim.soak_with_second(damage);
         sim.state.hunter.hp = sim.state.hunter.hp.saturating_sub(damage);
         sim.log(
             EventKind::Combat,
@@ -752,6 +753,7 @@ fn attack_hunter_with(sim: &mut Sim, id: ActorId, damage: u16, hit_percent: u8) 
     };
     let name = sim.actor_name(&kind);
     if sim.state.rng.percent(hit_percent) {
+        let damage = sim.soak_with_second(damage);
         sim.state.hunter.hp = sim.state.hunter.hp.saturating_sub(damage);
         sim.log(
             EventKind::Combat,

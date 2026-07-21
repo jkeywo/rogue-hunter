@@ -510,7 +510,8 @@ impl Sim {
                     return Err(Rejection::NotAdjacent);
                 }
                 let multiplier = self.take_melee_multiplier();
-                let damage = weapon_damage * u16::from(multiplier) / combat::MULTIPLIER_HALVES;
+                let damage = weapon_damage * u16::from(multiplier) / combat::MULTIPLIER_HALVES
+                    + self.second_blow();
                 self.hunter_strike(id, damage, dormant, false);
                 self.end_action();
                 Ok(())
@@ -803,6 +804,54 @@ impl Sim {
                     self.catalogue
                         .strings
                         .ui("log.signature.ward-ground")
+                        .to_owned(),
+                );
+            }
+            SignatureEffect::PressTheWitness => {
+                // Press a soured witness back into giving: the most recently
+                // lost social lead re-opens where it stands. Only a lead a
+                // witness took with them — a covert sign never depended on
+                // their goodwill, so there is nothing to press it out of.
+                let recovered = self
+                    .world
+                    .opportunities
+                    .iter()
+                    .filter(|opp| {
+                        self.state.lost.contains(&opp.id)
+                            && opp.pool == Some(PoolKind::Social)
+                            && !opp.covert
+                    })
+                    .map(|opp| (opp.id, opp.name.clone()))
+                    .next_back();
+                let Some((id, name)) = recovered else {
+                    return Err(Rejection::NoWitnessToPress);
+                };
+                self.state.hunter.physical -= def.physical_cost;
+                self.state.lost.remove(&id);
+                self.state.discovered.insert(id);
+                self.log(
+                    EventKind::Social,
+                    self.catalogue
+                        .strings
+                        .ui_fill("log.signature.press-the-witness", &[("lead", &name)]),
+                );
+            }
+            SignatureEffect::SecondInTheFight {
+                turns,
+                damage_per_turn,
+            } => {
+                // Call in a villager who owes the hunter her standing. The
+                // second is a buff she carries, not an actor on the board: while
+                // it lasts her blows land harder and some of what comes back is
+                // taken by the one beside her.
+                self.state.hunter.physical -= def.physical_cost;
+                self.state.hunter.second_turns = turns;
+                self.state.hunter.second_damage = damage_per_turn;
+                self.log(
+                    EventKind::Combat,
+                    self.catalogue
+                        .strings
+                        .ui("log.signature.second-in-the-fight")
                         .to_owned(),
                 );
             }
@@ -1418,6 +1467,28 @@ impl Sim {
         self.best_melee().0
     }
 
+    /// The extra damage a standing second adds to a melee blow, and nothing
+    /// once it has gone. Kept beside `melee_damage` so both halves of a strike
+    /// read together.
+    fn second_blow(&self) -> u16 {
+        if self.state.hunter.second_turns > 0 {
+            self.state.hunter.second_damage
+        } else {
+            0
+        }
+    }
+
+    /// What a blow does to the hunter with a second standing beside her: the
+    /// second takes half, so a strike bites for the ceiling of the rest and
+    /// still stings. No second, and the blow lands in full.
+    pub(crate) fn soak_with_second(&self, damage: u16) -> u16 {
+        if self.state.hunter.second_turns > 0 {
+            damage.div_ceil(2)
+        } else {
+            damage
+        }
+    }
+
     /// The best melee option carried, and whether it is the counter that cuts
     /// through this villain's ward (cold iron against the Witch).
     fn best_melee(&self) -> (u16, bool) {
@@ -1490,6 +1561,10 @@ impl Sim {
     pub(crate) fn clear_encounter_buffs(&mut self) {
         self.state.hunter.sure_shot = false;
         self.state.hunter.melee_multiplier = None;
+        // A second does not follow her back from the dark; a fallen hunter
+        // wakes alone.
+        self.state.hunter.second_turns = 0;
+        self.state.hunter.second_damage = 0;
     }
 
     pub(crate) fn refresh_senses(&mut self) {
@@ -2372,6 +2447,21 @@ impl Sim {
     fn end_action(&mut self) {
         crate::ai::world_tick(self);
         self.state.local_turn += 1;
+        // The second stands for a while, then their nerve or their errand
+        // takes them home. It leaves quietly; the fight simply gets harder.
+        if self.state.hunter.second_turns > 0 {
+            self.state.hunter.second_turns -= 1;
+            if self.state.hunter.second_turns == 0 {
+                self.state.hunter.second_damage = 0;
+                self.log(
+                    EventKind::Combat,
+                    self.catalogue
+                        .strings
+                        .ui("log.signature.second-departs")
+                        .to_owned(),
+                );
+            }
+        }
         let cap = self.catalogue.hunter.stamina_cap;
         let regen = self.catalogue.balance.combat.stamina_regen_per_turn;
         self.state.hunter.stamina = (self.state.hunter.stamina + regen).min(cap);

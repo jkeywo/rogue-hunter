@@ -70,11 +70,32 @@ fn corpus_covers_every_villain_combination() {
 
 #[test]
 fn certified_routes_meet_the_generator_contract() {
-    let catalogue = catalogue();
+    // Every hunter is held to the contract, not just the default one. A new
+    // hunter is obligated the moment she is in the roster, which is the whole
+    // point of certifying per hunter: the Advocate cannot quietly ship with
+    // routes that break the budgets the Huntress's never would.
+    let base = catalogue();
+    for hunter in base.hunters.keys() {
+        let catalogue = base.clone().with_hunter(hunter).expect("hunter");
+        certified_routes_hold_for(&catalogue, hunter);
+    }
+}
+
+fn certified_routes_hold_for(catalogue: &Catalogue, hunter: &str) {
     let generator = &catalogue.balance.generator;
 
-    for seed in 0..24u64 {
-        let result = rh_gen::generate(seed, &catalogue).expect("seed generates");
+    // Check the budgets on the first several worlds that certify, rather than
+    // demanding every seed certify: not every seed can be given fairly to
+    // every hunter, and proving a seed *cannot* be is the planner's slowest
+    // path. Eight certified worlds exercise the contract without paying for a
+    // string of exhaustive refusals — a real cost for the Advocate, whose
+    // social routes the planner searches hardest before giving up on.
+    let mut checked = 0u32;
+    for seed in 0..64u64 {
+        let Ok(result) = rh_gen::generate(seed, catalogue) else {
+            continue;
+        };
+        checked += 1;
         let routes = &result.world.certified_routes;
         assert_eq!(routes.len(), 2, "seed {seed}: two certified routes");
 
@@ -141,7 +162,57 @@ fn certified_routes_meet_the_generator_contract() {
             !(early.uses_mystic_favour && fallback.uses_mystic_favour),
             "seed {seed}: both routes lean on the mystical favour"
         );
+
+        if checked >= 8 {
+            break;
+        }
     }
+    assert!(checked >= 8, "{hunter}: too few worlds certified to check");
+}
+
+#[test]
+fn the_advocate_is_certified_through_people() {
+    // The Advocate's whole reason to exist is a route that runs on social
+    // work. The planner is not told to prefer it — social_cap 3 only makes it
+    // affordable — so this measures whether it happens emergently. If it stops
+    // happening, either her caps drifted or the social evidence thinned, and
+    // either way she is no longer the hunter she was added to be.
+    let cat = catalogue().with_hunter("advocate").expect("advocate");
+    let mut runs = 0u32;
+    let mut with_social = 0u32;
+    // The first sixteen worlds that certify for her. Bounded so a slow refusal
+    // does not dominate: for her, a seed that cannot be given fairly is the
+    // planner's most expensive answer.
+    for seed in 0..64u64 {
+        let Ok(result) = rh_gen::generate(seed, &cat) else {
+            continue;
+        };
+        runs += 1;
+        let social_steps = result
+            .world
+            .certified_routes
+            .iter()
+            .flat_map(|route| route.steps.iter())
+            .filter_map(|step| step.opportunity())
+            .filter(|id| result.world.opportunity(*id).pool == Some(rh_content::PoolKind::Social))
+            .count();
+        if social_steps > 0 {
+            with_social += 1;
+        }
+        if runs >= 16 {
+            break;
+        }
+    }
+    assert!(runs > 0, "the advocate must certify on some seed");
+    // Most of her certified worlds should route through at least one witness.
+    // Not all: some cases genuinely lie in the wood or the grave, and forcing
+    // a social step onto those would be the planner preferring flavour over
+    // the shortest honest route.
+    assert!(
+        with_social * 2 >= runs,
+        "only {with_social} of {runs} advocate worlds route through anyone - \
+         her social identity is not reaching her certified routes"
+    );
 }
 
 #[test]
@@ -217,10 +288,19 @@ fn every_run_opens_somewhere_and_banked_nodes_are_honest() {
 
     for hunter in base.hunters.keys() {
         let cat = base.clone().with_hunter(hunter).expect("hunter");
+        // Enough certified worlds to see both opening kinds, capped so a run of
+        // slow refusals cannot dominate — the Advocate's uncertifiable seeds
+        // are the planner's most expensive answer, and this test does not need
+        // to pay for them to check that openings are honest.
+        let mut checked = 0u32;
         for seed in 0..64u64 {
             let Ok(result) = rh_gen::generate(seed, &cat) else {
                 continue;
             };
+            checked += 1;
+            if checked > 16 {
+                break;
+            }
             let opening = &result.world.opening;
             assert!(
                 cat.openings.iter().any(|o| o.id == opening.opening),

@@ -110,11 +110,15 @@ impl Catalogue {
                 hunters.insert(stem.to_owned(), hunter);
             }
         }
-        // A run always has a selected hunter; the default is the first by id,
-        // and callers override it before generating.
+        // A run always has a selected hunter, and callers override it before
+        // generating. The default is the Huntress by name rather than whoever
+        // sorts first by id: she is the plainest hunter to learn on, and a
+        // default chosen by alphabetical accident put the Advocate here the
+        // moment she was added — a worse first run, and a slower one, since a
+        // social hunter is the planner's most expensive to certify.
         let (default_id, default_hunter) = hunters
-            .iter()
-            .next()
+            .get_key_value("huntress")
+            .or_else(|| hunters.iter().next())
             .map(|(id, hunter)| (id.clone(), hunter.clone()))
             .ok_or_else(|| ContentError::MissingFile("hunters/*.toml".to_owned()))?;
 

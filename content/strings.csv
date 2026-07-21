@@ -266,6 +266,16 @@ guide.the-shape-of-it.body,"Guide entry body, shown when the entry is selected",
 guide.the-shape-of-it.title,"Guide entry title, listed on the guide screen",[The Shape of a Hunt]
 guide.what-it-is-working-toward.body,"Guide entry body, shown when the entry is selected","[The thing in the valley is not merely feeding; it is doing something, and on the fourth day it will do more of it. Find the sign that says which, and you will know where to go to blunt it before it lands.|Pre-empting costs you a trip and a point. Not pre-empting costs you a stronger quarry on the last night. Neither is wrong, but choose on purpose.]"
 guide.what-it-is-working-toward.title,"Guide entry title, listed on the guide screen",[What It Is Working Toward]
+hunters.advocate.manoeuvres.aim.description,"Manoeuvre description, shown when inspecting the action",[Steady the flintlock. Your next ranged shot this encounter cannot miss.]
+hunters.advocate.manoeuvres.aim.name,"Name of a hunter manoeuvre, shown in the action list",Aim
+hunters.advocate.manoeuvres.sprint.description,"Manoeuvre description, shown when inspecting the action","[Move two tiles in a single direction, in one action.]"
+hunters.advocate.manoeuvres.sprint.name,"Name of a hunter manoeuvre, shown in the action list",Sprint
+hunters.advocate.name,"Hunter's name, shown on the hunter-select screen and status panel",[The Advocate]
+hunters.advocate.signatures.press-the-witness.description,"Signature ability description, shown when inspecting the action","[Go back to a door that closed on you and lean on it. A social lead a soured witness took with them opens again, there to be worked a second time.]"
+hunters.advocate.signatures.press-the-witness.name,"Name of a hunter signature ability, shown in the action list",[Press the Witness]
+hunters.advocate.signatures.stand-with-me.description,"Signature ability description, shown when inspecting the action","[Call in one of the many who owe you. For a while a villager stands at your shoulder, striking alongside you and taking a share of what is aimed your way.]"
+hunters.advocate.signatures.stand-with-me.name,"Name of a hunter signature ability, shown in the action list",[Stand With Me]
+hunters.advocate.title,"Hunter's title, shown under their name on the hunter-select screen","[A speaker for the wronged, who knows whose door to knock on]"
 hunters.huntress.manoeuvres.aim.description,"Manoeuvre description, shown when inspecting the action",[Steady the flintlock. Your next ranged shot this encounter cannot miss.]
 hunters.huntress.manoeuvres.aim.name,"Name of a hunter manoeuvre, shown in the action list",Aim
 hunters.huntress.manoeuvres.power-attack.description,"Manoeuvre description, shown when inspecting the action",[Put your weight behind the next blow. Your next melee strike deals half again its damage.]
@@ -368,7 +378,10 @@ log.outcome.revenant-unravels,Log line when the revenant is destroyed on consecr
 log.rite.consecration,Log line when you complete the consecration rite,[You spend the evening at the rite. By its end the church ground is warded against the risen dead.]
 log.run.arrive,Opening line of a run: the hunter reaches the valley,[{hunter} arrives in {place}.]
 log.signature.killing-blow,Log line when you line up a killing blow,[You measure the killing blow.]
+log.signature.press-the-witness,Log line when the Advocate re-opens a lost social lead,"[You go back and lean on it, gently, until it gives: {lead} is open to you again.]"
 log.signature.read-the-sign,Log line when the Occultist reinterprets an ambiguous sign into a proof,[You sit with it until it gives: {sign} stops agreeing with your suspicion and starts ruling out everything else.]
+log.signature.second-departs,Log line when the Advocate's second leaves the fight,"[Their nerve or their errand takes them, and you are standing alone again.]"
+log.signature.second-in-the-fight,Log line when the Advocate calls in a villager to stand with her,[Someone who owes you steps up out of the dark and sets their back to yours.]
 log.signature.snare,Log line when you set a snare,"[You rig a snare, quick and quiet.]"
 log.signature.snare-catches,Log line when a snare catches an enemy,[The snare snaps tight! The {name} is held fast.]
 log.signature.ward-ground,Log line when the Occultist wards the ground around her,[You draw the old marks into the earth. The air over them goes tight.]

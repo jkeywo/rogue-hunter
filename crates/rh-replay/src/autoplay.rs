@@ -668,6 +668,26 @@ impl Bot {
             }
         }
 
+        // Call in the second the moment the fight is joined, so the villager
+        // stands for as much of it as she can give. It is the Advocate's whole
+        // survival case, and the estimate certified her on the assumption she
+        // makes it — so a driver that never did was under-driving her.
+        if session.sim.state.hunter.second_turns == 0
+            && has_signature(session, "stand-with-me")
+            && hunter.distance(villain_pos) <= 4
+            && self.try_apply(
+                session,
+                "signature:stand-with-me",
+                Command::Signature {
+                    id: "stand-with-me".to_owned(),
+                    dir: None,
+                    target: None,
+                },
+            )
+        {
+            return;
+        }
+
         // Bind a shrouded revenant the moment we stand beside it.
         if adjacent
             && has_charm
