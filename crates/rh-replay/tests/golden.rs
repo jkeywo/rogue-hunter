@@ -79,13 +79,16 @@ fn autoplayer_wins_runs_for_every_hunter() {
 /// band pins today's reality so any further drift trips it.
 ///
 /// The band only ever moves down, and every reduction is backed by a scan.
-/// Raising it would be hiding the debt rather than paying it. It fell from
-/// 550 to 450 once the driver was taught to follow the soonest-ready route,
-/// to kite rather than brawl with a frail hunter, and to respawn clear of a
-/// waiting pack: the Huntress closed to a ~230 gap and the Occultist to ~390,
-/// the residual being a frail hunter's genuinely deadlier journey, which the
-/// estimate does not price and this band is here to absorb.
-const AGREEMENT_BAND_PERMILLE: u32 = 450;
+/// Raising it would be hiding the debt rather than paying it. 550 to 450 came
+/// from teaching the driver to follow the soonest-ready route, to kite rather
+/// than brawl on the road, and to respawn clear of a waiting pack. 450 to 350
+/// came from the fight itself: she puts shot into the villain while it crosses
+/// her warded ground instead of waiting empty-handed, and a frail hunter losing
+/// a melee trade now breaks contact and shoots rather than standing in it. Over
+/// ninety-six seeds that left the Huntress ~150 adrift and the Occultist ~285;
+/// what remains is a frail hunter's deadlier journey, which the estimate does
+/// not price and this band is here to absorb.
+const AGREEMENT_BAND_PERMILLE: u32 = 350;
 
 #[test]
 #[ignore = "slow corpus scan: holds the win rate to the certified estimate; run with --ignored"]

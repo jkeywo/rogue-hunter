@@ -339,9 +339,25 @@ impl Bot {
 
         // Emergency healing beats everything else; with draughts to spare,
         // top up after incidental scrapes too.
-        let hunter_hp = session.sim.state.hunter.hp;
-        let draughts = session.sim.state.hunter.item_count("wound-draught");
-        if ((hunter_hp <= 5 && draughts > 0) || (hunter_hp <= 8 && draughts >= 2))
+        //
+        // Both thresholds are shares of the hunter's own health, not the flat
+        // 5 and 8 they used to be. Those numbers were the Huntress's twelve
+        // health read as though it were everyone's: on the Occultist's nine
+        // they meant "drink at eight", which is a single scratch, so she spent
+        // her draughts on the road and reached every fight with none. That was
+        // the largest single reason she arrived underprepared.
+        let hunter = &session.sim.state.hunter;
+        let hunter_hp = hunter.hp;
+        let max_hp = hunter.max_hp.max(1);
+        let draughts = hunter.item_count("wound-draught");
+        let below =
+            |percent: u16| u32::from(hunter_hp) * 100 <= u32::from(max_hp) * u32::from(percent);
+        // Away from the final fight she keeps one back: the estimate certified
+        // the hunt on the draughts she would be carrying into it, and drinking
+        // the last one on the way is how that promise quietly stops being true.
+        let reserve = u16::from(!session.sim.state.final_hunt);
+        let spare = draughts.saturating_sub(reserve);
+        if ((below(40) && draughts > 0) || (below(65) && spare >= 1))
             && session.apply(Command::UseDraught).is_ok()
         {
             return;
@@ -777,6 +793,25 @@ impl Bot {
             return;
         }
 
+        // A frail hunter losing the exchange breaks contact and shoots rather
+        // than standing in a trade she is behind on: her health buys fewer
+        // turns than the thing in front of her has.
+        // Not frail while someone stands with her: a second both adds blows and
+        // takes them, which is exactly the trade she would be running from.
+        let frail = session.sim.catalogue.hunter.physical_cap < 2
+            && session.sim.state.hunter.max_hp < 12
+            && session.sim.state.hunter.second_turns == 0;
+        if adjacent
+            && frail
+            && !dormant
+            && session.sim.state.hunter.item_count("flintlock-shot") > 0
+            && u32::from(session.sim.state.hunter.hp) * 2
+                <= u32::from(session.sim.state.hunter.max_hp)
+            && self.step_away(session, villain_pos)
+        {
+            return;
+        }
+
         if adjacent {
             // Only strike when the blow can land (cadence villains).
             if def.cadence.is_some() && !vulnerable && !dormant {
@@ -869,9 +904,13 @@ impl Bot {
                 return;
             }
             // Standing on our own marks is the whole point: walking off them to
-            // meet the villain hands back the advantage we just paid for.
+            // meet the villain hands back the advantage we just paid for. But
+            // waiting empty-handed while it crosses wastes the very turns the
+            // ward bought — put shot into it as it comes.
             if already {
-                let _ = session.apply(Command::Wait);
+                if !self.shoot_if_able(session, actor_id, villain_pos, &def, vulnerable) {
+                    let _ = session.apply(Command::Wait);
+                }
                 return;
             }
         }
@@ -902,7 +941,39 @@ impl Bot {
                 }
             }
         }
+        // Still at range with nothing better to do: shoot it while it closes,
+        // rather than spending the approach taking blows without landing any.
+        if self.shoot_if_able(session, actor_id, villain_pos, &def, vulnerable) {
+            return;
+        }
         self.walk_toward(session, villain_pos, true);
+    }
+
+    /// Put ordinary shot into the villain from range, when a shot can land:
+    /// within the flintlock's reach, not already toe-to-toe, and either it has
+    /// no shroud or the shroud is currently thin. Returns whether it fired.
+    fn shoot_if_able(
+        &mut self,
+        session: &mut RunSession,
+        actor_id: rh_core::state::ActorId,
+        villain_pos: Point,
+        def: &rh_content::VillainDef,
+        vulnerable: bool,
+    ) -> bool {
+        let hunter = session.sim.state.hunter.pos;
+        let distance = hunter.distance(villain_pos);
+        if !(2..=6).contains(&distance)
+            || (def.cadence.is_some() && !vulnerable)
+            || session.sim.state.hunter.item_count("flintlock-shot") == 0
+        {
+            return false;
+        }
+        session
+            .apply(Command::Ranged {
+                target: Target::Actor(actor_id),
+                silver: false,
+            })
+            .is_ok()
     }
 
     /// Walk to the exit leading to `destination` and travel.
