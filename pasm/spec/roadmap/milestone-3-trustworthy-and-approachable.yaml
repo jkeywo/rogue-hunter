@@ -98,7 +98,7 @@ entities:
       owner: web-client
       reads: [authored-content-catalogue]
     implementation:
-      status: declared
+      status: confirmed
       target_paths: [crates/rh-web/src/lib.rs, crates/rh-terminal/src/render.rs, web/main.js, web/style.css]
       tests: [crates/rh-client-core/tests/session.rs]
 

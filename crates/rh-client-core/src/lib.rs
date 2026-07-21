@@ -1222,6 +1222,18 @@ impl ClientSession {
                         enabled: bool,
                         note: Option<String>,
                         intent: Intent| {
+            // A greyed-out row must always say why it is greyed out. The colour
+            // that dims it is the last channel a player without colour has, so
+            // the reason cannot live only in the hue. Any disabled row reaching
+            // here without a note is an authoring gap; the assert catches it in
+            // tests, and the fallback keeps a real player from ever facing a
+            // dead row with no explanation.
+            debug_assert!(
+                enabled || note.is_some(),
+                "disabled action '{label}' carries no reason"
+            );
+            let note =
+                note.or_else(|| (!enabled).then(|| strings.ui("ui.action.unavailable").to_owned()));
             actions.push(ActionEntry {
                 key: key
                     .map(str::to_owned)

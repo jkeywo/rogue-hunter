@@ -46,7 +46,7 @@ description = "npcs.archetypes.innkeeper.description"
 
 [archetypes.herbalist]
 name = "npcs.archetypes.herbalist.name"
-glyph = "H"
+glyph = "Y"
 name_pool = ["npcs.archetypes.herbalist.name-pool.1", "npcs.archetypes.herbalist.name-pool.2", "npcs.archetypes.herbalist.name-pool.3"]
 work_slot = "market-stall"
 can_host_villain = false

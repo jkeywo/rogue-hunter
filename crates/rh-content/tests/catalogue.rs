@@ -4,6 +4,35 @@
 use rh_content::{Concealment, ItemKind};
 
 #[test]
+fn a_villains_glyph_is_its_own() {
+    // A villain and a villager once shared the letter H, and a beast and a
+    // workbench shared W, so on the map the quarry and an innocent read alike.
+    // The villain glyphs are the fixed vocabulary; nothing an ordinary map
+    // draws may collide with one, because a glyph is the first thing a player
+    // reads and colour alone is not allowed to be the thing that tells them
+    // apart. Feature glyphs live in the client view and are asserted there;
+    // this holds the content the catalogue owns.
+    let catalogue = rh_content::load_embedded().expect("embedded content");
+    let villain_glyphs: std::collections::BTreeSet<char> =
+        catalogue.villains.values().map(|def| def.glyph).collect();
+
+    for (id, npc) in &catalogue.npcs.archetypes {
+        assert!(
+            !villain_glyphs.contains(&npc.glyph),
+            "npc '{id}' uses glyph '{}', which a villain already owns",
+            npc.glyph
+        );
+    }
+    for (id, enemy) in &catalogue.enemies {
+        assert!(
+            !villain_glyphs.contains(&enemy.glyph),
+            "enemy '{id}' uses glyph '{}', which a villain already owns",
+            enemy.glyph
+        );
+    }
+}
+
+#[test]
 fn embedded_catalogue_loads_and_validates() {
     let catalogue = rh_content::load_embedded().expect("embedded content must validate");
 

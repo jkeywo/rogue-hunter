@@ -34,11 +34,31 @@ body {
 
 #main { display: flex; gap: 10px; }
 
+/* Present to a screen reader, absent to the eye. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 #map {
   background: var(--bg);
   border: 1px solid var(--border);
-  outline: none;
   flex-shrink: 0;
+}
+
+/* A visible focus ring is the only way a keyboard player can tell where they
+   are. It was removed from the canvas; it is back, and given to every control
+   that can hold focus. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 #side { flex: 1; min-width: 240px; overflow-y: auto; max-height: 484px; }
@@ -51,7 +71,17 @@ body {
 #actions { flex: 0 0 220px; overflow-y: auto; max-height: 484px; }
 #actions h3 { margin: 0 0 4px; font-size: 14px; border-bottom: 1px solid var(--border); }
 ul.actionlist { list-style: none; margin: 0; padding: 0; }
+ul.actionlist li { margin: 0; }
+/* The rows are real buttons now; strip the browser chrome so they read as the
+   list they always looked like, keeping the behaviour a button brings. */
 ul.actionlist .action {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: inherit;
   padding: 2px 6px;
   cursor: pointer;
   border-radius: 2px;
@@ -68,6 +98,20 @@ ul.actionlist .akey {
 }
 ul.actionlist .action.disabled .akey { color: var(--dim); }
 ul.actionlist .note { color: var(--dim); }
+
+/* The map key: a glyph and what it means, in a tidy grid. */
+ul.legend { list-style: none; margin: 4px 0; padding: 0; }
+ul.legend li { display: flex; gap: 8px; align-items: baseline; }
+ul.legend .lglyph {
+  display: inline-block;
+  min-width: 1.2em;
+  text-align: center;
+  color: var(--accent);
+  font-weight: bold;
+}
+/* Hostility marker in the sight list — a symbol, not only a hue. */
+.sightlist .mark { display: inline-block; min-width: 1em; font-weight: bold; }
+.sightlist .hostile .mark { color: #ff5f5f; }
 
 #log { margin-top: 10px; min-height: 150px; }
 .events div { margin: 1px 0; }

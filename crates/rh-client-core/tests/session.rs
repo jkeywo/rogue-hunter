@@ -897,6 +897,44 @@ fn the_guide_says_how_a_hunt_is_solved() {
 }
 
 #[test]
+fn the_run_view_never_leans_on_colour_alone() {
+    // Everything a player must tell apart on the run screen is carried by
+    // something other than a hue: a greyed-out action says why, a log line
+    // names its kind, and the map has a written key.
+    let client = run_on_seed("11");
+    let run = match client.view().screen {
+        rh_client_core::view::ScreenView::Run(run) => run,
+        other => panic!("expected the run view, got {other:?}"),
+    };
+
+    // A disabled action always carries a reason — the colour that dims it is
+    // the last channel a colourblind player has.
+    for action in &run.actions {
+        assert!(
+            action.enabled || action.note.is_some(),
+            "disabled action '{}' gives no reason",
+            action.label
+        );
+    }
+
+    // Every log line is tagged with its kind, so the eight event colours are
+    // not the only thing saying what a line is about.
+    for (_, text) in &run.log_tail {
+        assert!(
+            text.starts_with('['),
+            "log line is not kind-tagged: {text:?}"
+        );
+    }
+
+    // The map has a key, and it covers the hunter's own glyph at least.
+    assert!(
+        run.legend.iter().any(|entry| entry.glyph == '@'),
+        "the map key must explain the hunter's glyph"
+    );
+    assert!(run.legend.len() >= 6, "the key should cover the vocabulary");
+}
+
+#[test]
 fn the_dossier_says_what_each_carried_item_is_for() {
     let client = run_on_seed("11");
     let pack = match client.view().screen {

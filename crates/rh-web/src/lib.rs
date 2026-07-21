@@ -299,7 +299,10 @@ fn css_color(color: CellColor) -> &'static str {
         CellColor::Villain => "#ff3030",
         CellColor::VillainVulnerable => "#ff87ff",
         CellColor::Terrain => "#9e9e8e",
-        CellColor::TerrainDim => "#4a4a42",
+        // Remembered ground: dimmer than what is in sight, but still legible —
+        // it was #4a4a42, which a contrast check found was below the bar for
+        // reading at all. Held clearly below Terrain so the two still differ.
+        CellColor::TerrainDim => "#70705f",
         CellColor::Feature => "#87afff",
         CellColor::Opportunity => "#87ff87",
         CellColor::Exit => "#5fffff",
@@ -364,9 +367,17 @@ fn side_html(run: &RunView, labels: &PanelLabels) -> String {
     } else {
         html.push_str("<ul class=\"sightlist\">");
         for entry in &run.in_sight {
+            // Hostility is a word, not only a colour: the class still tints it
+            // for a sighted player, and the marker names it for everyone else.
+            let (class, mark) = if entry.hostile {
+                ("hostile", &labels.sight_hostile)
+            } else {
+                ("villager", &labels.sight_villager)
+            };
             html.push_str(&format!(
-                "<li class=\"{}\">{} {} <span class=\"note\">[{}]</span></li>",
-                if entry.hostile { "hostile" } else { "villager" },
+                "<li class=\"{class}\"><span class=\"mark\">{}</span> {} {} \
+                   <span class=\"note\">[{}]</span></li>",
+                escape(mark),
                 escape(&entry.name),
                 escape(&entry.detail),
                 entry.distance
@@ -385,23 +396,47 @@ fn side_html(run: &RunView, labels: &PanelLabels) -> String {
         ));
     }
     html.push_str("</ul>");
+    // The map key: what each glyph means, so the canvas is not the only place
+    // that knowledge lives and a player never has to guess a character.
+    if !run.legend.is_empty() {
+        html.push_str(&format!(
+            "<h3>{}</h3><ul class=\"legend\">",
+            escape(&labels.legend)
+        ));
+        for entry in &run.legend {
+            html.push_str(&format!(
+                "<li><span class=\"lglyph\">{}</span> {}</li>",
+                escape(&entry.glyph.to_string()),
+                escape(&entry.meaning)
+            ));
+        }
+        html.push_str("</ul>");
+    }
     html
 }
 
 fn actions_html(run: &RunView, labels: &PanelLabels) -> String {
+    // Real buttons, not clickable list items: an action is a thing you do, and
+    // a screen reader should announce it as a button and let a keyboard reach
+    // it. `aria-disabled` rather than the `disabled` attribute keeps a blocked
+    // row focusable, so a player can land on it and hear *why* it is blocked —
+    // which is the whole reason a disabled action carries a note.
     let mut html = format!(
-        "<h3>{}</h3><ul class=\"actionlist\">",
+        "<h3 id=\"actions-heading\">{}</h3>\
+         <ul class=\"actionlist\" role=\"group\" aria-labelledby=\"actions-heading\">",
         escape(&labels.actions)
     );
     for (index, action) in run.actions.iter().enumerate() {
         let disabled = if action.enabled { "" } else { " disabled" };
+        let aria_disabled = if action.enabled { "false" } else { "true" };
         let note = match &action.note {
             Some(note) => format!("<span class=\"note\"> ({})</span>", escape(note)),
             None => String::new(),
         };
         html.push_str(&format!(
-            "<li class=\"action{disabled}\" data-action=\"{index}\">\
-               <span class=\"akey\">{}</span> {}{}</li>",
+            "<li><button type=\"button\" class=\"action{disabled}\" data-action=\"{index}\" \
+               aria-disabled=\"{aria_disabled}\">\
+               <span class=\"akey\">{}</span> {}{}</button></li>",
             escape(&action.key),
             escape(&action.label),
             note
@@ -420,11 +455,21 @@ fn log_html(run: &RunView, status: &str) -> String {
             escape(text)
         ));
     }
+    // The status and hint are what a sighted player's eye is drawn to, so they
+    // get a live region and are announced when they change. The log above is
+    // not live: it is rebuilt whole each frame, and announcing the whole tail
+    // every time would be a wall of noise.
     if !status.is_empty() {
-        html.push_str(&format!("<div class=\"status\">{}</div>", escape(status)));
+        html.push_str(&format!(
+            "<div class=\"status\" role=\"status\" aria-live=\"polite\">{}</div>",
+            escape(status)
+        ));
     }
     if let Some(hint) = &run.hint {
-        html.push_str(&format!("<div class=\"hint\">{}</div>", escape(hint)));
+        html.push_str(&format!(
+            "<div class=\"hint\" role=\"status\" aria-live=\"polite\">{}</div>",
+            escape(hint)
+        ));
     }
     html.push_str("</div>");
     html
@@ -439,20 +484,30 @@ fn overlay_html(overlay: &OverlayView, labels: &PanelLabels) -> String {
         ));
         return html;
     }
-    html.push_str("<ul class=\"menu\">");
+    // A listbox: the highlight is a selection, announced with aria-selected so
+    // a screen-reader user knows which row confirming will take, not just which
+    // one is a different colour.
+    html.push_str("<ul class=\"menu\" role=\"listbox\" tabindex=\"0\">");
     for (index, (label, blocked)) in overlay.items.iter().enumerate() {
         let selected = if index == overlay.selected {
             " selected"
         } else {
             ""
         };
+        let aria = if index == overlay.selected {
+            "true"
+        } else {
+            "false"
+        };
         match blocked {
             None => html.push_str(&format!(
-                "<li class=\"item{selected}\" data-choice=\"{index}\">{}</li>",
+                "<li class=\"item{selected}\" role=\"option\" aria-selected=\"{aria}\" \
+                   data-choice=\"{index}\">{}</li>",
                 escape(label)
             )),
             Some(reason) => html.push_str(&format!(
-                "<li class=\"item blocked{selected}\" data-choice=\"{index}\">{} — {}</li>",
+                "<li class=\"item blocked{selected}\" role=\"option\" aria-selected=\"{aria}\" \
+                   data-choice=\"{index}\">{} — {}</li>",
                 escape(label),
                 escape(reason)
             )),
@@ -629,4 +684,62 @@ fn console_error_panic_hook() {
             web_sys::console::error_1(&JsValue::from_str(&info.to_string()));
         }));
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Parse "#rrggbb" into linearised channels for a WCAG luminance sum.
+    fn luminance(hex: &str) -> f64 {
+        let channel = |s: &str| {
+            let v = u8::from_str_radix(s, 16).unwrap() as f64 / 255.0;
+            if v <= 0.03928 {
+                v / 12.92
+            } else {
+                ((v + 0.055) / 1.055).powf(2.4)
+            }
+        };
+        let r = channel(&hex[1..3]);
+        let g = channel(&hex[3..5]);
+        let b = channel(&hex[5..7]);
+        0.2126 * r + 0.7152 * g + 0.0722 * b
+    }
+
+    fn contrast(a: &str, b: &str) -> f64 {
+        let (la, lb) = (luminance(a), luminance(b));
+        let (hi, lo) = if la > lb { (la, lb) } else { (lb, la) };
+        (hi + 0.05) / (lo + 0.05)
+    }
+
+    #[test]
+    fn every_map_colour_is_legible_on_the_canvas() {
+        // The glyphs are drawn on the canvas fill; checked against a stated
+        // standard rather than by eye. They are 18px bold, so WCAG's 3:1 for
+        // large text is the bar. Unseen is exempt: it is meant to be invisible,
+        // that being what "you cannot see this tile" looks like.
+        const CANVAS_BG: &str = "#0a0a08";
+        const LARGE_TEXT_MIN: f64 = 3.0;
+        let colours = [
+            CellColor::Hunter,
+            CellColor::Npc,
+            CellColor::Enemy,
+            CellColor::Villain,
+            CellColor::VillainVulnerable,
+            CellColor::Terrain,
+            CellColor::TerrainDim,
+            CellColor::Feature,
+            CellColor::Opportunity,
+            CellColor::Exit,
+            CellColor::Snare,
+        ];
+        for colour in colours {
+            let ratio = contrast(css_color(colour), CANVAS_BG);
+            assert!(
+                ratio >= LARGE_TEXT_MIN,
+                "{colour:?} at {} has contrast {ratio:.2} on the canvas, below {LARGE_TEXT_MIN}",
+                css_color(colour)
+            );
+        }
+    }
 }

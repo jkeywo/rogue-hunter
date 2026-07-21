@@ -20,6 +20,13 @@ async function main() {
     if (event.ctrlKey || event.metaKey || event.altKey) {
       return;
     }
+    // If focus is on a real control, let it own its activation keys — a button
+    // should fire on Enter/Space the way every button does, rather than have
+    // the global handler read those keys as game input under it.
+    const onControl = event.target?.closest?.("button, [role='listbox']");
+    if (onControl && (event.key === "Enter" || event.key === " ")) {
+      return;
+    }
     if (client.handle_key(event.key, false)) {
       event.preventDefault();
     }

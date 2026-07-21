@@ -60,6 +60,11 @@ pub struct PanelLabels {
     /// Heading and empty-state for the in-sight panel.
     pub in_sight: String,
     pub in_sight_empty: String,
+    /// Textual markers so hostility in the sight list is not colour alone.
+    pub sight_hostile: String,
+    pub sight_villager: String,
+    /// Heading for the map-key panel.
+    pub legend: String,
     /// Heading for the case report's what-you-carried section.
     pub preparations: String,
     /// Heading for the look panel, by how the player is pointing.
@@ -91,6 +96,9 @@ impl PanelLabels {
             pack: strings.ui("ui.panel.pack").to_owned(),
             in_sight: strings.ui("ui.panel.in-sight").to_owned(),
             in_sight_empty: strings.ui("ui.panel.in-sight-empty").to_owned(),
+            sight_hostile: strings.ui("ui.sight.hostile").to_owned(),
+            sight_villager: strings.ui("ui.sight.villager").to_owned(),
+            legend: strings.ui("ui.legend.title").to_owned(),
             preparations: strings.ui("ui.report.preparations-title").to_owned(),
             look_cursor: strings.ui("ui.panel.look-cursor").to_owned(),
             look_hover: strings.ui("ui.panel.look-hover").to_owned(),
@@ -164,8 +172,19 @@ pub struct RunView {
     pub looking: bool,
     /// Inspection text for the cursor tile; `None` when nothing is targeted.
     pub inspect: Option<String>,
+    /// A key to the glyphs on the map: what each character means, so the map
+    /// is never a picture a player has to have colour to read. Fixed
+    /// vocabulary, not the live board — a legend, not a second map.
+    pub legend: Vec<LegendEntry>,
     /// Active modal (menu / targeting), rendered as an overlay.
     pub overlay: Option<OverlayView>,
+}
+
+/// One row of the map key: a glyph and what it stands for.
+#[derive(Debug, Clone)]
+pub struct LegendEntry {
+    pub glyph: char,
+    pub meaning: String,
 }
 
 #[derive(Debug, Clone)]
@@ -205,7 +224,7 @@ pub fn terrain_glyph(terrain: Terrain) -> char {
         Terrain::Road => ':',
         Terrain::Grass => ',',
         Terrain::Altar => 'A',
-        Terrain::Workstation => 'W',
+        Terrain::Workstation => '=',
     }
 }
 
@@ -505,7 +524,7 @@ fn build_run_view(session: &ClientSession) -> RunView {
                         && state.opened_graves.contains(&feature.id);
                 let glyph = match feature.kind {
                     rh_core::world::FeatureKind::Altar => 'A',
-                    rh_core::world::FeatureKind::Workstation => 'W',
+                    rh_core::world::FeatureKind::Workstation => '=',
                     rh_core::world::FeatureKind::Grave { .. } if opened_grave => 'u',
                     rh_core::world::FeatureKind::Grave { .. } => 'n',
                     // A kill site draws as its terrain, like any other
@@ -630,13 +649,20 @@ fn build_run_view(session: &ClientSession) -> RunView {
         })
         .collect();
 
+    // Each line is tagged with its kind, so the eight event colours are not
+    // the only thing saying what a line is: a reader without colour gets the
+    // tag, a reader with it gets both. The kind stays in the tuple for the
+    // colour a sighted player still sees.
     let log_tail: Vec<(EventKind, String)> = state
         .log
         .iter()
         .rev()
         .take(8)
         .rev()
-        .map(|event| (event.kind, event.text.clone()))
+        .map(|event| {
+            let tag = sim.catalogue.strings.ui(event_kind_label(event.kind));
+            (event.kind, format!("{tag} {}", event.text))
+        })
         .collect();
 
     let overlay = session.modal.as_ref().map(|modal| match modal {
@@ -790,7 +816,47 @@ fn build_run_view(session: &ClientSession) -> RunView {
         inspect: session
             .look_point()
             .and_then(|point| session.inspect(point)),
+        legend: map_legend(strings),
         overlay,
+    }
+}
+
+/// The key to the map's glyphs. A fixed vocabulary drawn from the string
+/// table, so a player who cannot lean on colour can still read what each
+/// character is. Ordered from the hunter outward, people before things.
+fn map_legend(strings: &rh_content::StringTable) -> Vec<LegendEntry> {
+    [
+        ('@', "ui.legend.hunter"),
+        ('W', "ui.legend.villain"),
+        ('t', "ui.legend.enemy"),
+        ('P', "ui.legend.villager"),
+        ('?', "ui.legend.opportunity"),
+        ('n', "ui.legend.grave"),
+        ('=', "ui.legend.workstation"),
+        ('A', "ui.legend.altar"),
+        ('^', "ui.legend.snare"),
+        ('>', "ui.legend.exit"),
+    ]
+    .into_iter()
+    .map(|(glyph, id)| LegendEntry {
+        glyph,
+        meaning: strings.ui(id).to_owned(),
+    })
+    .collect()
+}
+
+/// A short, non-colour tag for a log line's kind, so the eight event colours
+/// are not the only thing telling a player what a line is about.
+pub fn event_kind_label(kind: EventKind) -> &'static str {
+    match kind {
+        EventKind::Combat => "ui.log.kind.combat",
+        EventKind::Telegraph => "ui.log.kind.telegraph",
+        EventKind::Clue => "ui.log.kind.clue",
+        EventKind::Clock => "ui.log.kind.clock",
+        EventKind::Social => "ui.log.kind.social",
+        EventKind::Item => "ui.log.kind.item",
+        EventKind::Travel => "ui.log.kind.travel",
+        EventKind::System => "ui.log.kind.system",
     }
 }
 
@@ -816,6 +882,7 @@ fn empty_run_view() -> RunView {
         cursor: None,
         looking: false,
         inspect: None,
+        legend: Vec::new(),
         overlay: None,
     }
 }

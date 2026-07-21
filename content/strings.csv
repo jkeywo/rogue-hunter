@@ -690,6 +690,7 @@ ui.action.set-snare,Action panel: set a snare on an adjacent tile,[Set Snare]
 ui.action.sprint,Action panel: sprint several tiles in one action,[Sprint (move {tiles})]
 ui.action.talk,Action-menu label for talking to a villager,[Talk with {npc}]
 ui.action.travel,Interact-menu row for taking the road out of a map,[Take the road to {place} — it spends a day]
+ui.action.unavailable,Fallback note on a disabled action row when no specific reason was given,[Not something you can do right now.]
 ui.action.valley,Action panel: open the region map,[The Valley (map)]
 ui.action.wait,Action panel: pass a turn,Wait
 ui.action.walk-to,Action-panel row: walk to the tile the cursor is on,[Walk to the mark]
@@ -807,6 +808,25 @@ ui.keys.wait,"Splash screen key-bindings table, action column",[Wait a turn]
 ui.keys.wait.keys,"Splash screen key-bindings table, keys column",[Space / .]
 ui.keys.walk,"Splash screen key-bindings table, action column","[Walk to the look cursor, stopping if anything happens]"
 ui.keys.walk.keys,"Splash screen key-bindings table, keys column",[Enter / click the map]
+ui.legend.altar,Map key: an altar feature's glyph,[An altar]
+ui.legend.enemy,Map key: an ordinary enemy's glyph,[A lesser threat]
+ui.legend.exit,Map key: a road out to another region,[A road out]
+ui.legend.grave,Map key: a grave feature's glyph,[A grave]
+ui.legend.hunter,Map key: the hunter's glyph,[You]
+ui.legend.opportunity,Map key: an investigable lead's glyph,[Something worth a look]
+ui.legend.snare,Map key: a set snare's glyph,[A snare you set]
+ui.legend.title,Heading for the map key panel,[Map Key]
+ui.legend.villager,Map key: a villager's glyph,[A villager]
+ui.legend.villain,Map key: the villain's glyph,[Your quarry]
+ui.legend.workstation,Map key: a workstation feature's glyph,[A workbench]
+ui.log.kind.clock,Log line kind tag: the clock or a scheme event,[time]
+ui.log.kind.clue,Log line kind tag: a clue or knowledge gain,[clue]
+ui.log.kind.combat,Log line kind tag: combat,[fight]
+ui.log.kind.item,"Log line kind tag: crafting, items, loot",[item]
+ui.log.kind.social,Log line kind tag: conversation and fallout,[word]
+ui.log.kind.system,Log line kind tag: run start/end and system messages,[note]
+ui.log.kind.telegraph,Log line kind tag: a monster's tell,[tell]
+ui.log.kind.travel,Log line kind tag: travel and arrival,[road]
 ui.npc.dead-by-your-hand,"Shown on an NPC you killed, in the faces list",[Dead by your hand.]
 ui.npc.disposition,"How an NPC regards you, in the faces list",Disposition: {disposition}
 ui.npc.fled,"Shown on an NPC who has fled, in the faces list",[Fled.]
@@ -865,6 +885,8 @@ ui.seed-entry.prompt,Instruction on the seed-entry screen,"[Type a number, then 
 ui.seed-entry.title,Title of the seed-entry screen,[Enter Seed]
 ui.sight.health,"Health of a visible foe, in the in-sight panel",[{current}/{max}]
 ui.sight.held,Appended in the in-sight panel when a foe is held by a snare,"[, held fast]"
+ui.sight.hostile,"Marker before a hostile in the in-sight list, so hostility is not colour alone",[!]
+ui.sight.villager,Marker before a villager in the in-sight list,[·]
 ui.sight.vulnerable,Appended in the in-sight panel when the villain can be wounded now,"[, VULNERABLE]"
 ui.splash.intro.1,"Splash screen opening paragraph, first of three","[Something is killing the valley folk, and the valley has sent for you.]"
 ui.splash.intro.2,"Splash screen opening paragraph, second of three: the shape of a run","[You have six days. Walk the settlement, the deep wood, and the forsaken manor; trade words and watch faces; read the signs the thing cannot help but leave. Prove its name twice over, prepare its death, and take the hunt to it — or let the sixth night come, and it will take the hunt to you.]"

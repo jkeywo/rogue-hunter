@@ -630,3 +630,21 @@ entities:
       title: A seed the Advocate cannot be given fairly takes the planner a while to refuse
       summary: "Certifying is per hunter, and the Advocate is the most expensive to certify: her high Social pool makes many nodes affordable, so the search tree branches wide, and a seed that genuinely has no route she can walk is only proven so by exhausting the whole budget - eight opening attempts, each an iterative-deepening search to two hundred thousand states, about twenty seconds in all. She certifies most seeds quickly and the game rejects an uncertifiable one forward to the next, so a player feels this only as an occasional pause on hunter selection, and the tests are bounded to check a fixed number of certified worlds rather than pay for a run of refusals. It is recorded as provisional because the honest fix is a real one - an admissible upper bound on a world's best possible viability, to refuse a hopeless seed before the search rather than after - and that is a planner-performance pass of its own, deliberately not rushed here where it could shift which seeds certify."
       references: [the-advocate-certifies-on-a-priced-second, route-certification-strategy, search-moves-and-route-steps-stay-two-types]
+
+  # Milestone 3: nothing told by colour alone, and a web client you can drive.
+
+  - decision: redundancy-is-fixed-in-the-view-model-not-the-renderers
+    core:
+      status: accepted
+      confidence: confirmed
+      title: What a player must tell apart is carried by more than a hue, once
+      summary: "A run screen distinguished several things by colour alone: a disabled action was greyed, a hostile was tinted, a log line's kind was one of eight colours, and a villain and a villager could even share a glyph. The fixes live in the shared view model, not in each renderer, because the view model exists precisely so the two clients cannot drift and a fix applied twice would. A disabled action now always carries a note - enforced in the one place actions are built, with an assert for authoring gaps and a fallback so a real player never faces a dead row with no reason. Each log line is tagged with its kind in text, composed in the view model so both clients get it. The sight list marks hostility with a symbol. And the map gained a written key - a fixed vocabulary, a legend and not a second map - so the canvas is never the only place a glyph's meaning lives. Two real glyph collisions were fixed in content and a validation test forbids their return: a villain's glyph is its own, and no villager, enemy, or feature may take it."
+      references: [accessible-presentation, text-is-data-and-never-branched-on, the-guide-is-content-not-a-tutorial]
+
+  - decision: the-web-client-is-driveable-without-sight
+    core:
+      status: accepted
+      confidence: confirmed
+      title: Real controls, focus, and a contrast a machine checks
+      summary: "The browser client rendered its panels as anonymous divs and clickable list items: nothing announced itself to assistive technology, nothing held a keyboard focus ring, and the only tabindex removed the one the canvas had. Action rows are real buttons now, disabled ones marked aria-disabled so they stay reachable and can say why; menus are a listbox of options with aria-selected, so a screen reader knows which row confirming will take; the modal is a dialog; the status line is a live region that announces when it changes; the map is an image with a label pointing at the panels that describe it; and the focus ring is back, given to every control. A textual mirror of the canvas map was deliberately left out of scope. Contrast is a gate rather than an eye: a test computes the WCAG ratio of every map colour against the canvas and fails below the bar for large text - it caught remembered ground sitting at 2.2 to 1, genuinely too dim to read, and that colour was lifted until it passed."
+      references: [redundancy-is-fixed-in-the-view-model-not-the-renderers, web-client, mouse-inspection-and-actions]

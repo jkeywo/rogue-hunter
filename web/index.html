@@ -7,17 +7,18 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <h1 class="sr-only">Rogue Hunter</h1>
   <div id="app">
     <div id="fullscreen" class="panel"></div>
-    <div id="game" class="hidden">
+    <main id="game" class="hidden">
       <div id="main">
-        <canvas id="map" tabindex="0"></canvas>
-        <div id="side" class="panel"></div>
+        <canvas id="map" tabindex="0" role="img" aria-label="The map. Use the panels beside it to read what is on it."></canvas>
+        <aside id="side" class="panel" aria-label="Status and surroundings"></aside>
         <div id="actions" class="panel"></div>
       </div>
       <div id="log" class="panel"></div>
-    </div>
-    <div id="overlay" class="panel hidden"></div>
+    </main>
+    <div id="overlay" class="panel hidden" role="dialog" aria-modal="true"></div>
   </div>
   <script type="module" src="main.js"></script>
 </body>
