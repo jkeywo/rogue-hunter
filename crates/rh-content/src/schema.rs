@@ -175,13 +175,13 @@ pub enum SignatureEffect {
     /// torn at for the crossing.
     WardTheGround { turns: u8, radius: u8 },
     /// Re-open a lost social lead, or resolve a standing one without spending a
-    /// Social point. The Advocate's route through the case runs on people, and
+    /// Social point. The Confessor's route through the case runs on people, and
     /// this is how she keeps a door from closing for good. Route-relevant and
     /// combat-irrelevant on purpose: it is her identity, not her certification.
     PressTheWitness,
     /// Call in a villager who owes the hunter her standing: a second who
     /// stands with her for the fight, adding blows and soaking some in return.
-    /// The one signature the Advocate certifies on, priced in the model's own
+    /// The one signature the Confessor certifies on, priced in the model's own
     /// two currencies — damage a turn and turns survived — so a hunter who
     /// fights through people is still a hunter the estimate can vouch for.
     SecondInTheFight { turns: u8, damage_per_turn: u16 },

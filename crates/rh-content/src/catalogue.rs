@@ -113,7 +113,7 @@ impl Catalogue {
         // A run always has a selected hunter, and callers override it before
         // generating. The default is the Huntress by name rather than whoever
         // sorts first by id: she is the plainest hunter to learn on, and a
-        // default chosen by alphabetical accident put the Advocate here the
+        // default chosen by alphabetical accident put the Confessor here the
         // moment she was added — a worse first run, and a slower one, since a
         // social hunter is the planner's most expensive to certify.
         let (default_id, default_hunter) = hunters

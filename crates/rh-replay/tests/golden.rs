@@ -24,7 +24,7 @@ fn autoplayer_wins_runs_for_every_hunter() {
         // Sixteen worlds per hunter is enough to prove she can finish a case
         // and that her wins round-trip through a share code. The deeper win-
         // rate measurement is the ignored corpus scan; keeping this one small
-        // matters because the Advocate is the planner's most expensive to
+        // matters because the Confessor is the planner's most expensive to
         // certify, and a wide range here would pay for her slow refusals.
         for seed in 0..16u64 {
             // Certification may refuse a world for this hunter; rejecting
@@ -289,7 +289,7 @@ fn translating_the_route_text_does_not_change_what_the_autoplayer_does() {
 fn the_autoplay_report_agrees_with_the_world_it_describes() {
     for hunter in catalogue().hunters.keys() {
         // Seed 7 certifies quickly for all three; the diagnosis's seed 17 is
-        // one the Advocate cannot be given, and proving that is her slowest
+        // one the Confessor cannot be given, and proving that is her slowest
         // path — not what this test is here to exercise.
         let (mut session, _used) = RunSession::new_from_viable_seed(7, catalogue(), hunter)
             .expect("seed 7 certifies for every hunter");

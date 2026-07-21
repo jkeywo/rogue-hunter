@@ -1,0 +1,52 @@
+# The Confessor: hears what the valley will not say aloud. The highest Social
+# in the game opens doors the others cannot, and she can press a witness back
+# into finishing what they started telling her — but she has no finish of her
+# own and little health, and when it comes to the fight she wins it by not
+# standing in it alone.
+
+name = "hunters.confessor.name"
+title = "hunters.confessor.title"
+glyph = "@"
+health = 10
+lore_cap = 2
+social_cap = 3
+mystic_cap = 1
+physical_cap = 1
+stamina_cap = 6
+starting_items = ["hunting-blade", "flintlock", "flintlock-shot", "flintlock-shot"]
+
+# The same body and flintlock as anyone, so the generic manoeuvres carry over —
+# except Power Attack. Throwing her weight behind a blow is not her craft.
+
+[[manoeuvres]]
+id = "aim"
+name = "hunters.confessor.manoeuvres.aim.name"
+stamina_cost = 3
+effect = { kind = "sure-ranged-shot" }
+description = "hunters.confessor.manoeuvres.aim.description"
+
+[[manoeuvres]]
+id = "sprint"
+name = "hunters.confessor.manoeuvres.sprint.name"
+stamina_cost = 2
+effect = { kind = "dash", tiles = 2 }
+description = "hunters.confessor.manoeuvres.sprint.description"
+
+# Her signatures are the two things only she can do: reopen a confession that
+# stopped short, and call in one of the many whose sins she has kept to stand
+# at her shoulder when the thing finally shows itself. The second is what the
+# estimate vouches for; the first is who she is.
+
+[[signatures]]
+id = "press-the-witness"
+name = "hunters.confessor.signatures.press-the-witness.name"
+physical_cost = 1
+effect = { kind = "press-the-witness" }
+description = "hunters.confessor.signatures.press-the-witness.description"
+
+[[signatures]]
+id = "stand-with-me"
+name = "hunters.confessor.signatures.stand-with-me.name"
+physical_cost = 1
+effect = { kind = "second-in-the-fight", turns = 6, damage_per_turn = 3 }
+description = "hunters.confessor.signatures.stand-with-me.description"

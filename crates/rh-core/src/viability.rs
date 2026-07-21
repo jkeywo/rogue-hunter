@@ -119,7 +119,7 @@ pub fn hunt_viability(
     let has_killing_blow = affords(killing_blow_cost);
     let has_ward = affords(ward_cost);
 
-    // The Advocate's second: a villager who stands with her adds blows and
+    // The Confessor's second: a villager who stands with her adds blows and
     // takes some in return. Priced in the model's own two currencies rather
     // than a new axis — damage a turn here, turns survived below — so a hunter
     // who fights through people is one the estimate can still vouch for. Read
@@ -308,7 +308,7 @@ pub fn hunt_viability(
     }
     // The second takes half of what comes at her while it stands, so across
     // its `turns` it buys back about half of them in survival. This is the
-    // Advocate's whole survival case — she has neither the health to trade nor
+    // Confessor's whole survival case — she has neither the health to trade nor
     // a snare to deny — so unlike the snare and ward above it stacks rather
     // than being one branch of a choice.
     if let Some((turns, _)) = second {
@@ -369,13 +369,13 @@ mod tests {
     }
 
     #[test]
-    fn the_advocates_second_is_what_carries_her() {
-        // The Advocate has neither the health to trade nor a snare to deny, so
+    fn the_confessors_second_is_what_carries_her() {
+        // The Confessor has neither the health to trade nor a snare to deny, so
         // the estimate must be pricing her second — and only her second — when
         // it vouches for her. Score her loadout with the Physical point that
         // buys the second and without it; the gap is the second alone, since
         // nothing else she carries turns on that point.
-        let cat = catalogue().with_hunter("advocate").expect("advocate");
+        let cat = catalogue().with_hunter("confessor").expect("confessor");
         let with_point = HuntLoadout {
             hunter_hp: cat.hunter.health,
             draughts: 1,

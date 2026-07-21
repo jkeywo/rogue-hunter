@@ -607,7 +607,7 @@ entities:
 
   # Milestone 3: a third hunter, to prove the model generalises.
 
-  - decision: the-advocate-certifies-on-a-priced-second
+  - decision: the-confessor-certifies-on-a-priced-second
     core:
       status: accepted
       confidence: confirmed
@@ -620,16 +620,16 @@ entities:
       status: accepted
       confidence: confirmed
       title: The default hunter is the Huntress by name, not whoever sorts first
-      summary: "A run with no hunter chosen falls back to a default, which was the first hunter by id. Adding the Advocate put her there by alphabetical accident - a worse first run, since she is the subtlest of the three to learn on, and a slower one, since a social hunter is the planner's most expensive to certify and an unlucky default seed could make a fresh run pause for twenty seconds while the search for a route she cannot walk exhausts itself. The default is now the Huntress by name, the plainest hunter and the fastest to certify, falling back to first-by-id only if she is somehow absent. Tests that do not care which hunter they run also went through the default, so this keeps the suite from paying the Advocate's certification cost to check things that have nothing to do with her."
-      references: [the-advocate-certifies-on-a-priced-second, catalogue-carries-the-selected-hunter]
+      summary: "A run with no hunter chosen falls back to a default, which was the first hunter by id. Adding the Confessor put her there by alphabetical accident - a worse first run, since she is the subtlest of the three to learn on, and a slower one, since a social hunter is the planner's most expensive to certify and an unlucky default seed could make a fresh run pause for twenty seconds while the search for a route she cannot walk exhausts itself. The default is now the Huntress by name, the plainest hunter and the fastest to certify, falling back to first-by-id only if she is somehow absent. Tests that do not care which hunter they run also went through the default, so this keeps the suite from paying the Confessor's certification cost to check things that have nothing to do with her."
+      references: [the-confessor-certifies-on-a-priced-second, catalogue-carries-the-selected-hunter]
 
-  - decision: the-advocates-slow-refusal-is-a-known-planner-cost
+  - decision: the-confessors-slow-refusal-is-a-known-planner-cost
     core:
       status: accepted
       confidence: provisional
-      title: A seed the Advocate cannot be given fairly takes the planner a while to refuse
-      summary: "Certifying is per hunter, and the Advocate is the most expensive to certify: her high Social pool makes many nodes affordable, so the search tree branches wide, and a seed that genuinely has no route she can walk is only proven so by exhausting the whole budget - eight opening attempts, each an iterative-deepening search to two hundred thousand states, about twenty seconds in all. She certifies most seeds quickly and the game rejects an uncertifiable one forward to the next, so a player feels this only as an occasional pause on hunter selection, and the tests are bounded to check a fixed number of certified worlds rather than pay for a run of refusals. It is recorded as provisional because the honest fix is a real one - an admissible upper bound on a world's best possible viability, to refuse a hopeless seed before the search rather than after - and that is a planner-performance pass of its own, deliberately not rushed here where it could shift which seeds certify."
-      references: [the-advocate-certifies-on-a-priced-second, route-certification-strategy, search-moves-and-route-steps-stay-two-types]
+      title: A seed the Confessor cannot be given fairly takes the planner a while to refuse
+      summary: "Certifying is per hunter, and the Confessor is the most expensive to certify: her high Social pool makes many nodes affordable, so the search tree branches wide, and a seed that genuinely has no route she can walk is only proven so by exhausting the whole budget - eight opening attempts, each an iterative-deepening search to two hundred thousand states, about twenty seconds in all. She certifies most seeds quickly and the game rejects an uncertifiable one forward to the next, so a player feels this only as an occasional pause on hunter selection, and the tests are bounded to check a fixed number of certified worlds rather than pay for a run of refusals. It is recorded as provisional because the honest fix is a real one - an admissible upper bound on a world's best possible viability, to refuse a hopeless seed before the search rather than after - and that is a planner-performance pass of its own, deliberately not rushed here where it could shift which seeds certify."
+      references: [the-confessor-certifies-on-a-priced-second, route-certification-strategy, search-moves-and-route-steps-stay-two-types]
 
   # Milestone 3: nothing told by colour alone, and a web client you can drive.
 
@@ -665,4 +665,12 @@ entities:
       confidence: confirmed
       title: Shoot while it crosses, and break contact when the exchange is lost
       summary: "A second pass at the Occultist's driver, measured rather than argued, and two of four ideas were kept. Kept: she now puts ordinary shot into the villain while it closes, where before she stood on her warded ground and waited empty-handed, wasting the very turns the ward bought; and a frail hunter below half health with a shot left breaks contact rather than finishing a melee trade her health cannot pay for - nine health against three damage a turn is three turns, and she needs five. Discarded, and worth recording because each looked obvious: warding while already adjacent cost her seven wins in forty-eight, because the ward only bites what crosses it and casting it toe-to-toe spends an action for nothing; and warding from further out cost one, because it lapses before the thing arrives. A third change was made on principle rather than measurement - the emergency-draught thresholds were flat 5 and 8, the Huntress's twelve health read as everyone's, which on the Occultist's nine meant drinking at a single scratch. It moved no seed, because her routes never craft a draught at all, but it was a latent trap for any low-health hunter. Over ninety-six seeds the Occultist went from 541 to 625 permille won and the Huntress from 770 to 812; the band falls again, 450 to 350."
-      references: [a-frail-hunter-kites-and-a-fallen-one-respawns-clear, the-agreement-band-falls-to-what-was-measured, the-advocate-certifies-on-a-priced-second]
+      references: [a-frail-hunter-kites-and-a-fallen-one-respawns-clear, the-agreement-band-falls-to-what-was-measured, the-confessor-certifies-on-a-priced-second]
+
+  - decision: the-slow-refusal-is-the-price-of-the-in-media-res-opening
+    core:
+      status: accepted
+      confidence: confirmed
+      title: The six attempts that make a refusal slow are the banked opening
+      summary: "Refusing a seed the Confessor cannot be given fairly takes about twenty seconds, and the obvious saving was to notice that a search which ran out of *budget* rather than out of *answers* had proved nothing, and skip the six banked-node rescues that follow it. Measured, that was 2.3 times faster over a forty-eight seed sweep and left which seeds certify exactly unchanged for all three hunters over sixty-four seeds. It was still wrong, and the reason is the point: those six attempts are not overhead around the refusal, they are the in-media-res opening. Banking a node pre-resolves it, which is precisely what shrinks a tree too large to finish walking - so a budget blowout is the case where a rescue is most likely to work, not least. Skipping them took banked openings from four in forty-eight to none at all for two of the three hunters, silently deleting a designed feature to make a failure path faster. Reverted whole. The twenty seconds is what it costs to prove no banked node rescues a world, and it is only paid on the seeds that are then refused; making it cheaper means making the search itself cheaper - an admissible upper bound that refuses a hopeless world before the walk - not skipping the walk."
+      references: [the-confessors-slow-refusal-is-a-known-planner-cost, in-media-res-opening, route-certification-strategy, the-confessor-certifies-on-a-priced-second]

@@ -685,7 +685,7 @@ impl Bot {
         }
 
         // Call in the second the moment the fight is joined, so the villager
-        // stands for as much of it as she can give. It is the Advocate's whole
+        // stands for as much of it as she can give. It is the Confessor's whole
         // survival case, and the estimate certified her on the assumption she
         // makes it — so a driver that never did was under-driving her.
         if session.sim.state.hunter.second_turns == 0

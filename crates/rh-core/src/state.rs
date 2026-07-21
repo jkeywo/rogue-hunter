@@ -100,7 +100,7 @@ pub struct HunterState {
     /// Pending melee multiplier numerator over 2 (3 = x1.5 from Power Attack).
     pub melee_multiplier: Option<u8>,
     pub favour_used: bool,
-    /// Turns a called-in villager still stands with the hunter (the Advocate's
+    /// Turns a called-in villager still stands with the hunter (the Confessor's
     /// second). While it lasts, her blows land harder and some of what comes
     /// back is taken by the one beside her. A buff on the hunter rather than an
     /// actor on the board: an ally actor would touch targeting, occupancy, and

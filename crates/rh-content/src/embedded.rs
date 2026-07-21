@@ -13,7 +13,7 @@ pub const SOURCES: &[(&str, &str)] = &[
     content!("balance.toml"),
     content!("hunters/huntress.toml"),
     content!("hunters/occultist.toml"),
-    content!("hunters/advocate.toml"),
+    content!("hunters/confessor.toml"),
     content!("enemies.toml"),
     content!("villains.toml"),
     content!("origins.toml"),

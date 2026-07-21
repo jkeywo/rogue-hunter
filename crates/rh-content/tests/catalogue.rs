@@ -38,7 +38,7 @@ fn embedded_catalogue_loads_and_validates() {
 
     // Spot-check the fixed MVP profile the spec pins down. Named rather than
     // taken from the default, which is the first hunter by id and is no longer
-    // the Huntress now that the Advocate sorts ahead of her.
+    // the Huntress now that the Confessor sorts ahead of her.
     let huntress = &catalogue.hunters["huntress"];
     assert_eq!(huntress.health, 12);
     assert_eq!(huntress.lore_cap, 2);
