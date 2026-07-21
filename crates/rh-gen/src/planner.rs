@@ -118,6 +118,60 @@ struct PState {
     legs: u8,
 }
 
+/// A small, fast, non-cryptographic hasher for the search memo, in the mould
+/// of rustc's own. The default hasher is SipHash, chosen to make hash flooding
+/// hard from untrusted input — a guarantee worth nothing here, where the only
+/// keys are states this planner just built, and paid for on every one of the
+/// millions of states a hard world walks. Worth about a quarter of the search:
+/// removing it was measured at thirteen seconds against nine. It cannot change
+/// what the search finds, because the memo is only ever inserted into, never
+/// iterated, so the hash decides speed and nothing else.
+#[derive(Default)]
+struct FxHasher {
+    hash: u64,
+}
+
+impl FxHasher {
+    const SEED: u64 = 0x51_7c_c1_b7_27_22_0a_95;
+
+    #[inline]
+    fn add(&mut self, word: u64) {
+        self.hash = (self.hash.rotate_left(5) ^ word).wrapping_mul(Self::SEED);
+    }
+}
+
+impl std::hash::Hasher for FxHasher {
+    #[inline]
+    fn write(&mut self, bytes: &[u8]) {
+        let mut chunks = bytes.chunks_exact(8);
+        for chunk in &mut chunks {
+            self.add(u64::from_ne_bytes(chunk.try_into().expect("eight bytes")));
+        }
+        let mut tail = 0u64;
+        for (index, byte) in chunks.remainder().iter().enumerate() {
+            tail |= u64::from(*byte) << (index * 8);
+        }
+        self.add(tail);
+    }
+
+    #[inline]
+    fn write_u8(&mut self, value: u8) {
+        self.add(u64::from(value));
+    }
+
+    #[inline]
+    fn write_u64(&mut self, value: u64) {
+        self.add(value);
+    }
+
+    #[inline]
+    fn finish(&self) -> u64 {
+        self.hash
+    }
+}
+
+type FxBuild = std::hash::BuildHasherDefault<FxHasher>;
+
 /// Memo key: effort and obscurity are fully determined by (resolved, legs),
 /// so excluding them keeps deduplication exact while collapsing the space.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -156,17 +210,40 @@ impl PState {
 #[derive(Debug, Clone)]
 enum Action {
     Resolve(usize),
-    Craft(String),
+    Craft(usize),
     Consecrate,
     Travel(u8),
+}
+
+/// A recipe reduced to what the search needs: which tracked slots it consumes
+/// and which it fills. Worked out once per world rather than re-derived from
+/// recipe strings at every node that stands in the settlement.
+struct CraftPlan {
+    recipe: String,
+    needed: [u8; TRACKED.len()],
+    output: usize,
 }
 
 struct Ctx<'a> {
     catalogue: &'a Catalogue,
     world: &'a World,
     ops: Vec<PlanOp>,
-    /// Exploration order: identity clues first, then items, leads, location.
-    op_order: Vec<usize>,
+    /// Craftable recipes, in catalogue order so the search explores them in
+    /// the same order it always did.
+    crafts: Vec<CraftPlan>,
+    /// Bits of every op that grants an identity proof, and of the subset that
+    /// rules an alternative out. The goal test asks these of the resolved
+    /// bitmask with an AND and a popcount, where it used to walk all the ops
+    /// and match on each — twice — at every node of the search.
+    identity_mask: u64,
+    discriminating_mask: u64,
+    /// Exploration order (identity clues first, then items, leads, location),
+    /// split by the map each op sits on. A node can only resolve
+    /// what is under its feet, so scanning the whole graph at every node spent
+    /// most of its time rejecting ops in other regions. Order within a map is
+    /// unchanged, so the search still explores exactly what it always did.
+    ops_by_map: Vec<Vec<usize>>,
+
     villain_map: u8,
     villain_gate: Option<usize>,
     dormant_opening: bool,
@@ -715,11 +792,65 @@ fn build_ctx<'a>(
         (bucket, *index)
     });
 
+    // Reduce the recipe book once: which tracked slots each recipe eats and
+    // fills. This used to be recomputed, string comparison by string
+    // comparison, for every recipe at every node standing in the settlement.
+    let mut crafts = Vec::new();
+    for (recipe_id, recipe) in &catalogue.recipes {
+        let mut needed = [0u8; TRACKED.len()];
+        let mut craftable = true;
+        for input in &recipe.inputs {
+            match TRACKED.iter().position(|tracked| tracked == input) {
+                Some(index) => needed[index] += 1,
+                None => {
+                    craftable = false;
+                    break;
+                }
+            }
+        }
+        // A decisive counter also has to be quenched in this case's origin
+        // reagent, so the route must have gone and read the origin.
+        if recipe.requires_origin_reagent {
+            needed[ORIGIN_REAGENT_SLOT] += 1;
+        }
+        let output = TRACKED.iter().position(|tracked| *tracked == recipe.output);
+        let (true, Some(output)) = (craftable, output) else {
+            continue;
+        };
+        crafts.push(CraftPlan {
+            recipe: recipe_id.clone(),
+            needed,
+            output,
+        });
+    }
+
+    let mut identity_mask = 0u64;
+    let mut discriminating_mask = 0u64;
+    for (index, op) in ops.iter().enumerate() {
+        if let OpGrant::Identity { discriminating } = op.grants {
+            identity_mask |= 1 << index;
+            if discriminating {
+                discriminating_mask |= 1 << index;
+            }
+        }
+    }
+
+    let mut ops_by_map: Vec<Vec<usize>> = vec![Vec::new(); world.maps.len()];
+    for index in &op_order {
+        let map = usize::from(ops[*index].map);
+        if let Some(bucket) = ops_by_map.get_mut(map) {
+            bucket.push(*index);
+        }
+    }
+
     Ok(Ctx {
         catalogue,
         world,
         ops,
-        op_order,
+        crafts,
+        identity_mask,
+        discriminating_mask,
+        ops_by_map,
         villain_map,
         villain_gate,
         dormant_opening: world.villain.grave.is_some(),
@@ -763,7 +894,7 @@ fn flood_reaches(
 }
 
 struct RouteFound {
-    steps: Vec<(u8, String, RouteAction)>,
+    steps: Vec<(u8, Action)>,
     state: PState,
     viability: u16,
 }
@@ -855,8 +986,8 @@ fn search(ctx: &Ctx, cfg: &PlannerConfig) -> Result<CertifiedRoute, String> {
             pre_resolved: cfg.pre_resolved,
             label: cfg.label.clone(),
         };
-        let mut memo: HashSet<MemoKey> = HashSet::new();
-        let mut path: Vec<(u8, String, RouteAction)> = Vec::new();
+        let mut memo: HashSet<MemoKey, FxBuild> = HashSet::default();
+        let mut path: Vec<(u8, Action)> = Vec::new();
         nodes = 0;
         if let Some(found) = dfs(
             ctx,
@@ -876,13 +1007,17 @@ fn search(ctx: &Ctx, cfg: &PlannerConfig) -> Result<CertifiedRoute, String> {
             let uses_favour = favour_index
                 .map(|index| found.state.resolved & (1 << index) != 0)
                 .unwrap_or(false);
+            // Name the steps now, once, for the route that actually certified.
             let mut steps: Vec<RouteStep> = found
                 .steps
                 .iter()
-                .map(|(turn, description, action)| RouteStep {
-                    turn: *turn,
-                    action: action.clone(),
-                    description: description.clone(),
+                .map(|(turn, action)| {
+                    let (description, action) = describe(ctx, action);
+                    RouteStep {
+                        turn: *turn,
+                        action,
+                        description,
+                    }
                 })
                 .collect();
             steps.push(RouteStep {
@@ -923,25 +1058,13 @@ fn tier_at(ctx: &Ctx, turn: u8) -> u8 {
 }
 
 fn goal(ctx: &Ctx, state: &PState) -> Option<u16> {
-    let resolved_identity = || {
-        ctx.ops.iter().enumerate().filter(|(index, op)| {
-            matches!(op.grants, OpGrant::Identity { .. }) && state.resolved & (1 << index) != 0
-        })
-    };
-    if resolved_identity().count() < usize::from(ctx.catalogue.balance.case.corroborating_proofs) {
+    let proofs = (state.resolved & ctx.identity_mask).count_ones();
+    if proofs < u32::from(ctx.catalogue.balance.case.corroborating_proofs) {
         return None;
     }
     // Corroboration between ambiguous signs is not proof: naming the quarry
     // needs at least one clue that rules an alternative out.
-    let has_discriminator = resolved_identity().any(|(_, op)| {
-        matches!(
-            op.grants,
-            OpGrant::Identity {
-                discriminating: true
-            }
-        )
-    });
-    if !has_discriminator {
+    if state.resolved & ctx.discriminating_mask == 0 {
         return None;
     }
     if state.map != ctx.villain_map {
@@ -995,9 +1118,9 @@ fn dfs(
     ctx: &Ctx,
     cfg: &PlannerConfig,
     state: PState,
-    memo: &mut HashSet<MemoKey>,
+    memo: &mut HashSet<MemoKey, FxBuild>,
     nodes: &mut u32,
-    path: &mut Vec<(u8, String, RouteAction)>,
+    path: &mut Vec<(u8, Action)>,
 ) -> Option<RouteFound> {
     if *nodes >= NODE_BUDGET {
         return None;
@@ -1019,8 +1142,8 @@ fn dfs(
     }
 
     for action in candidate_actions(ctx, cfg, &state) {
-        let (next, description, taken) = apply_action(ctx, &state, &action);
-        path.push((state.turn, description, taken));
+        let next = apply_action(ctx, &state, &action);
+        path.push((state.turn, action));
         let result = dfs(ctx, cfg, next, memo, nodes, path);
         path.pop();
         if result.is_some() {
@@ -1036,14 +1159,19 @@ fn candidate_actions(ctx: &Ctx, cfg: &PlannerConfig, state: &PState) -> Vec<Acti
 
     // Resolve opportunities on the current map, identity clues first so the
     // depth-first search reaches hunt-readiness with minimal backtracking.
-    for index in ctx.op_order.iter().copied() {
+    let here = ctx
+        .ops_by_map
+        .get(usize::from(state.map))
+        .map(Vec::as_slice)
+        .unwrap_or(&[]);
+    for index in here.iter().copied() {
         let op = &ctx.ops[index];
         let bit = 1u64 << index;
         // Within-turn canonical ordering: indices ascend until the clock moves.
         if (index as u8) < state.min_op {
             continue;
         }
-        if state.resolved & bit != 0 || cfg.forbidden & bit != 0 || op.map != state.map {
+        if state.resolved & bit != 0 || cfg.forbidden & bit != 0 {
             continue;
         }
         if let Some(gate) = op.revealed_by {
@@ -1090,34 +1218,14 @@ fn candidate_actions(ctx: &Ctx, cfg: &PlannerConfig, state: &PState) -> Vec<Acti
 
     // Craft at the settlement forge (free).
     if state.map == SETTLEMENT {
-        for (recipe_id, recipe) in &ctx.catalogue.recipes {
-            let mut needed = [0u8; TRACKED.len()];
-            let mut craftable = true;
-            for input in &recipe.inputs {
-                match TRACKED.iter().position(|tracked| tracked == input) {
-                    Some(index) => needed[index] += 1,
-                    None => {
-                        craftable = false;
-                        break;
-                    }
-                }
-            }
-            // A decisive counter also has to be quenched in this case's origin
-            // reagent, so the route must have gone and read the origin.
-            if recipe.requires_origin_reagent {
-                needed[ORIGIN_REAGENT_SLOT] += 1;
-            }
-            // Only track outputs the planner cares about.
-            let output_tracked = TRACKED.iter().any(|tracked| *tracked == recipe.output);
-            if !craftable || !output_tracked {
-                continue;
-            }
-            if needed
+        for (index, plan) in ctx.crafts.iter().enumerate() {
+            if plan
+                .needed
                 .iter()
                 .zip(state.items.iter())
                 .all(|(need, have)| have >= need)
             {
-                actions.push(Action::Craft(recipe_id.clone()));
+                actions.push(Action::Craft(index));
             }
         }
         // The consecration rite costs a global turn; it only ever pays off
@@ -1175,7 +1283,14 @@ fn apply_clock_restore(next: &mut PState, ctx: &Ctx, reason: rh_core::sim::Clock
     }
 }
 
-fn apply_action(ctx: &Ctx, state: &PState, action: &Action) -> (PState, String, RouteAction) {
+/// Advance the search state by one action.
+///
+/// Deliberately returns only the state. Naming the step for a player — a
+/// string-table lookup and a couple of allocations — used to happen here, on
+/// every one of the millions of states a hard world walks, and was thrown away
+/// at once for all but the handful that end up on a route. `describe` does it
+/// instead, once per step of a route that actually certified.
+fn apply_action(ctx: &Ctx, state: &PState, action: &Action) -> PState {
     let mut next = state.clone();
     match action {
         Action::Resolve(index) => {
@@ -1202,48 +1317,22 @@ fn apply_action(ctx: &Ctx, state: &PState, action: &Action) -> (PState, String, 
                 }
                 _ => {}
             }
-            (
-                next,
-                ctx.catalogue
-                    .strings
-                    .ui_fill("ui.route.resolve", &[("what", &op.name)]),
-                RouteAction::Resolve(op.id),
-            )
+            next
         }
-        Action::Craft(recipe_id) => {
-            let recipe = &ctx.catalogue.recipes[recipe_id];
-            for input in &recipe.inputs {
-                if let Some(index) = TRACKED.iter().position(|tracked| tracked == input) {
-                    next.items[index] -= 1;
-                }
+        Action::Craft(plan_index) => {
+            let plan = &ctx.crafts[*plan_index];
+            for (slot, need) in plan.needed.iter().enumerate() {
+                next.items[slot] -= need;
             }
-            if recipe.requires_origin_reagent {
-                next.items[ORIGIN_REAGENT_SLOT] -= 1;
-            }
-            if let Some(index) = TRACKED.iter().position(|tracked| *tracked == recipe.output) {
-                next.items[index] = (next.items[index] + 1).min(ITEM_CAP[index]);
-            }
-            (
-                next,
-                ctx.catalogue.strings.ui_fill(
-                    "ui.route.craft",
-                    &[("recipe", ctx.catalogue.strings.get(&recipe.name))],
-                ),
-                RouteAction::Craft {
-                    recipe: recipe_id.clone(),
-                },
-            )
+            next.items[plan.output] = (next.items[plan.output] + 1).min(ITEM_CAP[plan.output]);
+            next
         }
         Action::Consecrate => {
             next.consecrated = true;
             next.turn += 1;
             next.min_op = 0;
             apply_clock_restore(&mut next, ctx, rh_core::sim::ClockReason::CostlyAction);
-            (
-                next,
-                ctx.catalogue.strings.ui("ui.route.consecrate").to_owned(),
-                RouteAction::Consecrate,
-            )
+            next
         }
         Action::Travel(destination) => {
             next.map = *destination;
@@ -1252,15 +1341,48 @@ fn apply_action(ctx: &Ctx, state: &PState, action: &Action) -> (PState, String, 
             next.legs += 1;
             next.effort += 2;
             apply_clock_restore(&mut next, ctx, rh_core::sim::ClockReason::Travel);
+            next
+        }
+    }
+}
+
+/// Name a step for a player, and say what it is in route terms. Called only
+/// for the steps of a route that certified, never during the walk.
+fn describe(ctx: &Ctx, action: &Action) -> (String, RouteAction) {
+    match action {
+        Action::Resolve(index) => {
+            let op = &ctx.ops[*index];
             (
-                next,
-                ctx.catalogue.strings.ui_fill(
-                    "ui.route.travel",
-                    &[("place", &ctx.world.maps[*destination as usize].name)],
-                ),
-                RouteAction::Travel(MapId(*destination)),
+                ctx.catalogue
+                    .strings
+                    .ui_fill("ui.route.resolve", &[("what", &op.name)]),
+                RouteAction::Resolve(op.id),
             )
         }
+        Action::Craft(plan_index) => {
+            let plan = &ctx.crafts[*plan_index];
+            let recipe = &ctx.catalogue.recipes[&plan.recipe];
+            (
+                ctx.catalogue.strings.ui_fill(
+                    "ui.route.craft",
+                    &[("recipe", ctx.catalogue.strings.get(&recipe.name))],
+                ),
+                RouteAction::Craft {
+                    recipe: plan.recipe.clone(),
+                },
+            )
+        }
+        Action::Consecrate => (
+            ctx.catalogue.strings.ui("ui.route.consecrate").to_owned(),
+            RouteAction::Consecrate,
+        ),
+        Action::Travel(destination) => (
+            ctx.catalogue.strings.ui_fill(
+                "ui.route.travel",
+                &[("place", &ctx.world.maps[*destination as usize].name)],
+            ),
+            RouteAction::Travel(MapId(*destination)),
+        ),
     }
 }
 
