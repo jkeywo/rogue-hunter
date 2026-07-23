@@ -4,7 +4,7 @@
 //! in [`crate::state`]. `rh-gen` constructs this; the simulation interprets
 //! it against the content catalogue.
 
-use rh_content::{MapRole, PoolKind, Terrain};
+use rh_content::{MapRole, OpportunityAction, PoolKind, StringTable, Terrain};
 use serde::{Deserialize, Serialize};
 
 use crate::geometry::Point;
@@ -243,7 +243,15 @@ pub struct OpportunitySpec {
     pub id: OpportunityId,
     /// Clue template id, gather kind, or intrinsic kind for the inspector.
     pub source: String,
+    /// The concrete referent the lead is about — an object, a topic, a sign.
+    /// For a clue this is a bare noun ("the silver candlesticks") that the
+    /// display composes a verb around; for a gather or a generated action it
+    /// is already a finished phrase and `action` is `None`, so it stands alone.
     pub name: String,
+    /// How this lead is acted on, when it composes into a verb-plus-referent
+    /// phrase. `None` for opportunities whose `name` is already a whole lead
+    /// (gathers, generated NPC actions, forceful ops).
+    pub action: Option<OpportunityAction>,
     pub map: MapId,
     pub anchor: OpportunityAnchor,
     /// Pool the action draws from; `None` means the action is free.
@@ -262,6 +270,53 @@ pub struct OpportunitySpec {
     pub covert: bool,
     pub prompt: String,
     pub reveal: String,
+}
+
+/// Which face of a lead to show. The player meets a lead twice — once when
+/// they notice it, and again when they decide to work it — and each wants a
+/// different verb: you *see* the disturbed grave, then you *examine* it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LeadFraming {
+    /// Where the player chooses to do it: the interact menu, the dossier.
+    Act,
+    /// Where the player notices it: the discovery log, the look cursor.
+    Perceive,
+}
+
+/// The string id of the verb frame for an action and a framing — the template
+/// the referent is dropped into. Kept beside the type it serves so a new
+/// `OpportunityAction` variant that composes cannot be added without giving it
+/// both frames. `Scavenge` and `Force` never compose (their names are whole
+/// leads already), so they have no frame and the caller uses the name as-is.
+fn lead_frame(action: OpportunityAction, framing: LeadFraming) -> Option<&'static str> {
+    let (act, perceive) = match action {
+        OpportunityAction::Examine => ("ui.lead.examine.act", "ui.lead.examine.perceive"),
+        OpportunityAction::Track => ("ui.lead.track.act", "ui.lead.track.perceive"),
+        OpportunityAction::Gossip => ("ui.lead.gossip.act", "ui.lead.gossip.perceive"),
+        OpportunityAction::Persuade => ("ui.lead.persuade.act", "ui.lead.persuade.perceive"),
+        OpportunityAction::Spy => ("ui.lead.spy.act", "ui.lead.spy.perceive"),
+        OpportunityAction::Commune => ("ui.lead.commune.act", "ui.lead.commune.perceive"),
+        OpportunityAction::Scavenge | OpportunityAction::Force => return None,
+    };
+    Some(match framing {
+        LeadFraming::Act => act,
+        LeadFraming::Perceive => perceive,
+    })
+}
+
+impl OpportunitySpec {
+    /// The lead as the player should read it: a verb composed around the
+    /// concrete referent ("Examine the silver candlesticks", "There is talk of
+    /// the stopped payment"), or the bare `name` when the lead is already a
+    /// whole phrase. Every surface that shows a lead asks this, so what the
+    /// player reads in the menu, the log, the cursor and the dossier cannot
+    /// drift apart.
+    pub fn lead(&self, strings: &StringTable, framing: LeadFraming) -> String {
+        match self.action.and_then(|action| lead_frame(action, framing)) {
+            Some(frame) => strings.ui_fill(frame, &[("referent", &self.name)]),
+            None => self.name.clone(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

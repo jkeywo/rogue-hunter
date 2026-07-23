@@ -4,6 +4,30 @@
 use rh_content::{Concealment, ItemKind};
 
 #[test]
+fn every_composable_action_has_both_lead_frames() {
+    // A lead is composed as a verb around a concrete referent, and the verb
+    // comes from a per-action frame in the table. A new composable action
+    // added without its frames would silently fall back to the bare referent
+    // and read as a noun with no verb, so hold both frames for each here. The
+    // two that never compose (their names are whole leads already) are left
+    // out on purpose.
+    let strings = &rh_content::load_embedded()
+        .expect("embedded content")
+        .strings;
+    for action in ["examine", "track", "gossip", "persuade", "spy", "commune"] {
+        for framing in ["act", "perceive"] {
+            let id = format!("ui.lead.{action}.{framing}");
+            let text = strings.ui(&id);
+            assert!(text != "[!missing]", "no lead frame for '{id}'");
+            assert!(
+                text.contains("{referent}"),
+                "lead frame '{id}' must have a slot for the referent: {text:?}"
+            );
+        }
+    }
+}
+
+#[test]
 fn a_villains_glyph_is_its_own() {
     // A villain and a villager once shared the letter H, and a beast and a
     // workbench shared W, so on the map the quarry and an innocent read alike.

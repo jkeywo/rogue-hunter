@@ -544,6 +544,7 @@ impl<'a> Builder<'a> {
                     let id = self.next_opportunity_id();
                     self.opportunities.push(OpportunitySpec {
                         id,
+                        action: None,
                         source: "force".to_owned(),
                         name: self.catalogue.strings.ui(name).to_owned(),
                         map: map_id,
@@ -710,8 +711,13 @@ impl<'a> Builder<'a> {
         let id = self.next_opportunity_id();
         self.opportunities.push(OpportunitySpec {
             id,
+            // A clue composes its lead: the display frames a verb around this
+            // referent from the action. The referent is interpolated like the
+            // prompt and reveal, so a clue can name the actual grave or the
+            // actual neighbour rather than a fixed generic noun.
+            action: Some(template.action),
             source: template_id.to_owned(),
-            name: self.text(&template.name).to_owned(),
+            name: fill(self.text(&template.name)),
             map,
             anchor,
             pool: Some(template.pool),
@@ -895,6 +901,7 @@ impl<'a> Builder<'a> {
             let id = self.next_opportunity_id();
             self.opportunities.push(OpportunitySpec {
                 id,
+                action: None,
                 source: gather_id.clone(),
                 name: self.text(&gather.name).to_owned(),
                 map,
@@ -953,6 +960,7 @@ impl<'a> Builder<'a> {
         let id = self.next_opportunity_id();
         self.opportunities.push(OpportunitySpec {
             id,
+            action: None,
             source: format!("preempt:{}", self.combo.scheme),
             name: self.text(&preempt.name).to_owned(),
             map,
@@ -985,6 +993,7 @@ impl<'a> Builder<'a> {
                 let id = self.next_opportunity_id();
                 self.opportunities.push(OpportunitySpec {
                     id,
+                    action: None,
                     source: machine_id.clone(),
                     name: self.text(&machine.name).to_owned(),
                     map: MapId(index as u8),
@@ -1050,6 +1059,7 @@ impl<'a> Builder<'a> {
             let spy_id = self.next_opportunity_id();
             self.opportunities.push(OpportunitySpec {
                 id: spy_id,
+                action: None,
                 source: format!("spy:{}", npc.name),
                 name: self
                     .catalogue
@@ -1085,6 +1095,7 @@ impl<'a> Builder<'a> {
                 let id = self.next_opportunity_id();
                 self.opportunities.push(OpportunitySpec {
                     id,
+                    action: None,
                     source: format!("disproof:{}", npc.name),
                     name: self
                         .catalogue
@@ -1115,6 +1126,7 @@ impl<'a> Builder<'a> {
                 let id = self.next_opportunity_id();
                 self.opportunities.push(OpportunitySpec {
                     id,
+                    action: None,
                     source: format!("expose:{}", npc.name),
                     name: self
                         .catalogue
@@ -1142,6 +1154,7 @@ impl<'a> Builder<'a> {
             let id = self.next_opportunity_id();
             self.opportunities.push(OpportunitySpec {
                 id,
+                action: None,
                 source: format!("ties:{}", npc.name),
                 name: self
                     .catalogue
@@ -1169,6 +1182,7 @@ impl<'a> Builder<'a> {
                 let id = self.next_opportunity_id();
                 self.opportunities.push(OpportunitySpec {
                     id,
+                    action: None,
                     source: "mystic-favour".to_owned(),
                     name: self
                         .catalogue

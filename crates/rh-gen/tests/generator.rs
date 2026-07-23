@@ -11,6 +11,57 @@ fn catalogue() -> Catalogue {
 }
 
 #[test]
+fn leads_compose_a_verb_around_a_concrete_referent() {
+    use rh_core::world::LeadFraming;
+    let catalogue = catalogue();
+    let mut composed = 0u32;
+    let mut plain = 0u32;
+    for seed in 0..24u64 {
+        let Ok(result) = rh_gen::generate(seed, &catalogue) else {
+            continue;
+        };
+        for opp in &result.world.opportunities {
+            let act = opp.lead(&catalogue.strings, LeadFraming::Act);
+            let perceive = opp.lead(&catalogue.strings, LeadFraming::Perceive);
+            // Nothing a player reads may carry an unfilled placeholder, and
+            // every lead resolves through the table (so it stays bracketed
+            // while the copy is still placeholder).
+            for text in [&act, &perceive] {
+                assert!(!text.contains('{'), "seed {seed}: unfilled lead {text:?}");
+                assert!(
+                    !text.contains("!missing"),
+                    "seed {seed}: missing frame {text:?}"
+                );
+                assert!(!text.is_empty(), "seed {seed}: empty lead");
+            }
+            match opp.action {
+                Some(_) => {
+                    // A composed lead frames a verb around the referent, so it
+                    // is neither the bare referent nor the same in both voices.
+                    composed += 1;
+                    assert_ne!(
+                        act, opp.name,
+                        "seed {seed}: act lead did not compose a verb"
+                    );
+                    assert_ne!(
+                        act, perceive,
+                        "seed {seed}: act and perceive read identically"
+                    );
+                }
+                None => {
+                    // A finished-phrase lead stands as its name in both voices.
+                    plain += 1;
+                    assert_eq!(act, opp.name);
+                    assert_eq!(perceive, opp.name);
+                }
+            }
+        }
+    }
+    assert!(composed > 0, "no clue lead composed");
+    assert!(plain > 0, "no plain lead to leave alone");
+}
+
+#[test]
 fn generation_is_deterministic() {
     let catalogue = catalogue();
     let first = rh_gen::generate(42, &catalogue).expect("seed 42 generates");

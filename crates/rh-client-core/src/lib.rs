@@ -1598,7 +1598,11 @@ impl ClientSession {
                 None => String::new(),
             };
             items.push(MenuItem {
-                label: format!("{}{}", opp.name, cost_note),
+                label: format!(
+                    "{}{}",
+                    opp.lead(&sim.catalogue.strings, rh_core::world::LeadFraming::Act),
+                    cost_note
+                ),
                 blocked,
                 action: MenuAction::Do(Command::Interact(opp.id)),
             });
@@ -1947,11 +1951,16 @@ impl ClientSession {
                         && !state.lost.contains(&opp.id)
                         && opp.anchor == OpportunityAnchor::Npc(npc_id)
                     {
-                        parts.push(
-                            sim.catalogue
-                                .strings
-                                .ui_fill("ui.inspect.lead", &[("what", &opp.name)]),
-                        );
+                        parts.push(sim.catalogue.strings.ui_fill(
+                            "ui.inspect.lead",
+                            &[(
+                                "what",
+                                &opp.lead(
+                                    &sim.catalogue.strings,
+                                    rh_core::world::LeadFraming::Perceive,
+                                ),
+                            )],
+                        ));
                     }
                 }
             }
@@ -1986,11 +1995,16 @@ impl ClientSession {
                 && !state.lost.contains(&opp.id)
                 && opp.anchor == OpportunityAnchor::Tile(point)
             {
-                parts.push(
-                    sim.catalogue
-                        .strings
-                        .ui_fill("ui.inspect.lead", &[("what", &opp.name)]),
-                );
+                parts.push(sim.catalogue.strings.ui_fill(
+                    "ui.inspect.lead",
+                    &[(
+                        "what",
+                        &opp.lead(
+                            &sim.catalogue.strings,
+                            rh_core::world::LeadFraming::Perceive,
+                        ),
+                    )],
+                ));
             }
         }
         if let Some(exit) = sim

@@ -1013,9 +1013,10 @@ pub(crate) fn dossier_entries(session: &ClientSession) -> Vec<(String, String)> 
             continue;
         }
         let place = &sim.world.map(opp.map).name;
+        let lead = opp.lead(strings, rh_core::world::LeadFraming::Act);
         let mut line = strings.ui_fill(
             "ui.dossier.leads.entry",
-            &[("name", &opp.name), ("place", place)],
+            &[("name", &lead), ("place", place)],
         );
         if let Some((pool, cost)) =
             rh_core::economy::opportunity_cost(opp.pool, opp.cost, state.settlement_hostile)
