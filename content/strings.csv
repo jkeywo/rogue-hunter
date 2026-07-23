@@ -1,125 +1,125 @@
 id,context,english
-clues.a-wrong-between-people.name,"Clue name, shown in the journal and on the opportunity",[A Wrong Between People]
+clues.a-wrong-between-people.name,"Clue name, shown in the journal and on the opportunity",an old wrong between neighbours
 clues.a-wrong-between-people.prompt,Opportunity text shown before this clue is taken,[The settlement talks around something the way a tongue works at a broken tooth.]
 clues.a-wrong-between-people.reveal,Journal and event-log text once this clue is revealed,"[It started with people, not omens: an arrangement, and someone on the wrong end of it. Whether that was a grudge taken up or a bargain put down, the gossip cannot agree.]"
-clues.bodies-turning-up.name,"Clue name, shown in the journal and on the opportunity",[Bodies Turning Up]
+clues.bodies-turning-up.name,"Clue name, shown in the journal and on the opportunity",the worked-over ground and the blood
 clues.bodies-turning-up.prompt,Opportunity text shown before this clue is taken,[There is a body's worth of blood here and the ground has been worked over.]
 clues.bodies-turning-up.reveal,Journal and event-log text once this clue is revealed,"[Somebody died badly on this spot. Whether they were killed to be seen, or killed for what could be taken from them, the ground will not say.]"
-clues.cold-iron-lore.name,"Clue name, shown in the journal and on the opportunity",[The Iron Rule]
+clues.cold-iron-lore.name,"Clue name, shown in the journal and on the opportunity",the old women's rule about workings
 clues.cold-iron-lore.prompt,Opportunity text shown before this clue is taken,"[The old women have a rule about workings, and they will recite it for the asking.]"
 clues.cold-iron-lore.reveal,Journal and event-log text once this clue is revealed,"['Nothing that ever saw the forge fire,' says Mother Wren. 'Cold iron, straight out the bog, never smelted. A hex has to get hold of a thing, and it can get no hold on that.']"
-clues.den-tracks.name,"Clue name, shown in the journal and on the opportunity",[The Den]
+clues.den-tracks.name,"Clue name, shown in the journal and on the opportunity",the trail of old kills
 clues.den-tracks.prompt,Opportunity text shown before this clue is taken,[Old kills litter the undergrowth. Something beds down near here.]
 clues.den-tracks.reveal,Journal and event-log text once this clue is revealed,[You find the den: a hollow of cracked bones. The beast returns here when the settlement is too watchful.]
-clues.grave-shadow.name,"Clue name, shown in the journal and on the opportunity",[The Shroud of Grave-Shadow]
+clues.grave-shadow.name,"Clue name, shown in the journal and on the opportunity",the wounds that would not land
 clues.grave-shadow.prompt,Opportunity text shown before this clue is taken,"[The killing blows here fell strangely — some bit deep, most seem not to have landed at all.]"
 clues.grave-shadow.reveal,Journal and event-log text once this clue is revealed,"[Blows that pass through without wounding, then one that tears. That is grave-shadow thinning and closing: the risen dead's rhythm, not a beast's and not a hex.]"
-clues.gravediggers-map.name,"Clue name, shown in the journal and on the opportunity",[The Gravedigger's Knowledge]
+clues.gravediggers-map.name,"Clue name, shown in the journal and on the opportunity",which grave is the one
 clues.gravediggers-map.prompt,Opportunity text shown before this clue is taken,[Nobody knows the ground here better than the one who digs it.]
 clues.gravediggers-map.reveal,Journal and event-log text once this clue is revealed,[He walks you the rows and points without looking: '{grave}. That one. Do what you came to do.']
-clues.herbwifes-tip.name,"Clue name, shown in the journal and on the opportunity",[The Herbwife's Tip]
+clues.herbwifes-tip.name,"Clue name, shown in the journal and on the opportunity",where moon-herb and bitter-root grow
 clues.herbwifes-tip.prompt,Opportunity text shown before this clue is taken,[The old women trade remedies at the market stall.]
 clues.herbwifes-tip.reveal,Journal and event-log text once this clue is revealed,[They tell you where moon-herb and bitter-root grow thick: the clearings off the forest trail.]
-clues.hex-marks.name,"Clue name, shown in the journal and on the opportunity",[Hex-marks on the Lintel]
+clues.hex-marks.name,"Clue name, shown in the journal and on the opportunity",the marks cut into the door-frames
 clues.hex-marks.prompt,Opportunity text shown before this clue is taken,"[The door-frames in this row all carry the same small scoring, cut fresh over older cuts.]"
 clues.hex-marks.reveal,Journal and event-log text once this clue is revealed,"[Deliberate hex-work, cut by a steady hand that knew the figure — and cut outward, from {npc}'s house toward the rest. Beasts do not draw, and the dead do not need to.]"
-clues.killed-to-be-found.name,"Clue name, shown in the journal and on the opportunity",[Killed to Be Found]
+clues.killed-to-be-found.name,"Clue name, shown in the journal and on the opportunity",the body left out on the green
 clues.killed-to-be-found.prompt,Opportunity text shown before this clue is taken,"[The body was left on the green, in the open, in the middle of the path.]"
 clues.killed-to-be-found.reveal,Journal and event-log text once this clue is revealed,[Nothing was taken and nothing was hidden. It was dragged from where it fell to where it would be found first. This killing is a notice nailed to a door.]
-clues.living-memory.name,"Clue name, shown in the journal and on the opportunity",[Inside Living Memory]
+clues.living-memory.name,"Clue name, shown in the journal and on the opportunity",the season this all began
 clues.living-memory.prompt,Opportunity text shown before this clue is taken,"[Whatever started this, someone here was alive when it did.]"
 clues.living-memory.reveal,Journal and event-log text once this clue is revealed,"[They can date it. A season, a name, an argument in the road — this began inside living memory, and inherited curses do not have a date.]"
-clues.materials-not-people.name,"Clue name, shown in the journal and on the opportunity","[Materials, Not People]"
+clues.materials-not-people.name,"Clue name, shown in the journal and on the opportunity",the tally of what has gone missing
 clues.materials-not-people.prompt,Opportunity text shown before this clue is taken,[Take an inventory rather than a statement: what has actually gone missing this month?]
 clues.materials-not-people.reveal,Journal and event-log text once this clue is revealed,"[Candle-wax, lead from the flashing, chalk, a censer, grave-earth by the sackful. Things, not people, and every one of them a component. Something is being built here.]"
-clues.mine-lode.name,"Clue name, shown in the journal and on the opportunity",[The Abandoned Lode]
+clues.mine-lode.name,"Clue name, shown in the journal and on the opportunity",the silver vein past the fallen rubble
 clues.mine-lode.prompt,Opportunity text shown before this clue is taken,[The old mine was abandoned when the vein pinched out — or so the story goes.]
 clues.mine-lode.reveal,Journal and event-log text once this clue is revealed,[The story lied. Past the fallen rubble a thread of true silver still glints in the rock.]
-clues.no-hex-work.name,"Clue name, shown in the journal and on the opportunity",[No Hand Behind It]
+clues.no-hex-work.name,"Clue name, shown in the journal and on the opportunity",the clean lintels and font
 clues.no-hex-work.prompt,Opportunity text shown before this clue is taken,"[If a working were being kept up in this parish, it would leave the same marks in the same places every time.]"
 clues.no-hex-work.reveal,Journal and event-log text once this clue is revealed,"[You check the lintels, the font, the threshold stones: no figures, no scoring, no working kept up anywhere. Whatever this is, no living hand is drawing it.]"
-clues.nothing-for-show.name,"Clue name, shown in the journal and on the opportunity",[Nothing Done for Show]
+clues.nothing-for-show.name,"Clue name, shown in the journal and on the opportunity",how little anyone has actually seen
 clues.nothing-for-show.prompt,Opportunity text shown before this clue is taken,"[For all the fear in this valley, ask what anyone has actually witnessed.]"
 clues.nothing-for-show.reveal,Journal and event-log text once this clue is revealed,"[Nobody has seen a thing. No display, no bodies left where the road runs, no message. Whatever this is, it is working quietly and would rather not be watched at all.]"
-clues.plot-map.name,"Clue name, shown in the journal and on the opportunity",[The Plot Map]
+clues.plot-map.name,"Clue name, shown in the journal and on the opportunity",the annotated parish plot map
 clues.plot-map.prompt,Opportunity text shown before this clue is taken,"[A vestry drawer holds the parish plot map, annotated in a shaking hand.]"
 clues.plot-map.reveal,Journal and event-log text once this clue is revealed,[The map marks every plot and names its occupant. Now you know exactly where {grave} lies.]
-clues.preparation-not-appetite.name,"Clue name, shown in the journal and on the opportunity","[Preparation, Not Appetite]"
+clues.preparation-not-appetite.name,"Clue name, shown in the journal and on the opportunity",the regular comings and goings
 clues.preparation-not-appetite.prompt,Opportunity text shown before this clue is taken,"[The traffic to this place is regular, and regular traffic has a purpose.]"
 clues.preparation-not-appetite.reveal,Journal and event-log text once this clue is revealed,"[The same trips, the same loads, the same hours — carrying in, never carrying out. This is not hunger and it is not display. It is a schedule of works.]"
-clues.route-stones.name,"Clue name, shown in the journal and on the opportunity",[The Marked Route-Stones]
+clues.route-stones.name,"Clue name, shown in the journal and on the opportunity",the marked stones set along the trail
 clues.route-stones.prompt,Opportunity text shown before this clue is taken,[There are stones set along this trail at intervals too even to be chance.]
 clues.route-stones.reveal,Journal and event-log text once this clue is revealed,"[Each stone scored with the same mark, each set exactly within sight of the next — a road laid out to be followed by someone who is not deciding to follow it. This is a route, and it leads somewhere that is counting arrivals.]"
-clues.second-face.name,"Clue name, shown in the journal and on the opportunity",[A Second Face]
+clues.second-face.name,"Clue name, shown in the journal and on the opportunity",a second face kept for after dark
 clues.second-face.prompt,Opportunity text shown before this clue is taken,"[The villagers are eager to talk about the nights, if you let them circle to it.]"
 clues.second-face.reveal,Journal and event-log text once this clue is revealed,"[The same shape to every account: somebody here keeps a second face for after dark. Which of the old horrors that means, nobody will say.]"
-clues.sextons-spade.name,"Clue name, shown in the journal and on the opportunity",[The Sexton's Spade]
+clues.sextons-spade.name,"Clue name, shown in the journal and on the opportunity",the sexton's consecrated grave-dust
 clues.sextons-spade.prompt,Opportunity text shown before this clue is taken,"[Grave-dust for a binding charm must be freely given, not stolen.]"
 clues.sextons-spade.reveal,Journal and event-log text once this clue is revealed,[The gravedigger fills a pouch from the old consecrated rows and presses it on you. 'Sew it tight. Use it close.']
-clues.shepherds-account.name,"Clue name, shown in the journal and on the opportunity",[The Shepherd's Account]
+clues.shepherds-account.name,"Clue name, shown in the journal and on the opportunity",what walks the high pasture at dusk
 clues.shepherds-account.prompt,Opportunity text shown before this clue is taken,[The shepherds drive their flocks wide of the high pasture and will not say why.]
 clues.shepherds-account.reveal,Journal and event-log text once this clue is revealed,"[The oldest shepherd finally speaks: the beast walks the tree-line at dusk, and dens in the deep wood.]"
-clues.silver-candlesticks.name,"Clue name, shown in the journal and on the opportunity",[The Silver Candlesticks]
+clues.silver-candlesticks.name,"Clue name, shown in the journal and on the opportunity",the heavy altar candlesticks
 clues.silver-candlesticks.prompt,Opportunity text shown before this clue is taken,"[The altar candlesticks are old, heavy, and untarnished.]"
 clues.silver-candlesticks.reveal,Journal and event-log text once this clue is revealed,"[They are true silver — enough, melted down, to cast a bullet the curse cannot heal.]"
-clues.something-old.name,"Clue name, shown in the journal and on the opportunity",[Something Old Behind It]
+clues.something-old.name,"Clue name, shown in the journal and on the opportunity",the old parish papers
 clues.something-old.prompt,Opportunity text shown before this clue is taken,"[The parish keeps its papers badly, but it keeps them.]"
 clues.something-old.reveal,Journal and event-log text once this clue is revealed,"[The trouble has a long tail: the same field-names, the same families, the same complaint recurring across generations. Something here was set in motion a long time ago — set, or promised.]"
-clues.steel-turned-aside.name,"Clue name, shown in the journal and on the opportunity",[Honest Steel Turned Aside]
+clues.steel-turned-aside.name,"Clue name, shown in the journal and on the opportunity",the blow that slid off in the dark
 clues.steel-turned-aside.prompt,Opportunity text shown before this clue is taken,[One of the drovers swung on something in the dark and wants to tell you he is not a coward.]
 clues.steel-turned-aside.reveal,Journal and event-log text once this clue is revealed,"['The blade went wide,' he insists, 'and I had it dead straight.' Steel that slides off a working, over and over — that is a ward worn on the body, not a hide and not a shroud.]"
-clues.stones-before-the-parish.name,"Clue name, shown in the journal and on the opportunity",[Stones Before the Parish]
+clues.stones-before-the-parish.name,"Clue name, shown in the journal and on the opportunity",what the standing stones still hold
 clues.stones-before-the-parish.prompt,Opportunity text shown before this clue is taken,"[The standing stones were old when the church was new, and they are still warm to the hand.]"
 clues.stones-before-the-parish.reveal,Journal and event-log text once this clue is revealed,[What answers is older than any compact and older than any grudge: a thing laid down before there were parties to agree or betray. It has simply been waiting to be fed again.]
-clues.the-audience.name,"Clue name, shown in the journal and on the opportunity",[It Wants an Audience]
+clues.the-audience.name,"Clue name, shown in the journal and on the opportunity",the hour the noises carry
 clues.the-audience.prompt,Opportunity text shown before this clue is taken,"[Ask them when they hear it, rather than what they hear.]"
 clues.the-audience.reveal,Journal and event-log text once this clue is revealed,"[Always at the hour the taproom empties, always near enough the houses to carry. It is timed for the largest number of listeners. Something that wanted quiet work would not perform.]"
-clues.the-dead-are-in-it.name,"Clue name, shown in the journal and on the opportunity",[The Dead Are In It]
+clues.the-dead-are-in-it.name,"Clue name, shown in the journal and on the opportunity",the over-trodden churchyard
 clues.the-dead-are-in-it.prompt,Opportunity text shown before this clue is taken,[The churchyard has been walked over more than the sexton's work accounts for.]
 clues.the-dead-are-in-it.reveal,Journal and event-log text once this clue is revealed,"[Grave-earth trodden and re-trodden, and a plot disturbed at the edges. Something in this valley has business with the dead — whether it is one of them, or only using them, the ground does not say.]"
-clues.the-earth-breathes.name,"Clue name, shown in the journal and on the opportunity",[The Earth Breathes]
+clues.the-earth-breathes.name,"Clue name, shown in the journal and on the opportunity",the grave he swears he saw breathe
 clues.the-earth-breathes.prompt,Opportunity text shown before this clue is taken,[The gravedigger drinks like a man trying to forget his own trade.]
 clues.the-earth-breathes.reveal,Journal and event-log text once this clue is revealed,"[He grips your wrist: 'I saw the earth breathe over {grave}. Rise and fall, like a sleeper.' Nothing living lies in a grave and breathes it.]"
-clues.the-long-register.name,"Clue name, shown in the journal and on the opportunity",[The Long Register]
+clues.the-long-register.name,"Clue name, shown in the journal and on the opportunity",three centuries of parish registers
 clues.the-long-register.prompt,Opportunity text shown before this clue is taken,"[The registers go back three hundred years, and someone has been careless with the old pages.]"
 clues.the-long-register.reveal,Journal and event-log text once this clue is revealed,"[The same affliction, entered in the same words, in three centuries of different hands. This did not begin with anyone now living, and nobody promised it — it was simply laid on, and never lifted.]"
-clues.the-pinned-hare.name,"Clue name, shown in the journal and on the opportunity",[The Pinned Hare]
+clues.the-pinned-hare.name,"Clue name, shown in the journal and on the opportunity",the hare pinned with black iron
 clues.the-pinned-hare.prompt,Opportunity text shown before this clue is taken,"[Something has been left on the trail as a warning, and warnings are instructions read backwards.]"
 clues.the-pinned-hare.reveal,Journal and event-log text once this clue is revealed,"[A hare pinned to a stump with a rough black pin — and the pin is unsmelted bog iron. Somebody in this valley already knows what holds a working still, and wanted the fact known.]"
-clues.the-stopped-payment.name,"Clue name, shown in the journal and on the opportunity",[The Stopped Payment]
+clues.the-stopped-payment.name,"Clue name, shown in the journal and on the opportunity",the manor's ruled-through accounts
 clues.the-stopped-payment.prompt,Opportunity text shown before this clue is taken,"[The manor kept its accounts to the penny, and then, one year, stopped keeping one of them.]"
 clues.the-stopped-payment.reveal,Journal and event-log text once this clue is revealed,"[A payment rendered every year without fail for four generations — then a line ruled through it, and nothing after. Not a grudge and not a curse: a compact honoured for centuries, and broken by someone who thought it was only money.]"
-clues.the-sworn-vengeance.name,"Clue name, shown in the journal and on the opportunity",[The Sworn Vengeance]
+clues.the-sworn-vengeance.name,"Clue name, shown in the journal and on the opportunity",the vow sworn against the valley
 clues.the-sworn-vengeance.prompt,Opportunity text shown before this clue is taken,"[There is old bad blood here, and someone knows who swore what, and before whom.]"
 clues.the-sworn-vengeance.reveal,Journal and event-log text once this clue is revealed,"[It spills out at last: a wrong done, and a vow sworn before witnesses to make the valley pay for it. No bargain, no obligation — only a debt of spite, taken up freely.]"
-clues.the-unpaid-obligation.name,"Clue name, shown in the journal and on the opportunity",[The Unpaid Obligation]
+clues.the-unpaid-obligation.name,"Clue name, shown in the journal and on the opportunity",the debt the dead are collecting
 clues.the-unpaid-obligation.prompt,Opportunity text shown before this clue is taken,"[Something here is owed, and knows the exact figure.]"
 clues.the-unpaid-obligation.reveal,Journal and event-log text once this clue is revealed,"[What answers is not spite and not an old malediction. It recites terms: what was promised, what was given, and the year the giving stopped. It is not angry. It is collecting.]"
-clues.the-widows-warning.name,"Clue name, shown in the journal and on the opportunity",[The Widow's Warning]
+clues.the-widows-warning.name,"Clue name, shown in the journal and on the opportunity",the house the widow will not pass
 clues.the-widows-warning.prompt,Opportunity text shown before this clue is taken,[One neighbour has stopped taking the short way past a particular door.]
 clues.the-widows-warning.reveal,Journal and event-log text once this clue is revealed,"['I'll not walk that side of the row after dark,' she says, and names the house. She is not guessing, and she is not wrong.]"
-clues.the-working-room.name,"Clue name, shown in the journal and on the opportunity",[The Working Room]
+clues.the-working-room.name,"Clue name, shown in the journal and on the opportunity",the room where the work is kept up
 clues.the-working-room.prompt,Opportunity text shown before this clue is taken,"[Whatever is being kept up in this valley is being kept up somewhere, at regular hours.]"
 clues.the-working-room.reveal,Journal and event-log text once this clue is revealed,"[You watch {npc}'s house until the shutter opens: a back room laid out for work, and the same hour kept every night. That is where she will be when it matters.]"
-clues.tracks-to-town.name,"Clue name, shown in the journal and on the opportunity",[Tracks to Town]
+clues.tracks-to-town.name,"Clue name, shown in the journal and on the opportunity",the pad-marks crossing toward town
 clues.tracks-to-town.prompt,Opportunity text shown before this clue is taken,"[Pad-marks the size of plates cross the trail here, heading for the settlement.]"
 clues.tracks-to-town.reveal,Journal and event-log text once this clue is revealed,"[You follow the pad-marks until, at the field's edge, they become boot-prints — walking calmly toward {npc}'s door. Nothing dead and nothing merely hexed leaves that trail.]"
-clues.undisturbed-ground.name,"Clue name, shown in the journal and on the opportunity",[The Undisturbed Ground]
+clues.undisturbed-ground.name,"Clue name, shown in the journal and on the opportunity","the settled, unbroken rows"
 clues.undisturbed-ground.prompt,Opportunity text shown before this clue is taken,"[The sexton's rows can be read like a ledger, if you know that settled earth lies flat.]"
 clues.undisturbed-ground.reveal,Journal and event-log text once this clue is revealed,"[Every plot settled, every sod flat, not one pushed up from beneath. Nothing has risen out of this ground — whatever walks here walked in on its own two feet.]"
-clues.walked-out-unhurried.name,"Clue name, shown in the journal and on the opportunity",[They Walked Out Unhurried]
+clues.walked-out-unhurried.name,"Clue name, shown in the journal and on the opportunity",the cottage left open to the weather
 clues.walked-out-unhurried.prompt,Opportunity text shown before this clue is taken,"[The empty cottage was left open to the weather, and the bed not slept in.]"
 clues.walked-out-unhurried.reveal,Journal and event-log text once this clue is revealed,"[No struggle, no blood, no forced door. One set of prints, unhurried, even-strided, leading away and not coming back. Nobody took them. They were called, and they went.]"
-clues.wardens-dust.name,"Clue name, shown in the journal and on the opportunity",[The Warden's Dust]
+clues.wardens-dust.name,"Clue name, shown in the journal and on the opportunity",the consecrated dust the oldest grave gives
 clues.wardens-dust.prompt,Opportunity text shown before this clue is taken,[Consecrated earth remembers what it holds.]
 clues.wardens-dust.reveal,Journal and event-log text once this clue is revealed,"[The oldest grave gives up its handful of dust freely, as if glad to be of use against the thing that mocks all graves.]"
-clues.working-toward-something.name,"Clue name, shown in the journal and on the opportunity",[Working Toward Something]
+clues.working-toward-something.name,"Clue name, shown in the journal and on the opportunity",the end all this is working toward
 clues.working-toward-something.prompt,Opportunity text shown before this clue is taken,[The air out here has the held-breath quality of a room set for a occasion.]
 clues.working-toward-something.reveal,Journal and event-log text once this clue is revealed,"[There is an intention running under all of this — stages, a sequence, an end being worked toward. What the end is, the working does not volunteer.]"
-clues.wounds-that-closed.name,"Clue name, shown in the journal and on the opportunity",[The Wounds That Closed]
+clues.wounds-that-closed.name,"Clue name, shown in the journal and on the opportunity",the wound that closed over
 clues.wounds-that-closed.prompt,Opportunity text shown before this clue is taken,"[Someone got a blow in on the thing, and lived. They will not enjoy remembering it.]"
 clues.wounds-that-closed.reveal,Journal and event-log text once this clue is revealed,"['I opened it to the bone,' he says, 'and watched the bone close over.' Flesh that knits itself is the beast's trick, and only the beast's.]"
-clues.wrongness-in-the-air.name,"Clue name, shown in the journal and on the opportunity",[A Wrongness in the Air]
+clues.wrongness-in-the-air.name,"Clue name, shown in the journal and on the opportunity",a weight and an appetite
 clues.wrongness-in-the-air.prompt,Opportunity text shown before this clue is taken,[The old stones sit in a silence that presses on the ears.]
 clues.wrongness-in-the-air.reveal,Journal and event-log text once this clue is revealed,"[The vision is only weight and appetite and something walking. Whatever is loose here is old and it is hungry, and that is all the stones will commit to.]"
 enemies.bandit.description,"Enemy description, shown when inspecting it",[A road-thief with a short pistol and no scruples. Keeps distance while it can.]
@@ -810,18 +810,18 @@ ui.keys.wait,"Splash screen key-bindings table, action column",[Wait a turn]
 ui.keys.wait.keys,"Splash screen key-bindings table, keys column",[Space / .]
 ui.keys.walk,"Splash screen key-bindings table, action column","[Walk to the look cursor, stopping if anything happens]"
 ui.keys.walk.keys,"Splash screen key-bindings table, keys column",[Enter / click the map]
-ui.lead.commune.act,"Lead verb, act framing: how the player chooses to work this clue; {referent} is the concrete object or topic",[Divine {referent}]
-ui.lead.commune.perceive,"Lead verb, perceive framing: how the player notices this clue; {referent} is the concrete object or topic",[You sense {referent}]
-ui.lead.examine.act,"Lead verb, act framing: how the player chooses to work this clue; {referent} is the concrete object or topic",[Examine {referent}]
-ui.lead.examine.perceive,"Lead verb, perceive framing: how the player notices this clue; {referent} is the concrete object or topic",[You see {referent}]
-ui.lead.gossip.act,"Lead verb, act framing: how the player chooses to work this clue; {referent} is the concrete object or topic",[Ask about {referent}]
-ui.lead.gossip.perceive,"Lead verb, perceive framing: how the player notices this clue; {referent} is the concrete object or topic",[There is talk of {referent}]
-ui.lead.persuade.act,"Lead verb, act framing: how the player chooses to work this clue; {referent} is the concrete object or topic",[Press them about {referent}]
-ui.lead.persuade.perceive,"Lead verb, perceive framing: how the player notices this clue; {referent} is the concrete object or topic",[Someone here knows about {referent}]
-ui.lead.spy.act,"Lead verb, act framing: how the player chooses to work this clue; {referent} is the concrete object or topic",[Watch for {referent}]
-ui.lead.spy.perceive,"Lead verb, perceive framing: how the player notices this clue; {referent} is the concrete object or topic",[You catch sight of {referent}]
-ui.lead.track.act,"Lead verb, act framing: how the player chooses to work this clue; {referent} is the concrete object or topic",[Follow {referent}]
-ui.lead.track.perceive,"Lead verb, perceive framing: how the player notices this clue; {referent} is the concrete object or topic",[You find {referent}]
+ui.lead.commune.act,"Lead verb, act framing: how the player chooses to work this clue; {referent} is the concrete object or topic",Divine {referent}
+ui.lead.commune.perceive,"Lead verb, perceive framing: how the player notices this clue; {referent} is the concrete object or topic",You sense {referent}
+ui.lead.examine.act,"Lead verb, act framing: how the player chooses to work this clue; {referent} is the concrete object or topic",Examine {referent}
+ui.lead.examine.perceive,"Lead verb, perceive framing: how the player notices this clue; {referent} is the concrete object or topic",You see {referent}
+ui.lead.gossip.act,"Lead verb, act framing: how the player chooses to work this clue; {referent} is the concrete object or topic",Ask about {referent}
+ui.lead.gossip.perceive,"Lead verb, perceive framing: how the player notices this clue; {referent} is the concrete object or topic",There is talk of {referent}
+ui.lead.persuade.act,"Lead verb, act framing: how the player chooses to work this clue; {referent} is the concrete object or topic",Press them about {referent}
+ui.lead.persuade.perceive,"Lead verb, perceive framing: how the player notices this clue; {referent} is the concrete object or topic",Someone here knows about {referent}
+ui.lead.spy.act,"Lead verb, act framing: how the player chooses to work this clue; {referent} is the concrete object or topic",Watch for {referent}
+ui.lead.spy.perceive,"Lead verb, perceive framing: how the player notices this clue; {referent} is the concrete object or topic",You catch sight of {referent}
+ui.lead.track.act,"Lead verb, act framing: how the player chooses to work this clue; {referent} is the concrete object or topic",Follow {referent}
+ui.lead.track.perceive,"Lead verb, perceive framing: how the player notices this clue; {referent} is the concrete object or topic",You find {referent}
 ui.legend.altar,Map key: an altar feature's glyph,[An altar]
 ui.legend.enemy,Map key: an ordinary enemy's glyph,[A lesser threat]
 ui.legend.exit,Map key: a road out to another region,[A road out]

@@ -238,7 +238,7 @@ fn every_string_is_bracketed_placeholder_copy() {
     // marked term nested its brackets inside whatever substituted it.
     let catalogue = rh_content::load_embedded().expect("embedded content");
     for (id, row) in catalogue.strings.rows() {
-        if rh_content::is_term(&row.english) {
+        if rh_content::is_term(&row.english) || is_reviewed_lead_copy(id) {
             continue;
         }
         assert!(
@@ -247,6 +247,15 @@ fn every_string_is_bracketed_placeholder_copy() {
             row.english
         );
     }
+}
+
+/// The lead strings are finished copy, deliberately unbracketed: a clue's name
+/// is the concrete referent a verb composes around, and a lead frame is that
+/// verb. Both must read cleanly in play — "Examine the heavy altar
+/// candlesticks" — rather than nest brackets inside brackets, so they are past
+/// the placeholder gate. Everything else in the table is still draft.
+fn is_reviewed_lead_copy(id: &str) -> bool {
+    id.starts_with("ui.lead.") || (id.starts_with("clues.") && id.ends_with(".name"))
 }
 
 #[test]
