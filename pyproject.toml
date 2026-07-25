@@ -1,25 +1,26 @@
+# Development tooling for Rogue Hunter. Ships no Python of its own; exists to
+# pull PASM. What stays here is pasm/spec — the model of *this* codebase — and
+# pasm/tools/extract_strings.py, which is about this game's content pipeline
+# rather than about architecture models.
 [project]
 name = "rogue-hunter-tooling"
 version = "0.1.0"
 description = "Development tooling for Rogue Hunter: the PASM architecture model."
 readme = "README.md"
 requires-python = ">=3.11"
-# PASM itself lives in its own repository, shared with project-murmur, which
-# had grown a byte-identical copy of it. What stays here is pasm/spec -- the
-# model of *this* codebase -- and pasm/tools/extract_strings.py, which is about
-# this game's content pipeline rather than about architecture models.
-#
-# Pinned to a rev: the scanner's findings are a gate, so which version produced
-# them matters.
 dependencies = [
-  "pasm @ git+https://github.com/jkeywo/pasm@de8a7bfce3aefa799eea51f8e5a2708e996e8b6e",
+  # PASM lives in the fleet's shared repository (a subdirectory of vellum),
+  # pinned to a rev: the scanner's findings are a gate, so which version
+  # produced them matters. Bumping the rev is part of a vellum bump PR — see
+  # vellum's docs/handbook/bump-workflow.md.
+  "pasm @ git+https://github.com/jkeywo/vellum@0d47f4e6d1203e63e5a019cae8736868bc958cc9#subdirectory=pasm",
 ]
 
-[build-system]
-requires = ["setuptools>=68"]
-build-backend = "setuptools.build_meta"
+[tool.uv]
+package = false
 
-# This project ships no Python of its own any more; installing it is how the
-# pinned PASM and its dependencies arrive.
-[tool.setuptools]
-packages = []
+# Local override against a sibling vellum checkout — uncomment for local
+# work, re-comment before committing. The committed state always resolves
+# the pinned rev.
+# [tool.uv.sources]
+# pasm = { path = "../vellum/pasm", editable = true }
