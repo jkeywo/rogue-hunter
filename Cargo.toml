@@ -29,10 +29,10 @@ rh-client-core = { path = "crates/rh-client-core" }
 # touches nothing but this file and Cargo.lock; anything else means the
 # engine changed behaviour. For local work against a checkout, use a
 # gitignored .cargo/config.toml [patch] -- see vellum's README.
-vellum-digest = { git = "https://github.com/jkeywo/vellum", rev = "bf877d3ee69f1be2b38f0a5c4d4ece99f942f280" }
-vellum-replay = { git = "https://github.com/jkeywo/vellum", rev = "bf877d3ee69f1be2b38f0a5c4d4ece99f942f280" }
-vellum-rng = { git = "https://github.com/jkeywo/vellum", rev = "bf877d3ee69f1be2b38f0a5c4d4ece99f942f280" }
-vellum-strings = { git = "https://github.com/jkeywo/vellum", rev = "bf877d3ee69f1be2b38f0a5c4d4ece99f942f280" }
+vellum-digest = { git = "https://github.com/jkeywo/vellum", rev = "fad2d71f1d6cf99e089631e4c8e53180538db433" }
+vellum-replay = { git = "https://github.com/jkeywo/vellum", rev = "fad2d71f1d6cf99e089631e4c8e53180538db433" }
+vellum-rng = { git = "https://github.com/jkeywo/vellum", rev = "fad2d71f1d6cf99e089631e4c8e53180538db433" }
+vellum-strings = { git = "https://github.com/jkeywo/vellum", rev = "fad2d71f1d6cf99e089631e4c8e53180538db433" }
 
 # External crates
 serde = { version = "1.0.228", features = ["derive"] }
