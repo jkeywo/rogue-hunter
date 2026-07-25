@@ -25,7 +25,12 @@ use serde::{Deserialize, Serialize};
 /// fallen hunter respawns — to the settlement tile farthest from a hostile
 /// rather than the door the map's own minions cluster at — so any version 3
 /// code with a pre-final death would replay from a different position.
-pub const REPLAY_VERSION: u8 = 4;
+/// Version 5 is the fleet RNG unification (vellum's
+/// `rng-unification-breaks-saves`): the generator becomes `Pcg32::seeded`
+/// with the Lemire draw and is serialised as the shared `{ state, inc }`
+/// shape, so every version 4 world generates differently and every version 4
+/// state digest moves.
+pub const REPLAY_VERSION: u8 = 5;
 
 /// How far `new_from_viable_seed` will walk forward before giving up. Well
 /// above the observed rejection rate, so exhausting it means something is

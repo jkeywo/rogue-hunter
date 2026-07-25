@@ -232,8 +232,11 @@ fn translating_the_route_text_does_not_change_what_the_autoplayer_does() {
 
     let hunter = plain.hunter_id.clone();
     let drive = |catalogue: Catalogue| {
+        // Seed 0: its certified route carries craft, travel and resolve steps
+        // under the unified fleet RNG (the pre-migration test drove seed 7,
+        // whose new route happens to skip crafting).
         let (mut session, _used) =
-            RunSession::new_from_viable_seed(7, catalogue, &hunter).expect("a viable run");
+            RunSession::new_from_viable_seed(0, catalogue, &hunter).expect("a viable run");
         let outcome = autoplay::autoplay(&mut session);
         (outcome, session.commands.clone(), session.state_digest())
     };
@@ -254,7 +257,7 @@ fn translating_the_route_text_does_not_change_what_the_autoplayer_does() {
     // And it must exercise the dispatch that used to be parsed out of prose,
     // or the invariance above would be about a route with nothing in it.
     let (mut probe, _used) =
-        RunSession::new_from_viable_seed(7, catalogue(), &hunter).expect("a viable run");
+        RunSession::new_from_viable_seed(0, catalogue(), &hunter).expect("a viable run");
     autoplay::autoplay(&mut probe);
     let route = probe
         .sim
@@ -276,7 +279,7 @@ fn translating_the_route_text_does_not_change_what_the_autoplayer_does() {
     for required in ["craft", "travel", "resolve"] {
         assert!(
             kinds.contains(&required),
-            "seed 7's route has no {required} step, so this proves nothing about it: {kinds:?}"
+            "seed 0's route has no {required} step, so this proves nothing about it: {kinds:?}"
         );
     }
 }

@@ -15,7 +15,7 @@ entities:
       status: accepted
       confidence: confirmed
       title: Hand-rolled PCG32 as the single simulation PRNG
-      summary: One PCG-XSH-RR 64/32 stream, seeded through SplitMix64, drives generation and then continues into runtime events. The generator is implemented in-crate with the reference constants and a pinned-sequence test so no dependency upgrade can silently change replays.
+      summary: One PCG-XSH-RR 64/32 stream drives generation and then continues into runtime events. Since the fleet RNG unification (vellum's rng-unification-breaks-saves, replay version 5) the generator is vellum-rng's Pcg32 — seeded via the fleet construction, drawing via Lemire, stored as the shared type — with pinned-sequence and trace tests so no upgrade can silently change replays. Codes recorded before version 5 are refused rather than misread; every fixture was re-blessed in the migration.
       references: [command-replay, seeded-mystery-generator]
 
   - decision: integer-only-simulation-math
