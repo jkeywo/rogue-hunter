@@ -26,7 +26,7 @@ concurrency:
 
 jobs:
   fleet:
-    uses: jkeywo/vellum/.github/workflows/fleet-ci.yml@42db1797a0e5b8e1e6e073760a89f1d94677c85f
+    uses: jkeywo/vellum/.github/workflows/fleet-ci.yml@65f65917adb8cad15a782bb1cde61d2448e3b731
     with:
       pasm-scenario-glob: tests/replays/*.yaml
       # Every villain combination, bounded so a pathological seed cannot hang
