@@ -94,3 +94,16 @@ and touches nothing else — a diff reaching further means the engine changed
 behaviour. For local work against a checkout use a **gitignored**
 `.cargo/config.toml` `[patch]`; a committed override would build CI against
 whatever happened to be on disk.
+
+## AI-origin decisions
+
+A decision you (an agent) make while working is marked in the spec:
+`origin: ai` on the entity you originated, or a literal `[ai] ` prefix on the
+rationale bullet you wrote. Unmarked decisions are the human's. AI-origin
+items may be revised without asking when evidence warrants — say so in the
+commit. Never alter an unmarked decision without asking, and never remove a
+marker: ratification is the human deleting it after reviewing
+
+```bash
+uv run pasm review pasm/spec
+```
